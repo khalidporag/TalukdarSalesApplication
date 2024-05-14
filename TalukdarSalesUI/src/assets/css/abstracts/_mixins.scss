@@ -1,0 +1,182 @@
+@mixin breakpoint-max($maxWidth) {
+  @media only screen and (max-width: $maxWidth) {
+    @content;
+  }
+}
+
+@mixin breakpoint-min($minWidth) {
+  @media only screen and (min-width: $minWidth) {
+    @content;
+  }
+}
+
+@mixin font-size($size) {
+  font-size: $size * 1px;
+  font-size: calEm($size);
+}
+
+// Gutter mixins for control padding and margin
+@mixin gutter($prop, $value, $iteration: 5px) {
+  #{$prop}: $value * $iteration;
+
+  @include breakpoint-max(991px) {
+    @if ($value >=10) {
+      #{$prop}: $value * ($iteration / 2);
+    }
+
+    @if ($value ==14) {
+      #{$prop}: 20px;
+    }
+  }
+}
+
+@mixin box-shadow($x, $y, $blur, $spread) {
+  -webkit-box-shadow: $x $y $blur $spread;
+  -moz-box-shadow: $x $y $blur $spread;
+  -ms-box-shadow: $x $y $blur $spread;
+  -o-box-shadow: $x $y $blur $spread;
+  box-shadow: $x $y $blur $spread;
+}
+
+@mixin pseudo($content: "", $pos: absolute, $pseudo: before) {
+  position: relative;
+
+  &::#{$pseudo} {
+    content: $content;
+    position: $pos;
+    @content;
+  }
+}
+
+%title-three {
+  font-size: 2.2em;
+  margin-bottom: 20px;
+}
+
+%title-four {
+  font-size: 2em;
+  margin-bottom: 20px;
+}
+
+@mixin scrollbars(
+  $size,
+  $foreground-color,
+  $background-color: mix($foreground-color, white, 50%)
+) {
+  // For Google Chrome
+  &::-webkit-scrollbar {
+    width: $size;
+    height: $size;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: $foreground-color;
+    border-radius: 10px;
+    &:hover {
+      background-color: $foreground-color;
+    }
+  }
+  &::-webkit-scrollbar-track {
+    background: $background-color;
+  }
+  // For Internet Explorer
+  & {
+    scrollbar-face-color: $foreground-color;
+    scrollbar-track-color: $background-color;
+  }
+}
+
+@mixin mini-sidebar {
+  .sidebar-inner {
+    overflow: initial;
+    padding: 0;
+
+    .logo {
+      border-bottom: 0;
+
+      h3 {
+        display: none;
+      }
+
+      figure {
+        margin-left: -5px;
+      }
+    }
+
+    &__menu {
+      margin-top: 75px;
+
+      .nav {
+        h4 {
+          width: 100%;
+
+          span {
+            display: none;
+          }
+
+          img {
+            display: block;
+            width: 20px;
+            margin-left: auto;
+            margin-right: auto;
+            // filter: brightness(0) saturate(100%) invert(70%) sepia(97%) saturate(925%) hue-rotate(353deg) brightness(102%) contrast(102%);
+            filter: brightness(0) saturate(97%) invert(70%) sepia(10%)
+              saturate(800%) hue-rotate(148deg) brightness(78%) contrast(42%);
+          }
+        }
+
+        &-item {
+          display: flex;
+          justify-content: center;
+          overflow: initial;
+
+          &:hover {
+            .dropdown-area {
+              // opacity: 1;
+              display: block;
+            }
+          }
+
+          &__list {
+            .left-icon {
+              margin-right: 0;
+
+              i {
+                font-size: 20px;
+              }
+            }
+
+            span {
+              display: none;
+            }
+
+            .right-icon {
+              display: none;
+            }
+          }
+
+          .dropdown-area {
+            position: absolute;
+            background-color: #173753;
+            left: 90px;
+            top: 0;
+            padding: 30px;
+            border-radius: 0 10px 10px 0;
+            // opacity: 0;
+            display: none;
+            transition: 0.3s;
+            border-left: 1px solid #4c7192;
+            z-index: 999 !important;
+
+            &:not(.show) {
+              height: auto;
+            }
+
+            .mobile-title {
+              display: block;
+            }
+          }
+        }
+      }
+    }
+  }
+}

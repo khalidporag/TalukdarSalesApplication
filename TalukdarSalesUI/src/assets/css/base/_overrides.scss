@@ -1,0 +1,227 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+:root {
+    --bs-gutter-x: 1.5rem;
+}
+
+.profile-dropdown {
+    top: 8px !important;
+}
+
+.ant-modal-close {
+    display: none !important;
+}
+
+.ant-modal-footer {
+    display: none !important;
+}
+
+.ant-form-item {
+    margin: 0 !important;
+}
+
+.ant-modal-content {
+    border-radius: 5px !important;
+}
+
+nz-form-item-feedback-icon.ant-input-suffix {
+    top: 6px !important;
+    height: 47px !important;
+}
+
+.component-modal {
+    &__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #dceaf0;
+
+        .modal-title {
+            font-size: 1.4em;
+            color: #6e6e6e;
+        }
+
+        .modal-close {
+            button {
+                background: none;
+                border: none;
+                font-size: 1.6em;
+                color: #6e6e6e;
+            }
+        }
+    }
+
+    &__body {
+        // overflow: auto;
+        padding: 10px 0;
+
+        table {
+            overflow: auto;
+        }
+    }
+
+    &__footer {
+        border-top: 1px solid #dceaf0;
+        margin-top: 20px;
+        padding-top: 20px;
+        display: flex;
+        justify-content: end;
+
+        button {
+            border: none;
+            padding: 5px 20px;
+            border-radius: 4px;
+            margin-right: 16px;
+
+            &:last-child {
+                margin-right: 0;
+            }
+        }
+
+        .cancel-btn {
+            background: #e0e0e0;
+            color: #212121;
+
+            &:hover {
+                background-color: #ddd;
+            }
+
+            &:active {
+                background-color: #6e6e6e;
+            }
+        }
+
+        .add-btn {
+            background: $primaryColor;
+            color: #fff;
+        }
+    }
+}
+
+.custom-form {
+    .ant-form-item-control-input-content {
+        margin-top: 8px;
+        margin-bottom: 8px;
+
+
+        input {
+            padding: 10px;
+            border-radius: 5px;
+
+            &:focus {
+                box-shadow: none !important;
+            }
+        }
+    }
+}
+
+.ant-form-horizontal .ant-form-item-control {
+    min-width: 100% !important;
+}
+
+.ant-form-item-label>label {
+    height: auto !important;
+    margin-top: 10px;
+    font-size: 15px !important;
+}
+
+.ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
+    height: 50px !important;
+    padding: 8px 10px !important;
+}
+
+.ant-picker {
+    min-width: 300px !important;
+    padding: 10px !important;
+    border-radius: 5px !important;
+}
+
+.ant-btn-primary {
+    color: $btnText !important;
+    border-color: $btnBg !important;
+    background-color: $btnBg !important;
+}
+
+select {
+    appearance: none;
+    border: 1px solid $btnBg;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16px' height='16px' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M6.1018 8C5.02785 8 4.45387 9.2649 5.16108 10.0731L10.6829 16.3838C11.3801 17.1806 12.6197 17.1806 13.3169 16.3838L18.8388 10.0731C19.5459 9.2649 18.972 8 17.898 8H6.1018Z' fill='%23212121'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 5px center !important;
+    background: none;
+    padding: 10px 30px 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.anticon {
+    line-height: 1 !important;
+    font-size: 18px !important;
+}
+
+.chart-legend {
+    display: block !important;
+    width: 100% !important;
+    padding: 20px !important;
+}
+
+.chart-legend .legend-title {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+}
+
+.ant-input::placeholder,
+.ant-select-selection-placeholder {
+    color: #818181 !important;
+}
+
+@include breakpoint-max (767px) {
+    .ant-modal {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        top: 0 !important;
+        margin: 0 !important;
+    }
+
+    .modal-body {
+        max-height: calc(100vh - 140px) !important;
+        overflow: overlay !important;
+    }
+}
+
+.ant-collapse-header {
+    display: flex !important;
+    flex-direction: row-reverse !important;
+    justify-content: space-between !important;
+    background-color: #e8e8e8 !important;
+    border-radius: 5px !important;
+}
+
+ngx-charts-number-card .cell .value-text {
+    fill: #8f8f8f !important;
+    font-weight: 700 !important;
+}
+
+.chart-legend .legend-labels {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    background-color: transparent !important;
+    margin-bottom: 10px !important;
+    justify-content: center !important;
+}
+
+.chart-legend .legend-label {
+    color: #414141 !important;
+    background: #fff !important;
+    padding: 10px !important;
+    border-radius: 5px !important;
+}
+
+.ant-picker {
+    border: 1px solid #101c44 !important;
+}

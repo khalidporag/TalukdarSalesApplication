@@ -1,0 +1,42 @@
+@use './variables' as *;
+@use './mixins' as *;
+
+@function calEm($size) {
+    $emSize: clac($size / 10);
+    @return $emSize * 1em;
+}
+
+// Iteration for padding top/bottom and margin top/bottom
+@for $i from 1 through 20 {
+    $value: $i;
+
+    .pt-#{$i * 5} {
+        @include gutter(padding-top, $value, $iteration: 5px);
+    }
+
+    .pb-#{$i * 5} {
+        @include gutter(padding-bottom, $value, $iteration: 5px);
+    }
+
+    .mt-#{$i * 5} {
+        @include gutter(margin-top, $value, $iteration: 5px);
+    }
+
+    .mb-#{$i * 5} {
+        @include gutter(margin-bottom, $value, $iteration: 5px);
+    }
+}
+
+.box-icon {
+    height: 60px;
+    width: 60px;
+    background-color: #E5E6E7;
+    display: flex;
+    justify-content: center;
+    border-radius: 5px;
+
+    i {
+        line-height: 1;
+        font-size: 30px;
+    }
+}

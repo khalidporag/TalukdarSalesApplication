@@ -1,0 +1,159 @@
+@use "variables" as *;
+@use "mixins" as *;
+
+.table {
+  position: relative;
+
+  thead {
+    th {
+      padding: 10px 16px;
+
+      &:last-child {
+        text-align: right;
+      }
+    }
+  }
+
+  tbody {
+
+    tr {
+      background-color: #fff;
+      border-bottom: 1px solid #dceaf0;
+
+      td {
+        padding: 10px 16px;
+      }
+
+      .action {
+        display: flex;
+        justify-content: end;
+        text-align: right;
+        border: 0;
+
+        span {
+          display: block;
+          margin-right: 10px;
+          cursor: pointer;
+
+          &:last-child {
+            margin-right: 0;
+          }
+        }
+      }
+
+    }
+
+    .table-loader {
+      height: 50vh;
+      position: relative;
+      background-color: transparent;
+
+      &__center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      td {
+        position: relative !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%);
+      }
+    }
+  }
+}
+
+.table-one {
+
+  table {
+    margin: 0 auto;
+    overflow-x: auto;
+    margin-bottom: 20px;
+  }
+
+  td {
+    img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border: 1px solid #c7cdcf;
+    }
+
+    .status {
+      background-color: #daf4f0;
+      color: #137f6e;
+      border: 1px solid #137f6e;
+      padding: 2px 8px;
+      border-radius: 25px;
+      font-size: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      &.inactive {
+        background-color: #f4dada;
+        color: #7f1313;
+        border: 1px solid #7f1313;
+      }
+
+      &.pending {
+        background-color: #fef4e4;
+        color: #f6b84b;
+        border: 1px solid #f6b84b;
+      }
+    }
+  }
+
+  .res-head {
+    display: none;
+  }
+
+  @include breakpoint-max(767px) {
+    thead {
+      display: none;
+    }
+
+    tbody {
+      tr {
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+        background-color: #fff;
+        padding: 40px 10px 10px 10px;
+        position: relative;
+
+        td {
+          padding-top: 30px;
+          display: flex;
+          background-color: transparent;
+          padding: 0;
+          margin-bottom: 5px;
+          margin-right: 10px;
+          border: none;
+          flex-wrap: wrap;
+
+          .res-head {
+            display: block;
+            font-weight: 700;
+            margin-right: 10px;
+          }
+
+          &:first-child {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+          }
+        }
+
+        .action {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          border: 0;
+        }
+      }
+    }
+  }
+}

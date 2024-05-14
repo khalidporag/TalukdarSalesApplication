@@ -76,11 +76,11 @@ namespace TalukdarSalesAPI.Controllers
             if (CheckUsernameExistAsync(userObj.Username))
                 return BadRequest(new { Message = "Username Already Exist" });
 
-            var passMessage = CheckPasswordStrength(userObj.Password);
-            if (!string.IsNullOrEmpty(passMessage))
-                return BadRequest(new { Message = passMessage.ToString() });
+            //var passMessage = CheckPasswordStrength(userObj.Password);
+            //if (!string.IsNullOrEmpty(passMessage))
+            //    return BadRequest(new { Message = passMessage.ToString() });
 
-            userObj.Password = PasswordHasher.HashPassword(userObj.Password);
+            userObj.Password = PasswordHasher.HashPassword(userObj.PhoneNumber);
             userObj.Token = "";
             _userRepository.Add(userObj);
             _userRepository.Commit();
@@ -94,17 +94,17 @@ namespace TalukdarSalesAPI.Controllers
         private bool CheckUsernameExistAsync(string? username)
            => _userRepository.FindBy(x => x.Username == username).Any();
 
-        private static string CheckPasswordStrength(string pass)
-        {
-            StringBuilder sb = new StringBuilder();
-            if (pass.Length < 9)
-                sb.Append("Minimum password length should be 8" + Environment.NewLine);
-            if (!(Regex.IsMatch(pass, "[a-z]") && Regex.IsMatch(pass, "[A-Z]") && Regex.IsMatch(pass, "[0-9]")))
-                sb.Append("Password should be AlphaNumeric" + Environment.NewLine);
-            if (!Regex.IsMatch(pass, "[<,>,@,!,#,$,%,^,&,*,(,),_,+,\\[,\\],{,},?,:,;,|,',\\,.,/,~,`,-,=]"))
-                sb.Append("Password should contain special charcter" + Environment.NewLine);
-            return sb.ToString();
-        }
+        //private static string CheckPasswordStrength(string pass)
+        //{
+        //    StringBuilder sb = new StringBuilder();
+        //    if (pass.Length < 9)
+        //        sb.Append("Minimum password length should be 8" + Environment.NewLine);
+        //    if (!(Regex.IsMatch(pass, "[a-z]") && Regex.IsMatch(pass, "[A-Z]") && Regex.IsMatch(pass, "[0-9]")))
+        //        sb.Append("Password should be AlphaNumeric" + Environment.NewLine);
+        //    if (!Regex.IsMatch(pass, "[<,>,@,!,#,$,%,^,&,*,(,),_,+,\\[,\\],{,},?,:,;,|,',\\,.,/,~,`,-,=]"))
+        //        sb.Append("Password should contain special charcter" + Environment.NewLine);
+        //    return sb.ToString();
+        //}
 
         private string CreateJwt(User user)
         {
@@ -191,6 +191,29 @@ namespace TalukdarSalesAPI.Controllers
                 AccessToken = newAccessToken,
                 RefreshToken = newRefreshToken,
             });
+        }
+
+
+        [HttpPost("userType")]
+        public IActionResult UserType([FromBody] UserType userTypeObj)
+        {
+            if (userTypeObj == null)
+                return BadRequest();
+
+            _userTypeRepository.Add(userTypeObj);
+            _userTypeRepository.Commit();
+            return Ok(new
+            {
+                Status = 200,
+                Message = "User Type Added!"
+            });
+        }
+
+
+        [HttpGet("getAllUserTypes")]
+        public ActionResult<UserType> GetAllUserTypes()
+        {
+            return Ok(_userTypeRepository.GetAll());
         }
     }
 }

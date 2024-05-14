@@ -1,0 +1,115 @@
+@use "./variables" as *;
+@use "./mixins" as *;
+
+button {
+  &:disabled {
+    opacity: 0.3;
+  }
+
+  &:active,
+  &:focus {
+    outline: 0;
+    border: 0;
+    // background-color: $primaryColor;
+  }
+}
+
+.main-btn {
+  min-width: 180px;
+  height: 45px;
+  padding-left: 20px;
+  padding-right: 20px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2em;
+  background: $primaryColor;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 5px;
+  border: 1px solid $primaryColor;
+  transition: all 0.3s linear;
+  line-height: 1;
+
+  &:disabled {
+    opacity: 0.3;
+  }
+
+  &:hover {
+    background-color: $primaryDark;
+    color: #fff;
+  }
+
+  &-rounded {
+    border-radius: 30px;
+  }
+
+  &-primary {
+    background-color: $primaryColor !important;
+    color: #fff;
+  }
+
+  &-disabled {
+    cursor: not-allowed;
+    pointer-events: none;
+    color: #c0c0c0;
+    background-color: #ffffff;
+  }
+
+  &-shadow {
+    box-shadow: 0 26px 19px -10px #34aaea7d;
+  }
+
+  &:active,
+  &:focus {
+    background-color: $textColor;
+    color: #ffffff;
+  }
+
+  @include breakpoint-max(991px) {
+    min-width: 185px;
+    height: 40px;
+
+    &-banner {
+      min-width: 300px;
+    }
+  }
+
+  @include breakpoint-max(767px) {
+    min-width: 165px;
+    height: 40px;
+
+    &-banner {
+      min-width: 200px;
+    }
+  }
+}
+
+.add-btn {
+  background-color: $btnBg;
+  color: $btnText;
+  border: none;
+  padding: 4px 12px;
+}
+
+.cancel-btn {
+  background-color: #dceaf0;
+  color: #212121;
+  border: none;
+  padding: 4px 12px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin-bottom: 0;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}

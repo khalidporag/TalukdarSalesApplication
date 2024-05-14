@@ -11,4 +11,12 @@ export class ApiService {
   getUsers() {
     return this.http.get<any>(this.baseUrl);
   }
+
+  getUserTypes() {
+    return this.http.get<any>(`${this.baseUrl}getAllUserTypes`);
+  }
+
+  userType(loginObj : any){
+    return this.http.post<any>(`${this.baseUrl}userType`,loginObj)
+  }
 }
