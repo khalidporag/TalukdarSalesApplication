@@ -12,5 +12,9 @@ namespace TalukdarSalesAPI.Context
 
         public DbSet<User> Users { get; set; }
         public DbSet<UserType> UserTypes { get; set; }
+        public DbSet<ApplicationRole> ApplicationRoles { get; set; }
+        public DbSet<ApplicationModule> ApplicationModules { get; set; }
+        public DbSet<RoleWisePermission> RoleWisePermissions { get; set; }
+        public DbSet<UserRoleMapping> UserRoleMappings { get; set; }
     }
 }

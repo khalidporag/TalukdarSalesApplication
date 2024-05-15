@@ -30,6 +30,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(option =>
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserTypeRepository, UserTypeRepository>();
+builder.Services.AddScoped<IApplicationRoleRepository, ApplicationRoleRepository>();
+builder.Services.AddScoped<IApplicationModuleRepository, ApplicationModuleRepository>();
+builder.Services.AddScoped<IRoleWisePermissionRepository, RoleWisePermissionRepository>();
+builder.Services.AddScoped<IUserRoleMappingRepository, UserRoleMappingRepository>();
 
 builder.Services.AddAuthentication(x =>
 {
