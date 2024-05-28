@@ -34,6 +34,8 @@ builder.Services.AddScoped<IApplicationRoleRepository, ApplicationRoleRepository
 builder.Services.AddScoped<IApplicationModuleRepository, ApplicationModuleRepository>();
 builder.Services.AddScoped<IRoleWisePermissionRepository, RoleWisePermissionRepository>();
 builder.Services.AddScoped<IUserRoleMappingRepository, UserRoleMappingRepository>();
+builder.Services.AddScoped<IFinishedGoodTypeRepository, FinishedGoodTypeRepository>();
+builder.Services.AddScoped<IFinishedGoodsRepository, FinishedGoodsRepository>();
 
 builder.Services.AddAuthentication(x =>
 {
