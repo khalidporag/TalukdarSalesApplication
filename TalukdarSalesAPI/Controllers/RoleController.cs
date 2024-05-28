@@ -4,6 +4,7 @@ using TalukdarSalesAPI.Context;
 using TalukdarSalesAPI.Interfaces;
 using TalukdarSalesAPI.Models.Dto;
 using TalukdarSalesAPI.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TalukdarSalesAPI.Controllers
 {
@@ -51,6 +52,12 @@ namespace TalukdarSalesAPI.Controllers
             });
         }
 
+        [HttpGet("getAllRoles")]
+        public ActionResult<ApplicationRole> GetAllRoles()
+        {
+            return Ok(_roleRepository.GetAll());
+        }
+
         [HttpPost("createModule")]
         public IActionResult CreateModule([FromBody] ApplicationModule moduleObj)
         {
@@ -65,6 +72,12 @@ namespace TalukdarSalesAPI.Controllers
                 Status = 200,
                 Message = "Module Added!"
             });
+        }
+
+        [HttpGet("getAllModules")]
+        public ActionResult<ApplicationModule> GetAllModules()
+        {
+            return Ok(_moduleRepository.GetAll());
         }
     }
 }
