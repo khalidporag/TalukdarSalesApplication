@@ -18,5 +18,7 @@ namespace TalukdarSalesAPI.Context
         public DbSet<UserRoleMapping> UserRoleMappings { get; set; }
         public DbSet<FinishGoodType> FinishGoodTypes { get; set; }
         public DbSet<FinishedGood> FinishedGoods { get; set; }
+        public DbSet<SalesRequisition> SalesRequisitions { get; set; }
+        public DbSet<SalesRequisitionDetail> SalesRequisitionDetails { get; set; }
     }
 }

@@ -36,6 +36,8 @@ builder.Services.AddScoped<IRoleWisePermissionRepository, RoleWisePermissionRepo
 builder.Services.AddScoped<IUserRoleMappingRepository, UserRoleMappingRepository>();
 builder.Services.AddScoped<IFinishedGoodTypeRepository, FinishedGoodTypeRepository>();
 builder.Services.AddScoped<IFinishedGoodsRepository, FinishedGoodsRepository>();
+builder.Services.AddScoped<ISalesRequisitionRepository, SalesRequisitionRepository>();
+builder.Services.AddScoped<ISalesRequisitionDetailRepository, SalesRequisitionDetailRepository>();
 
 builder.Services.AddAuthentication(x =>
 {
