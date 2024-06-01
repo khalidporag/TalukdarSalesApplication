@@ -38,6 +38,9 @@ builder.Services.AddScoped<IFinishedGoodTypeRepository, FinishedGoodTypeReposito
 builder.Services.AddScoped<IFinishedGoodsRepository, FinishedGoodsRepository>();
 builder.Services.AddScoped<ISalesRequisitionRepository, SalesRequisitionRepository>();
 builder.Services.AddScoped<ISalesRequisitionDetailRepository, SalesRequisitionDetailRepository>();
+builder.Services.AddScoped<ICollectionLedgerRepository, CollectionLedgerRepository>();
+builder.Services.AddScoped<ISalesInvoiceRepository, SalesInvoiceRepository>();
+builder.Services.AddScoped<ISalesInvoiceDetailsRepository, SalesInvoiceDetailsRepository>();
 
 builder.Services.AddAuthentication(x =>
 {

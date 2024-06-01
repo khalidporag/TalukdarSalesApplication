@@ -20,5 +20,8 @@ namespace TalukdarSalesAPI.Context
         public DbSet<FinishedGood> FinishedGoods { get; set; }
         public DbSet<SalesRequisition> SalesRequisitions { get; set; }
         public DbSet<SalesRequisitionDetail> SalesRequisitionDetails { get; set; }
+        public DbSet<CollectionLedger> CollectionLedgers { get; set; }
+        public DbSet<SalesInvoice> SalesInvoices { get; set; }
+        public DbSet<SalesInvoiceDetails> SalesInvoiceDetails { get; set; }
     }
 }
