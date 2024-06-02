@@ -13,6 +13,9 @@ import { SharedModule } from './shared/shared.module';
 import { UserManagementComponent } from './components/user-management/user-management.component';
 import { ModalComponent } from './components/modal/modal.component';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
+import { SettingsComponent } from './components/settings/settings.component';
+import { ProductComponent } from './components/product/product.component';
+import { RoleComponent } from './components/role/role.component';
 
 @NgModule({
   declarations: [
@@ -21,7 +24,10 @@ import { SidebarComponent } from './components/sidebar/sidebar.component';
     DashboardComponent,
     UserManagementComponent,
     ModalComponent,
-    SidebarComponent
+    SidebarComponent,
+    SettingsComponent,
+    ProductComponent,
+    RoleComponent
   ],
   imports: [
     BrowserModule,
