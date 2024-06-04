@@ -9,9 +9,11 @@ import { UserStoreService } from './services/user-store.service';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
+  isLoggedIn = this.auth.isLoggedIn();
   public fullName : string = "";
   constructor(private api : ApiService, private auth: AuthService,
      private userStore: UserStoreService) {
+      this.isLoggedIn = this.auth.isLoggedIn();
       this.userStore.getFullNameFromStore()
     .subscribe(val=>{
       const fullNameFromToken = this.auth.getfullNameFromToken();
@@ -22,5 +24,6 @@ export class AppComponent {
 
   logout(){
     this.auth.signOut();
+    window.location.reload();
   }
 }

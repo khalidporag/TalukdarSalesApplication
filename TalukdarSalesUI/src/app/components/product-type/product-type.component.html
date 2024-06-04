@@ -1,26 +1,25 @@
 
 <div
 class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-<h1 class="h2">Role Management</h1>
+<h1 class="h2">Product Type Setup</h1>
 </div>
-        <button (click)="openRoleModal()"><span>Create Role</span></button>
+        <button (click)="openRoleModal()"><span>Create Product Type</span></button>
         
         <div class="table-responsive">
             <table class="table table-striped table-sm">
                 <thead>
                     <tr>
                         <th scope="col">#</th>
-                        <th scope="col">Role</th>
+                        <th scope="col">Name</th>
                         <th scope="col">Creation Time</th>
-                        <th scope="col">Action</th>
 
                     </tr>
                 </thead>
                 <tbody>
-                    <tr *ngFor="let role of roles; let i= index">
+                    <tr *ngFor="let type of productTypes; let i= index">
                         <td>{{i+1}}</td>
-                        <td>{{role.name}}</td>
-                        <td>{{role.createdOn}}</td>
+                        <td>{{type.name}}</td>
+                        <td>{{type.createdOn}}</td>
                     </tr>
         
                 </tbody>
@@ -31,17 +30,17 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
             
             <modal *ngIf="createModal" >
                 <div class="modal-header">
-                    <h5 class="modal-title">Create Role</h5>
+                    <h5 class="modal-title">Create Product Type</h5>
                     <button type="button" class="btn-close" (click)="closeModal()"></button>
                 </div>
                 <div class="modal-body">
-                    <form (ngSubmit)="onSubmit()" [formGroup]="createRoleForm">
+                    <form (ngSubmit)="onSubmit()" [formGroup]="createProductTypeForm">
                         <div class="form-group pt-3">
-                            <div class="input-field" [class.error]="createRoleForm.controls['name'].dirty && createRoleForm.hasError('required','name')"> 
+                            <div class="input-field" [class.error]="createProductTypeForm.controls['name'].dirty && createProductTypeForm.hasError('required','name')"> 
                                 <span class="fa fa-user p-2"></span> 
                                 <input formControlName="name" type="text" placeholder="Name"> </div>
                         </div>
-                        <small *ngIf="createRoleForm.controls['name'].dirty && createRoleForm.hasError('required','name')" class="text-danger">*Name is required*</small>
+                        <small *ngIf="createProductTypeForm.controls['name'].dirty && createProductTypeForm.hasError('required','name')" class="text-danger">*Name is required*</small>
                         
                         <button *ngIf="!submitting" type="submit" class="btn btn-primary btn-block mt-4 w-100">Save</button>
                         <button type="button" class="btn btn-primary" *ngIf="submitting">

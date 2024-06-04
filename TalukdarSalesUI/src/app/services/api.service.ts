@@ -40,6 +40,10 @@ export class ApiService {
     return this.http.get<any>(`${this.finishedGoodUrl}getAllFinishedGoods`);
   }
 
+  createFinishedGoodType(obj: any) {
+    return this.http.post<any>(`${this.finishedGoodUrl}FinishGoodType`, obj)
+  }
+
   getFinishGoodTypes() {
     return this.http.get<any>(`${this.finishedGoodUrl}getAllFinishGoodTypes`);
   }

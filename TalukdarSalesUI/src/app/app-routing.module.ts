@@ -6,6 +6,7 @@ import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { UserManagementComponent } from './components/user-management/user-management.component';
 import { RoleComponent } from './components/role/role.component';
 import { ProductComponent } from './components/product/product.component';
+import { ProductTypeComponent } from './components/product-type/product-type.component';
 
 const routes: Routes = [
   {path:'', redirectTo:'login', pathMatch:'full'},
@@ -15,6 +16,8 @@ const routes: Routes = [
   {path: 'user-management', component: UserManagementComponent},
   {path: 'role', component: RoleComponent},
   {path: 'product', component: ProductComponent},
+  {path: 'product-type', component: ProductTypeComponent},
+
 
 ];
 
