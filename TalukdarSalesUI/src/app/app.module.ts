@@ -17,6 +17,7 @@ import { SettingsComponent } from './components/settings/settings.component';
 import { ProductComponent } from './components/product/product.component';
 import { RoleComponent } from './components/role/role.component';
 import { ProductTypeComponent } from './components/product-type/product-type.component';
+import { ModuleSetupComponent } from './components/module-setup/module-setup.component';
 
 @NgModule({
   declarations: [
@@ -29,7 +30,8 @@ import { ProductTypeComponent } from './components/product-type/product-type.com
     SettingsComponent,
     ProductComponent,
     RoleComponent,
-    ProductTypeComponent
+    ProductTypeComponent,
+    ModuleSetupComponent
   ],
   imports: [
     BrowserModule,

@@ -15,18 +15,21 @@ namespace TalukdarSalesAPI.Controllers
         private readonly IUserRepository _userRepository;
         private readonly IUserTypeRepository _userTypeRepository;
         private readonly IApplicationRoleRepository _roleRepository;
+        private readonly IRoleWisePermissionRepository _roleWisePermissionRepository;
         private readonly IApplicationModuleRepository _moduleRepository;
         private readonly ApplicationDbContext _authContext;
         public RoleController(
             IUserRepository userRepository,
             IUserTypeRepository userTypeRepository,
             IApplicationRoleRepository roleRepository,
+            IRoleWisePermissionRepository roleWisePermissionRepository,
             IApplicationModuleRepository moduleRepository,
             ApplicationDbContext authContext)
         {
             _userRepository = userRepository;
             _userTypeRepository = userTypeRepository;
             _roleRepository = roleRepository;
+            _roleWisePermissionRepository = roleWisePermissionRepository;
             _moduleRepository = moduleRepository;
             _authContext = authContext;
         }
@@ -45,6 +48,33 @@ namespace TalukdarSalesAPI.Controllers
             _roleRepository.Add(roleObj);
             _roleRepository.Commit();
 
+            return Ok(new
+            {
+                Status = 200,
+                Message = "Role Added!"
+            });
+        }
+
+        [HttpPost("addRoleWiseModule")]
+        public IActionResult AddRoleWiseModule([FromBody] RoleWiseModuleDto roleWiseModuleObj)
+        {
+            if (roleWiseModuleObj == null)
+                return BadRequest();
+            var roleWisePermissonObjList = new List<RoleWisePermission>();
+            foreach(var moduleId in roleWiseModuleObj.ModuleIds)
+            {
+                var obj = new RoleWisePermission();
+                obj.RoleId = roleWiseModuleObj.RoleId;
+                obj.ModuleId = moduleId;
+
+                roleWisePermissonObjList.Add(obj);
+            }
+
+            if(roleWisePermissonObjList.Count > 0)
+            {
+                _roleWisePermissionRepository.AddRange(roleWisePermissonObjList);
+                _roleWisePermissionRepository.Commit();
+            }
             return Ok(new
             {
                 Status = 200,

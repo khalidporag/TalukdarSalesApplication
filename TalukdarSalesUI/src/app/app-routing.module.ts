@@ -7,6 +7,7 @@ import { UserManagementComponent } from './components/user-management/user-manag
 import { RoleComponent } from './components/role/role.component';
 import { ProductComponent } from './components/product/product.component';
 import { ProductTypeComponent } from './components/product-type/product-type.component';
+import { ModuleSetupComponent } from './components/module-setup/module-setup.component';
 
 const routes: Routes = [
   {path:'', redirectTo:'login', pathMatch:'full'},
@@ -17,7 +18,7 @@ const routes: Routes = [
   {path: 'role', component: RoleComponent},
   {path: 'product', component: ProductComponent},
   {path: 'product-type', component: ProductTypeComponent},
-
+  {path: 'module-setup', component: ModuleSetupComponent},
 
 ];
 

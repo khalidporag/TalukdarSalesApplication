@@ -13,6 +13,7 @@ namespace TalukdarSalesAPI.Interfaces
         T GetSingle(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includeProperties);
         IEnumerable<T> FindBy(Expression<Func<T, bool>> predicate);
         void Add(T entity);
+        void AddRange(List<T> entities);
         void Update(T entity);
         void Delete(T entity);
         void DeleteWhere(Expression<Func<T, bool>> predicate);

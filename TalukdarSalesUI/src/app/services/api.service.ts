@@ -32,6 +32,14 @@ export class ApiService {
     return this.http.get<any>(`${this.roleUrl}getAllRoles`);
   }
 
+  createModule(obj: any) {
+    return this.http.post<any>(`${this.roleUrl}createModule`, obj)
+  }
+
+  getAllModules() {
+    return this.http.get<any>(`${this.roleUrl}getAllModules`);
+  }
+
   createFinishedGood(obj: any) {
     return this.http.post<any>(`${this.finishedGoodUrl}createFinishedGood`, obj)
   }

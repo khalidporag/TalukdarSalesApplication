@@ -21,6 +21,8 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
                         <td>{{i+1}}</td>
                         <td>{{role.name}}</td>
                         <td>{{role.createdOn}}</td>
+                        <td><button (click)="openAddModuleModal()"><span>Add Module</span></button>
+                        </td>
                     </tr>
         
                 </tbody>
@@ -28,7 +30,8 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
         </div>
         
         <div>
-            
+            <!-- Create Modal-->
+
             <modal *ngIf="createModal" >
                 <div class="modal-header">
                     <h5 class="modal-title">Create Role</h5>
@@ -50,7 +53,42 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
                     </form>
                 </div>
             </modal>
-            
+
+            <!-- Add Module To Role Modal -->
+            <modal id="addModuleToRole" *ngIf="addModuleToRoleModal" >
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Module To Role</h5>
+                    <button type="button" class="btn-close" (click)="closeModal()"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="checkbox-container">
+                        <div *ngFor="let item of applicationModules">
+                          <label>
+                            <input type="checkbox" [(ngModel)]="item.checked">
+                            {{ item.name }}
+                          </label>
+                        </div>
+                      </div>
+                      <button *ngIf="!submitting" type="input" click="assignModuleToRole()" class="btn btn-primary btn-block mt-4 w-100">Save</button>
+                      <button type="button" class="btn btn-primary" *ngIf="submitting">
+                            <i class="fas fa-spinner fa-pulse"></i>
+                       </button>
+                    <!-- <form (ngSubmit)="onSubmit()" [formGroup]="addModuleToRoleForm">
+                        
+                        <div class="form-group pt-3">
+                            <div class="input-field" [class.error]="addModuleToRoleForm.controls['name'].dirty && addModuleToRoleForm.hasError('required','name')"> 
+                                <span class="fa fa-user p-2"></span> 
+                                <input formControlName="name" type="text" placeholder="Name"> </div>
+                        </div>
+                        <small *ngIf="addModuleToRoleForm.controls['name'].dirty && addModuleToRoleForm.hasError('required','name')" class="text-danger">*Name is required*</small>
+                        
+                        <button *ngIf="!submitting" type="submit" class="btn btn-primary btn-block mt-4 w-100">Save</button>
+                        <button type="button" class="btn btn-primary" *ngIf="submitting">
+                            <i class="fas fa-spinner fa-pulse"></i>
+                        </button>
+                    </form> -->
+                </div>
+            </modal>
          
         </div>
  

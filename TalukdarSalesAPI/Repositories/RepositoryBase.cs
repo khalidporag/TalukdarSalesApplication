@@ -78,6 +78,17 @@ namespace TalukdarSalesAPI.Repositories
             _context.Set<T>().Add(entity);
         }
 
+        public virtual void AddRange(List<T> entities)
+        {
+            foreach (var entity in entities)
+            {
+                entity.CreatedOn = DateTime.UtcNow;
+                entity.IsDeleted = false;
+                _context.Entry<T>(entity).State = EntityState.Added;
+            }
+            _context.Set<T>().AddRange(entities);
+        }
+
         public virtual void Update(T entity)
         {
             entity.ModifiedOn = DateTime.UtcNow;
