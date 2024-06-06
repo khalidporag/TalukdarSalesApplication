@@ -18,6 +18,7 @@ import { ProductComponent } from './components/product/product.component';
 import { RoleComponent } from './components/role/role.component';
 import { ProductTypeComponent } from './components/product-type/product-type.component';
 import { ModuleSetupComponent } from './components/module-setup/module-setup.component';
+import { SalesRequisitionComponent } from './components/sales-requisition/sales-requisition.component';
 
 @NgModule({
   declarations: [
@@ -31,7 +32,8 @@ import { ModuleSetupComponent } from './components/module-setup/module-setup.com
     ProductComponent,
     RoleComponent,
     ProductTypeComponent,
-    ModuleSetupComponent
+    ModuleSetupComponent,
+    SalesRequisitionComponent
   ],
   imports: [
     BrowserModule,

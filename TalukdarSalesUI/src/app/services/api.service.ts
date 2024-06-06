@@ -8,12 +8,17 @@ export class ApiService {
   private baseUrl: string = 'https://localhost:7019/api/User/';
   private roleUrl: string = 'https://localhost:7019/api/Role/';
   private finishedGoodUrl: string = 'https://localhost:7019/api/FinishedGood/';
+  private SalesRequisitionUrl: string = 'https://localhost:7019/api/SalesRequisition/';
 
 
   constructor(private http: HttpClient) {}
 
   getUsers() {
     return this.http.get<any>(this.baseUrl);
+  }
+
+  getUsersByType(userTypeId: number) {
+    return this.http.get<any>(`${this.baseUrl}?userTypeId=${userTypeId}`);
   }
 
   getUserTypes() {
@@ -48,11 +53,19 @@ export class ApiService {
     return this.http.get<any>(`${this.finishedGoodUrl}getAllFinishedGoods`);
   }
 
+  getallFinishedGoodsByType(goodTypeId: number) {
+    return this.http.get<any>(`${this.finishedGoodUrl}getAllFinishedGoods?goodTypeId=${goodTypeId}`);
+  }
+
   createFinishedGoodType(obj: any) {
     return this.http.post<any>(`${this.finishedGoodUrl}FinishGoodType`, obj)
   }
 
   getFinishGoodTypes() {
     return this.http.get<any>(`${this.finishedGoodUrl}getAllFinishGoodTypes`);
+  }
+
+  createSalesRequisitionWithDetails(obj: any) {
+    return this.http.post<any>(`${this.SalesRequisitionUrl}createSalesRequisitionWithDetail`, obj)
   }
 }

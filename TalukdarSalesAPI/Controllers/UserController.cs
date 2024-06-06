@@ -163,10 +163,11 @@ namespace TalukdarSalesAPI.Controllers
 
         }
 
-        [Authorize]
         [HttpGet]
-        public ActionResult<User> GetAllUsers()
+        public ActionResult<User> GetAllUsers(int? userTypeId)
         {
+            if (userTypeId != null)
+                return Ok(_userRepository.GetAll().Where(n => n.UserTypeId == userTypeId).ToList());
             return Ok(_userRepository.GetAll());
         }
 

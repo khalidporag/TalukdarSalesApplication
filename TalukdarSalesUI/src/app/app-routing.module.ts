@@ -8,6 +8,7 @@ import { RoleComponent } from './components/role/role.component';
 import { ProductComponent } from './components/product/product.component';
 import { ProductTypeComponent } from './components/product-type/product-type.component';
 import { ModuleSetupComponent } from './components/module-setup/module-setup.component';
+import { SalesRequisitionComponent } from './components/sales-requisition/sales-requisition.component';
 
 const routes: Routes = [
   {path:'', redirectTo:'login', pathMatch:'full'},
@@ -19,6 +20,8 @@ const routes: Routes = [
   {path: 'product', component: ProductComponent},
   {path: 'product-type', component: ProductTypeComponent},
   {path: 'module-setup', component: ModuleSetupComponent},
+  {path: 'sales-requisition', component: SalesRequisitionComponent},
+
 
 ];
 

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Project.Run.Repositories;
 using TalukdarSalesAPI.Interfaces;
 using TalukdarSalesAPI.Models;
 
@@ -44,7 +45,7 @@ namespace TalukdarSalesAPI.Controllers
         {
             if (finishedGoodObj == null)
                 return BadRequest();
-
+            finishedGoodObj.IsActive = true;
             _finishedGoodsRepository.Add(finishedGoodObj);
             _finishedGoodsRepository.Commit();
             return Ok(new
@@ -55,8 +56,10 @@ namespace TalukdarSalesAPI.Controllers
         }
 
         [HttpGet("getAllFinishedGoods")]
-        public ActionResult<FinishedGood> GetAllFinishedGoods()
+        public ActionResult<FinishedGood> GetAllFinishedGoods(int? goodTypeId)
         {
+            if (goodTypeId != null)
+                return Ok(_finishedGoodsRepository.GetAll().Where(n => n.GoodTypeId == goodTypeId).ToList());
             return Ok(_finishedGoodsRepository.GetAll());
         }
     }
