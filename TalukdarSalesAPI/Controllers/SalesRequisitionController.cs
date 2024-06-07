@@ -13,14 +13,17 @@ namespace TalukdarSalesAPI.Controllers
         private readonly ISalesRequisitionRepository _salesRequisitionRepository;
         private readonly ISalesRequisitionDetailRepository _salesRequisitionDetailRepository;
         private readonly IFinishedGoodsRepository _finishedGoodsRepository;
+        private readonly IUserRepository _userRepository;
 
         public SalesRequisitionController(ISalesRequisitionRepository salesRequisitionRepository,
             ISalesRequisitionDetailRepository salesRequisitionDetailRepository,
-            IFinishedGoodsRepository finishedGoodsRepository)
+            IFinishedGoodsRepository finishedGoodsRepository,
+            IUserRepository userRepository)
         {
             _salesRequisitionRepository = salesRequisitionRepository;
             _salesRequisitionDetailRepository = salesRequisitionDetailRepository;
             _finishedGoodsRepository = finishedGoodsRepository;
+            _userRepository = userRepository;
         }
 
         [HttpPost("createSalesRequisitionWithDetail")]
@@ -32,6 +35,7 @@ namespace TalukdarSalesAPI.Controllers
             var addRequisition = new SalesRequisition();
             addRequisition.UserId = salesRequisitionWithDetailObj.UserId;
             addRequisition.CreatedDateTime = DateTime.UtcNow;
+            addRequisition.IsActive = true;
 
             _salesRequisitionRepository.Add(addRequisition);
             _salesRequisitionRepository.Commit();
@@ -55,9 +59,9 @@ namespace TalukdarSalesAPI.Controllers
                 requistionDetail.FinishedGoodId = (int)detail?.FinishedGoodId;
                 requistionDetail.Quantity = (int)detail?.Quantity;
                 requistionDetail.Price = (int)detail?.Price;
-                requistionDetail.IsActive = true;
 
-                requistionDetailsList.Add(requistionDetail);
+                if(requistionDetail.Quantity > 0)
+                    requistionDetailsList.Add(requistionDetail);
             }
 
             _salesRequisitionDetailRepository.AddRange(requistionDetailsList);
@@ -90,6 +94,31 @@ namespace TalukdarSalesAPI.Controllers
         {
             return Ok(_salesRequisitionRepository.GetAll());
         }
+
+        [HttpGet("getSalesRequisitionList")]
+        public ActionResult<SalesRequisition> GetSalesRequisitionList(bool? isActive, int? userId, string requisitionNo)
+        {
+            var userList = _userRepository.GetAll().ToDictionary(n => n.Id);
+            var requisitionList = _salesRequisitionRepository.GetAll();
+            if (isActive != null)
+                requisitionList = requisitionList.Where(n => n.IsActive == isActive);
+            if(userId != null)
+                requisitionList = requisitionList.Where(n => n.UserId == userId);
+            if(requisitionNo != null)
+                requisitionList = requisitionList.Where(n => n.RequisitionSerial == requisitionNo);
+           var result =  requisitionList.AsEnumerable().Select(s => new SalesRequisitionInfoDto
+            {
+                Id = s.Id,
+                RequisitionSerial = s.RequisitionSerial,
+                UserId = s.UserId,
+                UserName = userList.ContainsKey(s.UserId) ? userList[s.UserId].FirstName + " " + userList[s.UserId].LastName : "",
+                CreatedDateTime = s.CreatedDateTime,
+                IsActive = s.IsActive
+            }).ToList();
+
+            return Ok(result);
+        }
+
 
         [HttpPost("createSalesRequisitionDetail")]
         public IActionResult CreateSalesRequisitionDetail([FromBody] SalesRequisitionDetail salesRequisitionDetailObj)

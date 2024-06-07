@@ -68,4 +68,17 @@ export class ApiService {
   createSalesRequisitionWithDetails(obj: any) {
     return this.http.post<any>(`${this.SalesRequisitionUrl}createSalesRequisitionWithDetail`, obj)
   }
+
+  getSalesRequisitionList(param1?: boolean, param2?: number, param3?: string) {
+    let params: any = {};
+  
+    if (param1 !== undefined) params.isActive = param1;
+    if (param2 !== undefined) params.userId = param2;
+    if (param3 !== undefined && param3 !== null) params.requisitionNo = param3;
+  
+    const queryString = new URLSearchParams(params).toString();
+  
+    return this.http.get<any>(`${this.SalesRequisitionUrl}getSalesRequisitionList?${queryString}`);
+  }
+  
 }
