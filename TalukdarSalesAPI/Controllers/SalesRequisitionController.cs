@@ -96,7 +96,7 @@ namespace TalukdarSalesAPI.Controllers
         }
 
         [HttpGet("getSalesRequisitionList")]
-        public ActionResult<SalesRequisition> GetSalesRequisitionList(bool? isActive, int? userId, string requisitionNo)
+        public ActionResult<SalesRequisitionInfoDto> GetSalesRequisitionList(bool? isActive, int? userId, string requisitionNo)
         {
             var userList = _userRepository.GetAll().ToDictionary(n => n.Id);
             var requisitionList = _salesRequisitionRepository.GetAll();
@@ -105,7 +105,7 @@ namespace TalukdarSalesAPI.Controllers
             if(userId != null)
                 requisitionList = requisitionList.Where(n => n.UserId == userId);
             if(requisitionNo != null)
-                requisitionList = requisitionList.Where(n => n.RequisitionSerial == requisitionNo);
+                requisitionList = requisitionList.Where(n => n.RequisitionSerial.Contains(requisitionNo));
            var result =  requisitionList.AsEnumerable().Select(s => new SalesRequisitionInfoDto
             {
                 Id = s.Id,

@@ -93,5 +93,12 @@ export class ApiService {
   createSalesInvoiceWithDetails(obj: any) {
     return this.http.post<any>(`${this.SalesInvoiceUrl}createSalesInvoiceWithDetails`, obj)
   }
+
+  getSalesInvoiceList(param1?: number) {
+    let params: any = {};
+    if (param1 !== undefined) params.userId = param1;
+    const queryString = new URLSearchParams(params).toString();
+    return this.http.get<any>(`${this.SalesInvoiceUrl}getSalesInvoiceList?${queryString}`);
+  }
   
 }
