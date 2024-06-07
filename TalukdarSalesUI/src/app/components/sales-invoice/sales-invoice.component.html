@@ -25,16 +25,17 @@
                 </tr>
             </thead>
             <tbody>
-                <tr *ngFor="let requisition of requisitionDetailsList">
+                <tr *ngFor="let requisition of requisitionDetailsList; let i = index">
                     <td>{{ requisition.finishedGoodName }}</td>
                     <td>{{ requisition.quantity }}</td>
-                    <td><input type="number" [(ngModel)]="invoiceDetail.quantity"></td>
+                    <td><input type="number" [(ngModel)]="invoiceDetail[i].quantity"></td>
                     <td>{{ requisition.price }}</td>
-                    <td><input type="number" [value]="requisition.price*invoiceDetail.quantity" [(ngModel)]="invoiceDetail.price"></td>
+                    <td><input type="number" [value]="requisition.price * invoiceDetail[i].quantity" [(ngModel)]="invoiceDetail[i].price"></td>
                 </tr>
             </tbody>
         </table>
     </div>
+    
     <div class="submit-button">
         <button type="button" (click)="submitInvoice()">Submit</button>
     </div>
