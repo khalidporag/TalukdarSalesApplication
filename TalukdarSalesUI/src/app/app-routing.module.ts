@@ -10,6 +10,7 @@ import { ProductTypeComponent } from './components/product-type/product-type.com
 import { ModuleSetupComponent } from './components/module-setup/module-setup.component';
 import { SalesRequisitionComponent } from './components/sales-requisition/sales-requisition.component';
 import { RequisitionListComponent } from './components/requisition-list/requisition-list.component';
+import { SalesInvoiceComponent } from './components/sales-invoice/sales-invoice.component';
 
 const routes: Routes = [
   {path:'', redirectTo:'login', pathMatch:'full'},
@@ -23,6 +24,7 @@ const routes: Routes = [
   {path: 'module-setup', component: ModuleSetupComponent},
   {path: 'sales-requisition', component: SalesRequisitionComponent},
   {path: 'requisition-list', component: RequisitionListComponent},
+  {path: 'sales-invoice', component: SalesInvoiceComponent},
 
 
 ];

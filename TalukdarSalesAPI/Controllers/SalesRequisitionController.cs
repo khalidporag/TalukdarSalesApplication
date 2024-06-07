@@ -119,6 +119,25 @@ namespace TalukdarSalesAPI.Controllers
             return Ok(result);
         }
 
+        [HttpGet("getSalesRequisitionDetailsList")]
+        public ActionResult<SalesRequisitionDetailsDto> GetSalesRequisitionDetailsList(int? requisitionId)
+        {
+            if (requisitionId == null)
+                return BadRequest();
+            var finishedGoodList = _finishedGoodsRepository.GetAll().AsEnumerable().ToDictionary(n => n.Id);
+            var requisitionDetailsList = _salesRequisitionDetailRepository.GetAll().Where(n => n.SalesRequisitionId == requisitionId).Select(s =>
+            new SalesRequisitionDetailsDto
+            {
+                SalesRequisitionId = s.SalesRequisitionId,
+                CreatedDateTime = s.CreatedDateTime,
+                FinishedGoodId = s.FinishedGoodId,
+                FinishedGoodName = finishedGoodList.ContainsKey((int)s.FinishedGoodId)? finishedGoodList[s.FinishedGoodId].Name : "",
+                Quantity = s.Quantity,
+                Price = s.Price
+            }).ToList();
+            return Ok(requisitionDetailsList);
+        }
+
 
         [HttpPost("createSalesRequisitionDetail")]
         public IActionResult CreateSalesRequisitionDetail([FromBody] SalesRequisitionDetail salesRequisitionDetailObj)

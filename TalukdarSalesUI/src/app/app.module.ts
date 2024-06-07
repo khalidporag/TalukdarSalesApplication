@@ -20,6 +20,7 @@ import { ProductTypeComponent } from './components/product-type/product-type.com
 import { ModuleSetupComponent } from './components/module-setup/module-setup.component';
 import { SalesRequisitionComponent } from './components/sales-requisition/sales-requisition.component';
 import { RequisitionListComponent } from './components/requisition-list/requisition-list.component';
+import { SalesInvoiceComponent } from './components/sales-invoice/sales-invoice.component';
 
 @NgModule({
   declarations: [
@@ -35,7 +36,8 @@ import { RequisitionListComponent } from './components/requisition-list/requisit
     ProductTypeComponent,
     ModuleSetupComponent,
     SalesRequisitionComponent,
-    RequisitionListComponent
+    RequisitionListComponent,
+    SalesInvoiceComponent
   ],
   imports: [
     BrowserModule,

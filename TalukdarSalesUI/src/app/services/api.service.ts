@@ -9,6 +9,8 @@ export class ApiService {
   private roleUrl: string = 'https://localhost:7019/api/Role/';
   private finishedGoodUrl: string = 'https://localhost:7019/api/FinishedGood/';
   private SalesRequisitionUrl: string = 'https://localhost:7019/api/SalesRequisition/';
+  private SalesInvoiceUrl: string = 'https://localhost:7019/api/SalesInvoice/';
+
 
 
   constructor(private http: HttpClient) {}
@@ -79,6 +81,17 @@ export class ApiService {
     const queryString = new URLSearchParams(params).toString();
   
     return this.http.get<any>(`${this.SalesRequisitionUrl}getSalesRequisitionList?${queryString}`);
+  }
+
+  getSalesRequisitionDetailsList(param1?: number) {
+    let params: any = {};
+    if (param1 !== undefined) params.requisitionId = param1;
+    const queryString = new URLSearchParams(params).toString();
+    return this.http.get<any>(`${this.SalesRequisitionUrl}getSalesRequisitionDetailsList?${queryString}`);
+  }
+
+  createSalesInvoiceWithDetails(obj: any) {
+    return this.http.post<any>(`${this.SalesInvoiceUrl}createSalesInvoiceWithDetails`, obj)
   }
   
 }

@@ -43,14 +43,6 @@ export class RequisitionListComponent implements OnInit {
     this.getUsers();
   }
 
-  // getRequisitionList(){
-  //   this.api.getSalesRequisitionList()
-  //   .subscribe(res=>{
-  //   this.requisitionList = res;
-  //   console.log(this.requisitionList);
-  //   });
-  // }
-
   getRequisitionList() {
     this.api.getSalesRequisitionList(this.selectedStatus, this.selectedUser, this.requisitionNo)
     .subscribe(res => {
@@ -84,47 +76,7 @@ export class RequisitionListComponent implements OnInit {
     });
   }
 
-  private createInit(): void {
-    this.createProductTypeForm = this.fb.group({
-      name:['', Validators.required]
-    });
-  }
-
-  openRoleModal() {
-    // this.modalService.open('modal-1');
-    this.createModal = true;
-    this.submitting = false;
-    this.getUserTypes();
-    this.createInit();
-  }
-
-  closeModal(){
-    this.createModal = false;
-    this.submitting = false;
-  }
-
   onCreateNew(): void {
     this.router.navigate(['/sales-requisition']);
-  }
-
-  onSubmit(){
-    if (this.createProductTypeForm.valid) {
-      this.submitting = true;
-      this.api.createFinishedGoodType(this.createProductTypeForm.value).subscribe({
-        next: (res) => {
-          this.createProductTypeForm.reset();
-          this.toast.success({detail:"SUCCESS", summary:res.message, duration: 5000});
-          this.closeModal();
-          this.getProductTypes();
-        },
-        error: (err) => {
-          this.toast.error({detail:"ERROR", summary:"Something when wrong!", duration: 5000});
-          console.log(err);
-          this.closeModal();
-        },
-      });
-    } else {
-      ValidateForm.validateAllFormFields(this.createProductTypeForm);
-    }
   }
 }
