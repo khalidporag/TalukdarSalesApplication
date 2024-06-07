@@ -130,8 +130,24 @@ namespace TalukdarSalesAPI.Controllers
             });
         }
 
+        [HttpPost("collectInvoiceAmount")]
+        public IActionResult ColllectInvoiceAmount([FromBody] CollectAmountDto collectAmountObj)
+        {
+            if (collectAmountObj == null)
+                return BadRequest();
+            var invoiceInfo = _salesInvoiceRepository.GetSingle((int)collectAmountObj?.SalesInvoiceId);
+            invoiceInfo.CollectionAmount = invoiceInfo.CollectionAmount + (double)collectAmountObj.CollectionAmount;
+            _salesInvoiceRepository.Update(invoiceInfo);
+            _salesInvoiceRepository.Commit();
+            return Ok(new
+            {
+                Status = 200,
+                Message = "Sales Invoice Created!"
+            });
+        }
+
         [HttpGet("getSalesInvoiceList")]
-        public ActionResult<SalesInvoiceDto> GetSalesInvoiceList(int? userId)
+        public ActionResult<SalesInvoice> GetSalesInvoiceList(int? userId)
         {
             var userList = _userRepository.GetAll().ToDictionary(n => n.Id);
             var requisitionList = _salesRequisitioinRepository.GetAll().ToDictionary(n => n.Id);

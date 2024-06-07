@@ -39,3 +39,29 @@
         <button type="button" (click)="submitInvoice()">Submit</button>
     </div>
 </div>
+
+<!-- <div>
+            
+    <modal *ngIf="collectionModal" >
+        <div class="modal-header">
+            <h5 class="modal-title">Collect Amount</h5>
+            <button type="button" class="btn-close" (click)="closeModal()"></button>
+        </div>
+        <div class="modal-body">
+            <form (ngSubmit)="onSubmit()" [formGroup]="createCollectionForm">
+                <div class="form-group pt-3">
+                    <div class="input-field" [class.error]="createCollectionForm.controls['firstName'].dirty && createUserForm.hasError('required','firstName')"> 
+                        <span class="fa fa-user p-2"></span> 
+                        <input formControlName="firstName" type="text" placeholder="First Name"> </div>
+                </div>
+                <small *ngIf="createCollectionForm.controls['firstName'].dirty && createCollectionForm.hasError('required','firstName')" class="text-danger">*First Name is required*</small>
+                <button *ngIf="!submitting" type="submit" class="btn btn-primary btn-block mt-4 w-100">Submit</button>
+                <button type="button" class="btn btn-primary" *ngIf="submitting">
+                    <i class="fas fa-spinner fa-pulse"></i>
+                </button>
+            </form>
+        </div>
+    </modal>
+    
+ 
+</div> -->

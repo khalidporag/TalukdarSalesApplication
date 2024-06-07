@@ -12,7 +12,7 @@
         public double? TotalPrice { get; set; }
         public double? DiscountAmount { get; set; }
         public double? DiscountPercentage { get; set; }
-        public int? CollectionAmount { get; set; }
+        public double? CollectionAmount { get; set; }
         public List<SalesInvoiceDetailsDto> SalesInvoiceDetails { get; set; }
     }
 }
