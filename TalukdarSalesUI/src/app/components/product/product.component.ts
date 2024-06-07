@@ -19,7 +19,7 @@ export class ProductComponent implements OnInit {
   createModal: boolean = false;
   submitting: boolean = false;
   bodyText = 'This text can be updated in modal 1';
-
+  selectedProductType: any;
   constructor(
     private api : ApiService,
     private modalService1: NzModalService,
@@ -54,7 +54,8 @@ export class ProductComponent implements OnInit {
       name:['', Validators.required],
       uOM:['', Validators.required],
       finishedGoodTypeId:[null, Validators.required],
-      description:['', Validators.required]
+      description:['', Validators.required],
+      unitPrice:['', Validators.required]
     });
   }
 
@@ -74,7 +75,14 @@ export class ProductComponent implements OnInit {
   onSubmit(){
     if (this.createFinishedGoodForm.valid) {
       this.submitting = true;
-      this.api.createFinishedGood(this.createFinishedGoodForm.value).subscribe({
+      let product = {
+        name: this.createFinishedGoodForm.value.name,
+        uom: this.createFinishedGoodForm.value.uOM,
+        goodTypeId: this.selectedProductType,
+        description: this.createFinishedGoodForm.value.description,
+        unitPrice: this.createFinishedGoodForm.value.unitPrice
+      }
+      this.api.createFinishedGood(product).subscribe({
         next: (res) => {
           this.createFinishedGoodForm.reset();
           this.toast.success({detail:"SUCCESS", summary:res.message, duration: 5000});

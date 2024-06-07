@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Project.Run.Repositories;
 using TalukdarSalesAPI.Interfaces;
 using TalukdarSalesAPI.Models;
 using TalukdarSalesAPI.Models.Dto;
@@ -14,15 +15,19 @@ namespace TalukdarSalesAPI.Controllers
         private readonly ISalesInvoiceRepository _salesInvoiceRepository;
         private readonly ISalesInvoiceDetailsRepository _salesInvoiceDetailsRepository;
         private readonly ISalesRequisitionRepository _salesRequisitioinRepository;
+        private readonly IUserRepository _userRepository;
+
         public SalesInvoiceController(ICollectionLedgerRepository collectionLedgerRepository,
             ISalesInvoiceRepository salesInvoiceRepository,
             ISalesInvoiceDetailsRepository salesInvoiceDetailsRepository,
-            ISalesRequisitionRepository salesRequisitioinRepository)
+            ISalesRequisitionRepository salesRequisitioinRepository,
+            IUserRepository userRepository)
         {
             _collectionLedgerRepository = collectionLedgerRepository;
             _salesInvoiceRepository = salesInvoiceRepository;
             _salesInvoiceDetailsRepository = salesInvoiceDetailsRepository;
             _salesRequisitioinRepository = salesRequisitioinRepository;
+            _userRepository = userRepository;
 
         }
         [HttpPost("createCollectionLedger")]
@@ -123,6 +128,30 @@ namespace TalukdarSalesAPI.Controllers
                 Status = 200,
                 Message = "Sales Invoice Created!"
             });
+        }
+
+        [HttpGet("getSalesInvoiceList")]
+        public ActionResult<SalesInvoiceDto> GetSalesInvoiceList(int? userId)
+        {
+            var userList = _userRepository.GetAll().ToDictionary(n => n.Id);
+            var requisitionList = _salesRequisitioinRepository.GetAll().ToDictionary(n => n.Id);
+            var invoiceList = _salesInvoiceRepository.GetAll();
+            if (userId != null)
+                invoiceList = invoiceList.Where(n => n.UserId == userId);
+
+            var result = invoiceList.AsEnumerable().Select(s => new SalesInvoiceDto
+            {
+                Id = s.Id,
+                SalesRequisitionId = s.SalesRequisitionId,
+                SalesRequisitionNo = requisitionList.ContainsKey(s.SalesRequisitionId)? requisitionList[s.SalesRequisitionId].RequisitionSerial : " ",
+                UserId = s.UserId,
+                UserName = userList.ContainsKey(s.UserId) ? userList[s.UserId].FirstName + " " + userList[s.UserId].LastName : "",
+                TotalPrice = s.TotalPrice,
+                CollectionAmount = s.CollectionAmount,
+                CreatedDateTime = s.CreatedDateTime,
+            }).ToList();
+
+            return Ok(result);
         }
 
         [HttpGet("getAllSalesInvoice")]

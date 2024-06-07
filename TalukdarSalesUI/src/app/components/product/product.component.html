@@ -51,12 +51,18 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
                             <div class="input-field" [class.error]="createFinishedGoodForm.controls['uOM'].dirty && createFinishedGoodForm.hasError('required','uOM')"> <span class="fa fa-user p-2"></span> <input formControlName="uOM" type="text" placeholder="Unit of Measurement"> </div>
                         </div>
                         <small *ngIf="createFinishedGoodForm.controls['uOM'].dirty && createFinishedGoodForm.hasError('required','uOM')" class="text-danger">*UOM is required*</small>
+                        
+                        <div class="form-group pt-3">
+                            <div class="input-field" [class.error]="createFinishedGoodForm.controls['unitPrice'].dirty && createFinishedGoodForm.hasError('required','unitPrice')"> <span class="fa fa-user p-2"></span> <input formControlName="unitPrice" type="text" placeholder="Unit Price"> </div>
+                        </div>
+                        <small *ngIf="createFinishedGoodForm.controls['unitPrice'].dirty && createFinishedGoodForm.hasError('required','unitPrice')" class="text-danger">*Unit price is required*</small>
+
                         <div class="form-group pt-3">
                             <div class="input-field" [class.error]="createFinishedGoodForm.controls['finishedGoodTypeId'].dirty && createFinishedGoodForm.controls['finishedGoodTypeId'].hasError('required')">
                               <span class="fa fa-user p-2"></span>
                               <select formControlName="finishedGoodTypeId" class="form-control">
                                 <option value=null disabled>Select Product Type</option>
-                                <option *ngFor="let type of finishedGoodTypes" [value]="type.id">{{ type.name }}</option>
+                                <option *ngFor="let type of finishedGoodTypes" [(ngModel)]="selectedProductType" [value]="type.id">{{ type.name }}</option>
                               </select>
                             </div>
                           </div>
