@@ -18,13 +18,13 @@ export class InvoiceListComponent implements OnInit {
   selectedStatus: any;
   selectedUser: any;
   requisitionNo: string = '';
-
+  selectedInvoiceId: any;
   public productTypes:any = [];
   public invoiceList:any = [];
   public userTypes:any = [];
   public users:any = [];
-  public createProductTypeForm!: FormGroup;
-  createModal: boolean = false;
+  public createCollectionForm!: FormGroup;
+  createCollectionModal: boolean = false;
   submitting: boolean = false;
   bodyText = 'This text can be updated in modal 1';
 
@@ -80,5 +80,50 @@ export class InvoiceListComponent implements OnInit {
 
   onCreateNew(): void {
     this.router.navigate(['/sales-requisition']);
+  }
+
+  openCollectionModal(id: any) {
+    this.selectedInvoiceId = id;
+    this.createCollectionModal = true;
+    this.submitting = false;
+    this.createInit();
+  }
+
+    private createInit(): void {
+    this.createCollectionForm = this.fb.group({
+      collectionAmount:[null, Validators.required],
+      paymentMethod:['', Validators.required]
+    });
+  }
+
+  closeModal(){
+    this.createCollectionModal = false;
+    this.submitting = false;
+  }
+
+  onSubmit(){
+    if (this.createCollectionForm.valid) {
+      this.submitting = true;
+      var collectionData = {
+        salesInvoiceId: this.selectedInvoiceId,
+        collectionAmount: this.createCollectionForm.value.collectionAmount,
+        paymentMethod: this.createCollectionForm.value.paymentMethod
+      }
+      this.api.collectInvoiceAmount(collectionData).subscribe({
+        next: (res) => {
+          this.createCollectionForm.reset();
+          this.toast.success({detail:"SUCCESS", summary:res.message, duration: 5000});
+          this.closeModal();
+          this.getInvoiceList();
+        },
+        error: (err) => {
+          this.toast.error({detail:"ERROR", summary:"Something when wrong!", duration: 5000});
+          console.log(err);
+          this.closeModal();
+        },
+      });
+    } else {
+      ValidateForm.validateAllFormFields(this.createCollectionForm);
+    }
   }
 }

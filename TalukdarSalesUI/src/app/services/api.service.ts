@@ -94,6 +94,10 @@ export class ApiService {
     return this.http.post<any>(`${this.SalesInvoiceUrl}createSalesInvoiceWithDetails`, obj)
   }
 
+  collectInvoiceAmount(obj: any) {
+    return this.http.post<any>(`${this.SalesInvoiceUrl}collectInvoiceAmount`, obj)
+  }
+
   getSalesInvoiceList(param1?: number) {
     let params: any = {};
     if (param1 !== undefined) params.userId = param1;

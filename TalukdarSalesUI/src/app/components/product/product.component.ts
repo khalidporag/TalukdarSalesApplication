@@ -78,7 +78,7 @@ export class ProductComponent implements OnInit {
       let product = {
         name: this.createFinishedGoodForm.value.name,
         uom: this.createFinishedGoodForm.value.uOM,
-        goodTypeId: this.selectedProductType,
+        goodTypeId: this.createFinishedGoodForm.value.finishedGoodTypeId,
         description: this.createFinishedGoodForm.value.description,
         unitPrice: this.createFinishedGoodForm.value.unitPrice
       }

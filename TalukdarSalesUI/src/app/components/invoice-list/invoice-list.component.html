@@ -31,8 +31,12 @@
                       <td>{{invoice.createdDateTime}}</td>
                       <td>
                         <tr>
-                            <td><button>Collection History</button></td>
-                            <td><button>Collect Amount</button></td>
+                            <td><a>Collection History
+                                <i class="fa fa-history"></i>
+                            </a></td>
+                            <td><a (click)="openCollectionModal(invoice.id)">Collect Amount 
+                                <i class="fa fa-credit-card"></i>
+                            </a></td>
                         </tr>
                       <td>
                   </tr>
@@ -42,3 +46,36 @@
       </div>
     </div>
     
+    <div>
+            
+        <modal id="collectionModal" *ngIf="createCollectionModal" >
+            <div class="modal-header">
+                <h5 class="modal-title">Collect Amount</h5>
+                <button type="button" class="btn-close" (click)="closeModal()"></button>
+            </div>
+            <div class="modal-body">
+                <form (ngSubmit)="onSubmit()" [formGroup]="createCollectionForm">
+                    <div class="form-group pt-3">
+                        <div class="input-field" [class.error]="createCollectionForm.controls['collectionAmount'].dirty && createCollectionForm.hasError('required','collectionAmount')"> 
+                            <span class="fa fa-user p-2"></span> 
+                            <input formControlName="collectionAmount" type="text" placeholder="Collection Amount"> </div>
+                    </div>
+                    <small *ngIf="createCollectionForm.controls['collectionAmount'].dirty && createCollectionForm.hasError('required','collectionAmount')" class="text-danger">*Collection Amount is required*</small>
+                    <div class="form-group pt-3">
+                        <div class="input-field" [class.error]="createCollectionForm.controls['paymentMethod'].dirty && createCollectionForm.hasError('required','paymentMethod')"> <span class="fa fa-user p-2"></span> <input formControlName="paymentMethod" type="text" placeholder="Payment Method"> </div>
+                    </div>
+                    <small *ngIf="createCollectionForm.controls['paymentMethod'].dirty && createCollectionForm.hasError('required','paymentMethod')" class="text-danger">*Payment Method is required*</small>
+                    
+                    <!-- <div class="form-group pt-3">
+                        <div class="input-field" [class.error]="createCollectionForm.controls['unitPrice'].dirty && createCollectionForm.hasError('required','unitPrice')"> <span class="fa fa-user p-2"></span> <input formControlName="unitPrice" type="text" placeholder="Unit Price"> </div>
+                    </div>
+                    <small *ngIf="createCollectionForm.controls['unitPrice'].dirty && createCollectionForm.hasError('required','unitPrice')" class="text-danger">*Unit price is required*</small> -->
+
+                    <button *ngIf="!submitting" type="submit" class="btn btn-primary btn-block mt-4 w-100">Save</button>
+                    <button type="button" class="btn btn-primary" *ngIf="submitting">
+                        <i class="fas fa-spinner fa-pulse"></i>
+                    </button>
+                </form>
+            </div>
+        </modal>
+    </div>

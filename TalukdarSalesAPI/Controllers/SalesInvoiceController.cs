@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Project.Run.Repositories;
 using TalukdarSalesAPI.Interfaces;
 using TalukdarSalesAPI.Models;
@@ -84,6 +85,11 @@ namespace TalukdarSalesAPI.Controllers
 
             if(createSalesInvoice?.Id != null)
             {
+                var userInfo = _userRepository.GetSingle(createSalesInvoice.UserId);
+                userInfo.DueAmount = (decimal)createSalesInvoice?.TotalPrice;
+                _userRepository.Update(userInfo);
+                _userRepository.Commit();
+
                 foreach (var details in salesInvoiceObj.SalesInvoiceDetails)
                 {
                     var invoiceDetails = new SalesInvoiceDetails();
@@ -139,10 +145,26 @@ namespace TalukdarSalesAPI.Controllers
             invoiceInfo.CollectionAmount = invoiceInfo.CollectionAmount + (double)collectAmountObj.CollectionAmount;
             _salesInvoiceRepository.Update(invoiceInfo);
             _salesInvoiceRepository.Commit();
+
+            var collectionLedger = new CollectionLedger();
+            collectionLedger.UserId = (int)invoiceInfo?.UserId;
+            collectionLedger.SalesInvoiceId = (int)collectAmountObj?.SalesInvoiceId;
+            collectionLedger.CollectionAmount = (double)collectAmountObj?.CollectionAmount;
+            collectionLedger.PaymentMethod = collectAmountObj?.PaymentMethod;
+            _collectionLedgerRepository.Add(collectionLedger);
+            _collectionLedgerRepository.Commit();
+
+            if(collectionLedger?.Id != null)
+            {
+                var userInfo = _userRepository.GetSingle(collectionLedger.UserId);
+                userInfo.DueAmount = userInfo.DueAmount - (decimal)collectionLedger?.CollectionAmount;
+                _userRepository.Update(userInfo);
+                _userRepository.Commit();
+            }
             return Ok(new
             {
                 Status = 200,
-                Message = "Sales Invoice Created!"
+                Message = "Amount Collected!"
             });
         }
 
