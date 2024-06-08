@@ -48,6 +48,13 @@ export class CollectionHistoryComponent implements OnInit {
   }
 
   getCollectionList(){
+    if(this.selectedInvoice == null)
+      {
+        this.api.getCollectionHistory(this.selectedUser)
+    .subscribe(res=>{
+    this.collectionHistory = res;
+    });
+      }
     this.api.getCollectionHistory(this.selectedUser, this.selectedInvoice)
     .subscribe(res=>{
     this.collectionHistory = res;
