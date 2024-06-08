@@ -15,6 +15,8 @@ import { ModalService } from 'src/app/services/modal.service';
 })
 export class InvoiceListComponent implements OnInit {
 
+  public collectionHistory:any = [];
+
   selectedStatus: any;
   selectedUser: any;
   requisitionNo: string = '';
@@ -99,6 +101,10 @@ export class InvoiceListComponent implements OnInit {
   closeModal(){
     this.createCollectionModal = false;
     this.submitting = false;
+  }
+
+  getCollectionList(){
+    this.router.navigate(['/collection-history']);
   }
 
   onSubmit(){

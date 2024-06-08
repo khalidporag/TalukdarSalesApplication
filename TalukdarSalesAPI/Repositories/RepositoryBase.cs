@@ -72,7 +72,7 @@ namespace TalukdarSalesAPI.Repositories
 
         public virtual void Add(T entity)
         {
-            entity.CreatedOn = DateTime.UtcNow;
+            entity.CreatedOn = DateTime.Now;
             entity.IsDeleted = false;
             EntityEntry dbEntityEntry = _context.Entry<T>(entity);
             _context.Set<T>().Add(entity);
@@ -82,7 +82,7 @@ namespace TalukdarSalesAPI.Repositories
         {
             foreach (var entity in entities)
             {
-                entity.CreatedOn = DateTime.UtcNow;
+                entity.CreatedOn = DateTime.Now;
                 entity.IsDeleted = false;
                 _context.Entry<T>(entity).State = EntityState.Added;
             }
@@ -91,7 +91,7 @@ namespace TalukdarSalesAPI.Repositories
 
         public virtual void Update(T entity)
         {
-            entity.ModifiedOn = DateTime.UtcNow;
+            entity.ModifiedOn = DateTime.Now;
             EntityEntry dbEntityEntry = _context.Entry<T>(entity);
             dbEntityEntry.State = EntityState.Modified;
         }
@@ -99,7 +99,7 @@ namespace TalukdarSalesAPI.Repositories
         public virtual void Delete(T entity)
         {
             entity.IsDeleted = true;
-            entity.DeletedOn = DateTime.UtcNow;
+            entity.DeletedOn = DateTime.Now;
             EntityEntry dbEntityEntry = _context.Entry<T>(entity);
             dbEntityEntry.State = EntityState.Modified;
         }
@@ -111,7 +111,7 @@ namespace TalukdarSalesAPI.Repositories
             foreach (var entity in entities)
             {
                 entity.IsDeleted = true;
-                entity.DeletedOn = DateTime.UtcNow;
+                entity.DeletedOn = DateTime.Now;
                 _context.Entry<T>(entity).State = EntityState.Modified;
             }
         }

@@ -104,5 +104,13 @@ export class ApiService {
     const queryString = new URLSearchParams(params).toString();
     return this.http.get<any>(`${this.SalesInvoiceUrl}getSalesInvoiceList?${queryString}`);
   }
+
+  getCollectionHistory(param1?: number, param2?: number) {
+    let params: any = {};
+    if (param1 !== undefined) params.userId = param1;
+    if (param2 !== undefined) params.salesInvoiceId = param2;
+    const queryString = new URLSearchParams(params).toString();
+    return this.http.get<any>(`${this.SalesInvoiceUrl}getCollectionHistory?${queryString}`);
+  }
   
 }

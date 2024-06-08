@@ -14,6 +14,7 @@
                   <tr>
                       <th scope="col">#</th>
                       <th scope="col">Invoice For</th>
+                      <th scope="col">Invoice Number</th>
                       <th scope="col">Requisition Serial</th>
                       <th scope="col">Total Amount</th>
                       <th scope="col">Collection Amount</th>
@@ -25,13 +26,14 @@
                   <tr *ngFor="let invoice of invoiceList; let i= index">
                       <td>{{i+1}}</td>
                       <td>{{invoice.userName}}</td>
+                      <td>{{invoice.invoiceNumber}}</td>
                       <td>{{invoice.salesRequisitionNo}}</td>
                       <td>{{invoice.totalPrice}}</td>
                       <td>{{invoice.collectionAmount}}</td>
                       <td>{{invoice.createdDateTime}}</td>
                       <td>
                         <tr>
-                            <td><a>Collection History
+                            <td><a (click)="getCollectionList()" >Collection History
                                 <i class="fa fa-history"></i>
                             </a></td>
                             <td><a (click)="openCollectionModal(invoice.id)">Collect Amount 

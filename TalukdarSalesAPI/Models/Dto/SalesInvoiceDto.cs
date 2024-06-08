@@ -3,6 +3,7 @@
     public class SalesInvoiceDto
     {
         public int Id { get; set; }
+        public string InvoiceNumber { get; set; }
         public int? SalesRequisitionId { get; set; }
         public string SalesRequisitionNo { get; set; }
         public DateTime? CreatedDateTime { get; set; }

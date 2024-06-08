@@ -52,6 +52,32 @@ namespace TalukdarSalesAPI.Controllers
             return Ok(_collectionLedgerRepository.GetAll());
         }
 
+        [HttpGet("getCollectionHistory")]
+        public ActionResult<CollectionLedgerDto> GetCollectionHistory(int? userId, int? salesInvoiceId)
+        {
+            var invoiceList = _salesInvoiceRepository.GetAll().ToDictionary(n => n.Id);
+            var allCollection = _collectionLedgerRepository.GetAll();
+            if(userId != null)
+            {
+                allCollection = allCollection.Where(n => n.UserId == userId);
+            }
+            if (salesInvoiceId != null)
+            {
+                allCollection = allCollection.Where(n => n.SalesInvoiceId == salesInvoiceId);
+            }
+            var collectionHistory = allCollection.AsEnumerable().Select(s => new CollectionLedgerDto
+            {
+                Id = s.Id,
+                SalesInvoiceId = s.SalesInvoiceId,
+                InvoiceNumber = invoiceList.ContainsKey(s.SalesInvoiceId) ? invoiceList[s.SalesInvoiceId].InvoiceSerialNo : "",
+                CollectionAmount = s.CollectionAmount,
+                PaymentMethod = s.PaymentMethod,
+                CollectionTime = s.CreatedOn,
+                UserId = s.UserId
+            }).ToList();
+            return Ok(collectionHistory);
+        }
+
         [HttpPost("createSalesInvoiceWithDetails")]
         public IActionResult CreateSalesInvoiceWithDetails([FromBody] SalesInvoiceDto salesInvoiceObj)
         {
@@ -89,6 +115,12 @@ namespace TalukdarSalesAPI.Controllers
                 userInfo.DueAmount = (decimal)createSalesInvoice?.TotalPrice;
                 _userRepository.Update(userInfo);
                 _userRepository.Commit();
+
+                string invoiceSerialNo = "INV - " + createSalesInvoice.Id.ToString("D6");
+
+                createSalesInvoice.InvoiceSerialNo = invoiceSerialNo;
+                _salesInvoiceRepository.Update(createSalesInvoice);
+                _salesInvoiceRepository.Commit();
 
                 foreach (var details in salesInvoiceObj.SalesInvoiceDetails)
                 {
@@ -180,6 +212,7 @@ namespace TalukdarSalesAPI.Controllers
             var result = invoiceList.AsEnumerable().Select(s => new SalesInvoiceDto
             {
                 Id = s.Id,
+                InvoiceNumber = s.InvoiceSerialNo,
                 SalesRequisitionId = s.SalesRequisitionId,
                 SalesRequisitionNo = requisitionList.ContainsKey(s.SalesRequisitionId)? requisitionList[s.SalesRequisitionId].RequisitionSerial : " ",
                 UserId = s.UserId,

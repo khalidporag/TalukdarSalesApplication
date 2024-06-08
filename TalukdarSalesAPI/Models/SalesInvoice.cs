@@ -2,6 +2,7 @@
 {
     public class SalesInvoice : EntityBase
     {
+        public string InvoiceSerialNo { get; set; }
         public int SalesRequisitionId { get; set; }
         public DateTime CreatedDateTime { get; set; }
         public double Quantity { get; set; }
