@@ -103,8 +103,8 @@ export class InvoiceListComponent implements OnInit {
     this.submitting = false;
   }
 
-  getCollectionList(){
-    this.router.navigate(['/collection-history']);
+  getCollectionList(id: any){
+    this.router.navigate(['/collection-history', id]);
   }
 
   onSubmit(){

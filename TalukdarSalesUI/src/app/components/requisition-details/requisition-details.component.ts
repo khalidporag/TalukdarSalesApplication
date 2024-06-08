@@ -8,14 +8,16 @@ import { ApiService } from 'src/app/services/api.service';
 import { AuthService } from 'src/app/services/auth.service';
 import { ModalService } from 'src/app/services/modal.service';
 @Component({
-  selector: 'app-collection-history',
-  templateUrl: './collection-history.component.html',
-  styleUrls: ['./collection-history.component.scss']
+  selector: 'app-requisition-details',
+  templateUrl: './requisition-details.component.html',
+  styleUrls: ['./requisition-details.component.scss']
 })
-export class CollectionHistoryComponent implements OnInit {
+export class RequisitionDetailsComponent implements OnInit {
   public collectionHistory:any = [];
   public invoiceList:any = [];
+  public requisitionDetailsList:any = [];
   selectedUser: any;
+  selectedRequisition: any;
   selectedInvoice: any;
   public userTypes:any = [];
   public createProductTypeForm!: FormGroup;
@@ -30,13 +32,17 @@ export class CollectionHistoryComponent implements OnInit {
     private auth: AuthService,
     private toast: NgToastService,
     private fb: FormBuilder,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+
   ){}
 
   ngOnInit(): void {
     this.getInvoiceList();
-    this.selectedInvoice = this.route.snapshot.paramMap.get('id');
     this.getCollectionList();
+    this.selectedRequisition = this.route.snapshot.paramMap.get('id');
+    if(this.selectedRequisition!=null){
+      this.getRequisitionDetailsList(this.selectedRequisition);
+    }
   }
 
   getInvoiceList() {
@@ -54,6 +60,15 @@ export class CollectionHistoryComponent implements OnInit {
     });
   }
 
+  getRequisitionDetailsList(id: any) {
+    this.selectedRequisition = id;
+    this.api.getSalesRequisitionDetailsList(this.selectedRequisition)
+    .subscribe(res => {
+      this.requisitionDetailsList = res;
+      console.log(this.requisitionDetailsList);
+    });
+  }
+
   getUserTypes(){
     this.api.getUserTypes()
     .subscribe(res=>{
@@ -62,3 +77,4 @@ export class CollectionHistoryComponent implements OnInit {
     });
   }
 }
+

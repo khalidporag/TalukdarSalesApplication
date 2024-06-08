@@ -33,7 +33,7 @@
                       <td>{{invoice.createdDateTime}}</td>
                       <td>
                         <tr>
-                            <td><a (click)="getCollectionList()" >Collection History
+                            <td><a (click)="getCollectionList(invoice.id)" >Collection History
                                 <i class="fa fa-history"></i>
                             </a></td>
                             <td><a (click)="openCollectionModal(invoice.id)">Collect Amount 

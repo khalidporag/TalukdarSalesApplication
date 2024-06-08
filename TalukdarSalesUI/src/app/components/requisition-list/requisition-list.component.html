@@ -37,7 +37,7 @@
                     <td>{{requisition.requisitionSerial}}</td>
                     <td>{{requisition.userName}}</td>
                     <td>{{requisition.createdDateTime}}</td>
-                    <td><button>Details</button></td>
+                    <td><button [routerLink]="['/requisition-list', requisition.id]">Details</button></td>
                 </tr>
     
             </tbody>

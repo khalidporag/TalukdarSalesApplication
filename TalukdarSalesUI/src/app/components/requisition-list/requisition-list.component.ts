@@ -17,9 +17,11 @@ export class RequisitionListComponent implements OnInit {
   selectedStatus: any;
   selectedUser: any;
   requisitionNo: string = '';
+  selectedRequisition: any;
 
   public productTypes:any = [];
   public requisitionList:any = [];
+  public requisitionDetailsList:any = [];
   public userTypes:any = [];
   public users:any = [];
   public createProductTypeForm!: FormGroup;
@@ -47,6 +49,14 @@ export class RequisitionListComponent implements OnInit {
     this.api.getSalesRequisitionList(this.selectedStatus, this.selectedUser, this.requisitionNo)
     .subscribe(res => {
       this.requisitionList = res;
+    });
+  }
+
+  getRequisitionDetailsList(id: any) {
+    this.selectedRequisition = id;
+    this.api.getSalesRequisitionDetailsList(this.selectedRequisition)
+    .subscribe(res => {
+      this.requisitionDetailsList = res;
     });
   }
 
