@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { NgToastService } from 'ng-angular-popup';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import ValidateForm from 'src/app/helpers/validationform';
@@ -43,6 +44,7 @@ export class SalesRequisitionComponent implements OnInit {
     private auth: AuthService,
     private toast: NgToastService,
     private fb: FormBuilder,
+    private router: Router
   ){}
 
   ngOnInit(): void {
@@ -133,6 +135,7 @@ export class SalesRequisitionComponent implements OnInit {
 
     this.api.createSalesRequisitionWithDetails(this.salesRequisition).subscribe(response => {
       this.toast.success({detail: "SUCCESS"});
+      this.router.navigate(['/requisition-list']);
       console.log('Requisition submitted successfully:', response);
     }, error => {
       console.error('Error submitting requisition:', error);

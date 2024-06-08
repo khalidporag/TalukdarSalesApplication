@@ -84,6 +84,7 @@ export class SalesInvoiceComponent implements OnInit {
     this.api.getSalesRequisitionDetailsList(this.selectedRequisition)
     .subscribe(res=>{
     this.requisitionDetailsList = res;
+    console.log(this.requisitionDetailsList);
     });
   }
 

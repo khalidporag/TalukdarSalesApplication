@@ -31,10 +31,12 @@ namespace TalukdarSalesAPI.Controllers
         {
             if (salesRequisitionWithDetailObj == null)
                 return BadRequest();
+            if (salesRequisitionWithDetailObj?.UserId == 0)
+                return BadRequest();
 
             var addRequisition = new SalesRequisition();
             addRequisition.UserId = salesRequisitionWithDetailObj.UserId;
-            addRequisition.CreatedDateTime = DateTime.UtcNow;
+            addRequisition.CreatedDateTime = DateTime.Now;
             addRequisition.IsActive = true;
 
             _salesRequisitionRepository.Add(addRequisition);
@@ -55,12 +57,12 @@ namespace TalukdarSalesAPI.Controllers
             {
                 var requistionDetail = new SalesRequisitionDetail();
                 requistionDetail.SalesRequisitionId = addRequisition.Id;
-                requistionDetail.CreatedDateTime = DateTime.UtcNow;
+                requistionDetail.CreatedDateTime = DateTime.Now;
                 requistionDetail.FinishedGoodId = (int)detail?.FinishedGoodId;
                 requistionDetail.Quantity = (int)detail?.Quantity;
                 requistionDetail.Price = (int)detail?.Price;
 
-                if(requistionDetail.Quantity > 0)
+                if(requistionDetail.Quantity > 0 && requistionDetail.FinishedGoodId != 0)
                     requistionDetailsList.Add(requistionDetail);
             }
 

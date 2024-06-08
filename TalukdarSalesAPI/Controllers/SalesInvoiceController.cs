@@ -78,7 +78,7 @@ namespace TalukdarSalesAPI.Controllers
             createSalesInvoice.DiscountAmount = 0;
             createSalesInvoice.DiscountPercentage = 0;
             createSalesInvoice.CollectionAmount = 0;
-            createSalesInvoice.CreatedDateTime = DateTime.UtcNow;
+            createSalesInvoice.CreatedDateTime = DateTime.Now;
 
             _salesInvoiceRepository.Add(createSalesInvoice);
             _salesInvoiceRepository.Commit();
@@ -95,7 +95,7 @@ namespace TalukdarSalesAPI.Controllers
                     var invoiceDetails = new SalesInvoiceDetails();
                     invoiceDetails.SalesInvoiceId = createSalesInvoice.Id;
                     invoiceDetails.FinishedGoodsId = (int)details?.FinishedGoodsId;
-                    invoiceDetails.CreatedDateTime = DateTime.UtcNow;
+                    invoiceDetails.CreatedDateTime = DateTime.Now;
                     invoiceDetails.Quantity = (double)details?.Quantity;
                     invoiceDetails.Price = (double)details?.Price;
                     invoiceDetails.DiscountAmount = 0;
