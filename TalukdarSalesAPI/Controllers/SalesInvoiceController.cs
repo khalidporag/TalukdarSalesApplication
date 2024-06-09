@@ -91,7 +91,7 @@ namespace TalukdarSalesAPI.Controllers
             foreach(var details in salesInvoiceObj.SalesInvoiceDetails)
             {
                 totalQuantity += (double)details.Quantity;
-                totalPrice += (double)details.Price;
+                totalPrice += (double)details.Price * (double)details.Quantity;
             }
 
             //var ttotalQuantity = salesInvoiceObj.SalesInvoiceDetails.Sum(s => s.Quantity);
@@ -174,6 +174,8 @@ namespace TalukdarSalesAPI.Controllers
             if (collectAmountObj == null)
                 return BadRequest();
             var invoiceInfo = _salesInvoiceRepository.GetSingle((int)collectAmountObj?.SalesInvoiceId);
+            if (invoiceInfo.CollectionAmount + (double)collectAmountObj.CollectionAmount > invoiceInfo.TotalPrice)
+                return BadRequest();
             invoiceInfo.CollectionAmount = invoiceInfo.CollectionAmount + (double)collectAmountObj.CollectionAmount;
             _salesInvoiceRepository.Update(invoiceInfo);
             _salesInvoiceRepository.Commit();
@@ -189,6 +191,8 @@ namespace TalukdarSalesAPI.Controllers
             if(collectionLedger?.Id != null)
             {
                 var userInfo = _userRepository.GetSingle(collectionLedger.UserId);
+                if (userInfo.DueAmount - (decimal)collectionLedger?.CollectionAmount < 0)
+                    return BadRequest();
                 userInfo.DueAmount = userInfo.DueAmount - (decimal)collectionLedger?.CollectionAmount;
                 _userRepository.Update(userInfo);
                 _userRepository.Commit();

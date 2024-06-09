@@ -1,5 +1,5 @@
 export interface InvoiceDetails {
-    finishedGoodsId: number;
+    finishedGoodId: number;
     quantity: number;
     price: number;
   }

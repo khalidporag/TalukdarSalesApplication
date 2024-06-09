@@ -1,5 +1,12 @@
 <div class="container">
     <div class="header">
+
+        <div class="form-group">
+            <label for="user-group">User Group</label>
+            <select id="user-group" [(ngModel)]="selectedUserGroup" (change)="onUserGroupChange()">
+              <option *ngFor="let group of userTypes" [value]="group.id">{{ group.typeName }}</option>
+            </select>
+          </div>
         <div class="form-group">
             <label for="user">User</label>
             <select id="user" [(ngModel)]="selectedUser" (change)="onUserChange()">
@@ -28,9 +35,12 @@
                 <tr *ngFor="let requisition of requisitionDetailsList; let i = index">
                     <td>{{ requisition.finishedGoodName }}</td>
                     <td>{{ requisition.quantity }}</td>
-                    <td><input type="number" [(ngModel)]="invoiceDetail.quantity"></td>
+                    <td><input type="number" [(ngModel)]="requisition.quantity"></td>
                     <td>{{ requisition.price }}</td>
-                    <td><input type="number" [value]="requisition.price * invoiceDetail.quantity" [(ngModel)]="invoiceDetail.price"></td>
+                    <td><input type="number" [value]="requisition.price * requisition.quantity" [(ngModel)]="requisition.price * requisition.quantity"></td>
+                    <td>
+                        <input type="hidden" [(ngModel)]="requisition.finishedGoodsId" name="finishedGoodsId{{i}}">
+                    </td>
                 </tr>
             </tbody>
         </table>

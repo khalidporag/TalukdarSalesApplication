@@ -24,6 +24,7 @@ import { SalesInvoiceComponent } from './components/sales-invoice/sales-invoice.
 import { InvoiceListComponent } from './components/invoice-list/invoice-list.component';
 import { CollectionHistoryComponent } from './components/collection-history/collection-history.component';
 import { RequisitionDetailsComponent } from './components/requisition-details/requisition-details.component';
+import { ProductwiseRequisitionComponent } from './components/productwise-requisition/productwise-requisition.component';
 
 @NgModule({
   declarations: [
@@ -43,7 +44,8 @@ import { RequisitionDetailsComponent } from './components/requisition-details/re
     SalesInvoiceComponent,
     InvoiceListComponent,
     CollectionHistoryComponent,
-    RequisitionDetailsComponent
+    RequisitionDetailsComponent,
+    ProductwiseRequisitionComponent
   ],
   imports: [
     BrowserModule,

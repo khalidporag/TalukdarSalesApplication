@@ -14,6 +14,7 @@ import { SalesInvoiceComponent } from './components/sales-invoice/sales-invoice.
 import { InvoiceListComponent } from './components/invoice-list/invoice-list.component';
 import { CollectionHistoryComponent } from './components/collection-history/collection-history.component';
 import { RequisitionDetailsComponent } from './components/requisition-details/requisition-details.component';
+import { ProductwiseRequisitionComponent } from './components/productwise-requisition/productwise-requisition.component';
 
 const routes: Routes = [
   {path:'', redirectTo:'login', pathMatch:'full'},
@@ -31,7 +32,8 @@ const routes: Routes = [
   {path: 'invoice-list', component: InvoiceListComponent},
   {path: 'collection-history/:id', component: CollectionHistoryComponent},
   {path: 'collection-history', component: CollectionHistoryComponent},
-  {path: 'requisition-list/:id', component: RequisitionDetailsComponent}
+  {path: 'requisition-list/:id', component: RequisitionDetailsComponent},
+  {path: 'productionwise-requisition', component: ProductwiseRequisitionComponent}
 
 ];
 

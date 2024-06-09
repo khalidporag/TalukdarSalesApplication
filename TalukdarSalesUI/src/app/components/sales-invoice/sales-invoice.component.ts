@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { NgToastService } from 'ng-angular-popup';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import ValidateForm from 'src/app/helpers/validationform';
@@ -57,10 +58,12 @@ export class SalesInvoiceComponent implements OnInit {
     private auth: AuthService,
     private toast: NgToastService,
     private fb: FormBuilder,
+    private router: Router
   ){}
 
   ngOnInit(): void {
     // this.getFinishedGoods();
+    this.getUserTypes();
     this.getUsers();
     this.getFinishGoodTypes();
   }
@@ -149,18 +152,19 @@ export class SalesInvoiceComponent implements OnInit {
   }
   
   submitInvoice() {
-    this.invoiceWithDetail = this.invoiceDetail;
+    this.invoiceWithDetail = this.requisitionDetailsList;
     this.invoiceWithDetailsInfo = {
       userId: this.selectedUser,
       salesRequisitionId: this.selectedRequisition,
       salesInvoiceDetails: this.invoiceWithDetail.map(invoice => ({
-        finishedGoodId: invoice.finishedGoodsId,
+        finishedGoodsId: invoice.finishedGoodId,
         quantity: invoice.quantity,
         price: invoice.price,
       }))
     };
     this.api.createSalesInvoiceWithDetails(this.invoiceWithDetailsInfo).subscribe(response => {
       this.toast.success({detail: "SUCCESS"});
+      this.router.navigate(['/invoice-list']);
       console.log('Requisition submitted successfully:', response);
     }, error => {
       console.error('Error submitting requisition:', error);

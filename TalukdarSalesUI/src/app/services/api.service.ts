@@ -100,6 +100,11 @@ export class ApiService {
     return this.http.get<any>(`${this.SalesRequisitionUrl}getSalesRequisitionDetailsList?${queryString}`);
   }
 
+  getProductWiseDailyRequisition()
+  {
+    return this.http.get<any>(`${this.SalesRequisitionUrl}getProductWiseDailyRequisition`);
+  }
+
   createSalesInvoiceWithDetails(obj: any) {
     return this.http.post<any>(`${this.SalesInvoiceUrl}createSalesInvoiceWithDetails`, obj)
   }

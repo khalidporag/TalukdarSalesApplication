@@ -14,21 +14,32 @@ namespace TalukdarSalesAPI.Controllers
         private readonly ISalesRequisitionDetailRepository _salesRequisitionDetailRepository;
         private readonly IFinishedGoodsRepository _finishedGoodsRepository;
         private readonly IUserRepository _userRepository;
+        private readonly IConfiguration _configuration;
+
 
         public SalesRequisitionController(ISalesRequisitionRepository salesRequisitionRepository,
             ISalesRequisitionDetailRepository salesRequisitionDetailRepository,
             IFinishedGoodsRepository finishedGoodsRepository,
-            IUserRepository userRepository)
+            IUserRepository userRepository,
+            IConfiguration configuration)
         {
             _salesRequisitionRepository = salesRequisitionRepository;
             _salesRequisitionDetailRepository = salesRequisitionDetailRepository;
             _finishedGoodsRepository = finishedGoodsRepository;
             _userRepository = userRepository;
+            _configuration = configuration;
         }
 
         [HttpPost("createSalesRequisitionWithDetail")]
         public IActionResult CreateSalesRequisitionWithDetail([FromBody] SalesRequisitionDto salesRequisitionWithDetailObj)
         {
+            var from = _configuration["Settings:From"];
+            var to = _configuration["Settings:To"];
+
+            if(!TimeIsWithinRange(from, to))
+            {
+                return BadRequest();
+            }
 
             if (salesRequisitionWithDetailObj == null)
                 return BadRequest();
@@ -163,6 +174,40 @@ namespace TalukdarSalesAPI.Controllers
         public ActionResult<SalesRequisitionDetail> GetAllSalesRequisitionDetail()
         {
             return Ok(_salesRequisitionDetailRepository.GetAll());
+        }
+
+        [HttpGet("getProductWiseDailyRequisition")]
+        public ActionResult<ProductWiseRequisitionDto> GetProductWiseDailyRequisition()
+        {
+            var requisitionList = _salesRequisitionDetailRepository.GetAll().Where(n => n.CreatedDateTime.Date == DateTime.Now.Date).ToList();
+            var finishedGoodList = _finishedGoodsRepository.GetAll().ToDictionary(n => n.Id);
+            var dailyFinishedGoodsQuantities = requisitionList
+           .GroupBy(r => new { Date = r.CreatedDateTime.Date, r.FinishedGoodId })
+           .Select(g => new ProductWiseRequisitionDto
+           {
+               RequisitionDate = g.Key.Date,
+               FinishedGoodId = g.Key.FinishedGoodId,
+               FinishedGoodName = finishedGoodList.ContainsKey(g.Key.FinishedGoodId)? finishedGoodList[g.Key.FinishedGoodId].Name : "",
+               TotalQuantity = g.Sum(r => r.Quantity)
+           })
+           .OrderBy(result => result.RequisitionDate)
+           .ThenBy(result => result.FinishedGoodId)
+           .ToList();
+
+            return Ok(dailyFinishedGoodsQuantities);
+        }
+
+        private bool TimeIsWithinRange(string fromTime, string toTime)
+        {
+            if (TimeSpan.TryParse(fromTime, out var from) && TimeSpan.TryParse(toTime, out var to))
+            {
+                var now = DateTime.Now.TimeOfDay;
+                return (from <= now) && (now <= to);
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }

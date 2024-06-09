@@ -138,6 +138,7 @@ export class SalesRequisitionComponent implements OnInit {
       this.router.navigate(['/requisition-list']);
       console.log('Requisition submitted successfully:', response);
     }, error => {
+      this.toast.error({detail:"ERROR", summary:"Something when wrong!", duration: 5000});
       console.error('Error submitting requisition:', error);
     });
   }
