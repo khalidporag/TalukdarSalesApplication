@@ -2,6 +2,16 @@
 <div
 class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
 <h1 class="h2">Product SetUp</h1>
+<div class="filter">
+    <label for="user">Product Type</label>
+    <select id="user" [(ngModel)]="selectedType" (change)="onFilterChange()">
+      <option *ngFor="let type of finishedGoodTypes" [value]="type.id">{{ type.name }}</option>
+    </select>
+  </div>
+  <div class="filter">
+    <label for="name">Product Name</label>
+    <input type="text" [(ngModel)]="productName" (input)="onFilterChange()">
+  </div>
 </div>
         <button (click)="openFinishedGoodModal()"><span>Add Product</span></button>
         
@@ -15,6 +25,7 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
                         <th scope="col">Unit Price</th>
                         <th scope="col">Description</th>
                         <th scope="col">Added On</th>
+                        <th scope="col">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -25,7 +36,7 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
                         <td>{{product.unitPrice}}</td>
                         <td>{{product.description}}</td>
                         <td>{{product.createdOn}}</td>
-
+                        <td><button (click)="openEditFinishedGoodModal(product)">Edit</button></td>
                     </tr>
         
                 </tbody>
@@ -34,7 +45,7 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
         
         <div>
             
-            <modal *ngIf="createModal" >
+            <modal id="addProduct" *ngIf="createModal" >
                 <div class="modal-header">
                     <h5 class="modal-title">Add Product</h5>
                     <button type="button" class="btn-close" (click)="closeModal()"></button>
@@ -81,3 +92,42 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
             </modal>
         </div>
  
+        <div>
+            
+            <modal id="editProduct" *ngIf="editModal" >
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Product</h5>
+                    <button type="button" class="btn-close" (click)="closeModal()"></button>
+                </div>
+                <div class="modal-body">
+                    <form (ngSubmit)="editProduct()" [formGroup]="editFinishedGoodForm">
+                        <div class="form-group pt-3">
+                            <div class="input-field" [class.error]="editFinishedGoodForm.controls['isActive'].dirty && editFinishedGoodForm.hasError('required','isActive')"> 
+                                <span class="fa fa-user p-2"></span>
+                                <select formControlName="isActive" id="active-status" [(ngModel)]="selectedFinishedGood.isActive">
+                                    <option value='true'>Active</option>
+                                    <option value='false'>InActive</option>
+                                  </select> 
+                                <!-- <input formControlName="isActive" type="text" placeholder="Status"> -->
+                            </div>
+                        </div>
+                        <small *ngIf="editFinishedGoodForm.controls['isActive'].dirty && editFinishedGoodForm.hasError('required','isActive')" class="text-danger">*Status is required*</small>
+                        
+                        <div class="form-group pt-3">
+                            <div class="input-field" [class.error]="editFinishedGoodForm.controls['unitPrice'].dirty && editFinishedGoodForm.hasError('required','unitPrice')"> <span class="fa fa-user p-2"></span> <input formControlName="unitPrice" type="text" placeholder="Unit Price"> </div>
+                        </div>
+                        <small *ngIf="editFinishedGoodForm.controls['unitPrice'].dirty && editFinishedGoodForm.hasError('required','unitPrice')" class="text-danger">*Unit price is required*</small>
+
+                        
+                        <div class="form-group pt-3">
+                            <div class="input-field" [class.error]="editFinishedGoodForm.controls['description'].dirty && editFinishedGoodForm.hasError('required','description')"> <span class="fa fa-user p-2"></span> <input formControlName="description" type="text" placeholder="Description"> </div>
+                        </div>
+                        <small *ngIf="editFinishedGoodForm.controls['description'].dirty && editFinishedGoodForm.hasError('required','description')" class="text-danger">*Description is required*</small>
+                        <button *ngIf="!submitting" type="submit" class="btn btn-primary btn-block mt-4 w-100">Save</button>
+                        <button type="button" class="btn btn-primary" *ngIf="submitting">
+                            <i class="fas fa-spinner fa-pulse"></i>
+                        </button>
+                    </form>
+                </div>
+            </modal>
+        </div>

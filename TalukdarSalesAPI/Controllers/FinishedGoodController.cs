@@ -2,6 +2,7 @@
 using Project.Run.Repositories;
 using TalukdarSalesAPI.Interfaces;
 using TalukdarSalesAPI.Models;
+using TalukdarSalesAPI.Models.Dto;
 
 namespace TalukdarSalesAPI.Controllers
 {
@@ -55,12 +56,34 @@ namespace TalukdarSalesAPI.Controllers
             });
         }
 
-        [HttpGet("getAllFinishedGoods")]
-        public ActionResult<FinishedGood> GetAllFinishedGoods(int? goodTypeId)
+        [HttpPost("updateFinishedGood")]
+        public IActionResult UpdateFinishGood([FromBody] FinishedGoodDto finishedGoodObj)
         {
+            if (finishedGoodObj == null)
+                return BadRequest();
+            var finishedGoodInfo = _finishedGoodsRepository.GetSingle(finishedGoodObj.Id);
+            finishedGoodInfo.IsActive = finishedGoodObj.IsActive;
+            finishedGoodInfo.UnitPrice = finishedGoodObj.UnitPrice;
+            finishedGoodInfo.Description = finishedGoodObj.Description;
+
+            _finishedGoodsRepository.Update(finishedGoodInfo);
+            _finishedGoodsRepository.Commit();
+            return Ok(new
+            {
+                Status = 200,
+                Message = "Finish Good Type Added!"
+            });
+        }
+
+        [HttpGet("getAllFinishedGoods")]
+        public ActionResult<FinishedGood> GetAllFinishedGoods(int? goodTypeId, string finishedGoodName)
+        {
+            var result = _finishedGoodsRepository.GetAll().ToList();
             if (goodTypeId != null)
-                return Ok(_finishedGoodsRepository.GetAll().Where(n => n.GoodTypeId == goodTypeId).ToList());
-            return Ok(_finishedGoodsRepository.GetAll());
+                result = result.Where(n => n.GoodTypeId == goodTypeId).ToList();
+            if (finishedGoodName != null)
+                result = result.Where(n => n.Name.ToLower().Trim().Contains(finishedGoodName.ToLower().Trim())).ToList();
+            return Ok(result);
         }
     }
 }

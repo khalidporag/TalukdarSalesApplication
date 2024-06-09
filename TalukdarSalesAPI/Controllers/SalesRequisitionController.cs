@@ -29,8 +29,12 @@ namespace TalukdarSalesAPI.Controllers
         [HttpPost("createSalesRequisitionWithDetail")]
         public IActionResult CreateSalesRequisitionWithDetail([FromBody] SalesRequisitionDto salesRequisitionWithDetailObj)
         {
+
             if (salesRequisitionWithDetailObj == null)
                 return BadRequest();
+
+            salesRequisitionWithDetailObj.RequisitionDetails = salesRequisitionWithDetailObj.RequisitionDetails.Where(n => n.Quantity != null).ToList();
+
             if (salesRequisitionWithDetailObj?.UserId == 0)
                 return BadRequest();
 
@@ -52,8 +56,7 @@ namespace TalukdarSalesAPI.Controllers
             _salesRequisitionRepository.Commit();
 
             var requistionDetailsList = new List<SalesRequisitionDetail>();
-
-            foreach(var detail in salesRequisitionWithDetailObj?.RequisitionDetails)
+            foreach (var detail in salesRequisitionWithDetailObj?.RequisitionDetails)
             {
                 var requistionDetail = new SalesRequisitionDetail();
                 requistionDetail.SalesRequisitionId = addRequisition.Id;

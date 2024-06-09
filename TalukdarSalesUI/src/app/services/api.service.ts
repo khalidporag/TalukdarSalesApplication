@@ -51,8 +51,18 @@ export class ApiService {
     return this.http.post<any>(`${this.finishedGoodUrl}createFinishedGood`, obj)
   }
 
-  getallFinishedGoods() {
-    return this.http.get<any>(`${this.finishedGoodUrl}getAllFinishedGoods`);
+  updateFinishedGood(obj: any) {
+    return this.http.post<any>(`${this.finishedGoodUrl}updateFinishedGood`, obj)
+  }
+
+  getallFinishedGoods(param1?: number, param2?: string) {
+    let params: any = {};
+  
+    if (param1 !== undefined) params.goodTypeId = param1;
+    if (param2 !== undefined && param2 !== null) params.finishedGoodName = param2;
+  
+    const queryString = new URLSearchParams(params).toString();
+    return this.http.get<any>(`${this.finishedGoodUrl}getAllFinishedGoods?${queryString}`);
   }
 
   getallFinishedGoodsByType(goodTypeId: number) {
