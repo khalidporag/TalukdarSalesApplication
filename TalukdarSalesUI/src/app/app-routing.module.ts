@@ -15,6 +15,7 @@ import { InvoiceListComponent } from './components/invoice-list/invoice-list.com
 import { CollectionHistoryComponent } from './components/collection-history/collection-history.component';
 import { RequisitionDetailsComponent } from './components/requisition-details/requisition-details.component';
 import { ProductwiseRequisitionComponent } from './components/productwise-requisition/productwise-requisition.component';
+import { TimeSettingComponent } from './components/time-setting/time-setting.component';
 
 const routes: Routes = [
   {path:'', redirectTo:'login', pathMatch:'full'},
@@ -33,7 +34,8 @@ const routes: Routes = [
   {path: 'collection-history/:id', component: CollectionHistoryComponent},
   {path: 'collection-history', component: CollectionHistoryComponent},
   {path: 'requisition-list/:id', component: RequisitionDetailsComponent},
-  {path: 'productionwise-requisition', component: ProductwiseRequisitionComponent}
+  {path: 'productionwise-requisition', component: ProductwiseRequisitionComponent},
+  {path: 'time-setting', component: TimeSettingComponent}
 
 ];
 

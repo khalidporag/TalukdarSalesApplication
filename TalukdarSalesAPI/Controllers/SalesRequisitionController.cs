@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Linq.Expressions;
 using TalukdarSalesAPI.Interfaces;
 using TalukdarSalesAPI.Models;
 using TalukdarSalesAPI.Models.Dto;
@@ -14,6 +15,7 @@ namespace TalukdarSalesAPI.Controllers
         private readonly ISalesRequisitionDetailRepository _salesRequisitionDetailRepository;
         private readonly IFinishedGoodsRepository _finishedGoodsRepository;
         private readonly IUserRepository _userRepository;
+        private readonly ITimeSettingRepository _timeSettingRepository;
         private readonly IConfiguration _configuration;
 
 
@@ -21,22 +23,28 @@ namespace TalukdarSalesAPI.Controllers
             ISalesRequisitionDetailRepository salesRequisitionDetailRepository,
             IFinishedGoodsRepository finishedGoodsRepository,
             IUserRepository userRepository,
-            IConfiguration configuration)
+            ITimeSettingRepository timeSettingRepository,
+        IConfiguration configuration)
         {
             _salesRequisitionRepository = salesRequisitionRepository;
             _salesRequisitionDetailRepository = salesRequisitionDetailRepository;
             _finishedGoodsRepository = finishedGoodsRepository;
             _userRepository = userRepository;
             _configuration = configuration;
+            _timeSettingRepository = timeSettingRepository;
         }
 
         [HttpPost("createSalesRequisitionWithDetail")]
         public IActionResult CreateSalesRequisitionWithDetail([FromBody] SalesRequisitionDto salesRequisitionWithDetailObj)
         {
-            var from = _configuration["Settings:From"];
-            var to = _configuration["Settings:To"];
+            var timeSettingInfo = _timeSettingRepository.GetAll().OrderByDescending(n => n.CreatedOn).FirstOrDefault();
+            var from = timeSettingInfo?.From;
+            var to = timeSettingInfo?.To;
 
-            if(!TimeIsWithinRange(from, to))
+            //var from = _configuration["Settings:From"];
+            //var to = _configuration["Settings:To"];
+
+            if (!TimeIsWithinRange(from, to))
             {
                 return BadRequest();
             }
@@ -208,6 +216,41 @@ namespace TalukdarSalesAPI.Controllers
             {
                 return false;
             }
+        }
+
+        [HttpPost("updateTimeSetting")]
+        public IActionResult UpdateRequisitionTimeSetting([FromBody] TimeSetting timeSettingObj)
+        {
+            if (timeSettingObj == null)
+                return BadRequest();
+            var timeSetting = _timeSettingRepository.GetAll().OrderByDescending(n => n.CreatedOn).FirstOrDefault();
+            if (timeSetting == null)
+            {
+                var createTimeSetting = new TimeSetting();
+                createTimeSetting.From = timeSettingObj.From;
+                createTimeSetting.To = timeSettingObj.To;
+                _timeSettingRepository.Add(createTimeSetting);
+                _timeSettingRepository.Commit();
+            }
+            else if (timeSettingObj?.From != null && timeSettingObj?.To != null)
+            {
+                timeSetting.From = timeSettingObj?.From;
+                timeSetting.To = timeSettingObj?.To;
+                _timeSettingRepository.Update(timeSetting);
+                _timeSettingRepository.Commit();
+            }
+            return Ok(new
+            {
+                Status = 200,
+                Message = "Time Setting Updated!"
+            });
+        }
+
+        [HttpGet("getTimeSetting")]
+        public ActionResult<TimeSetting> GetTimeSetting()
+        {
+            var result = _timeSettingRepository.GetAll().OrderByDescending(n => n.CreatedOn).FirstOrDefault();
+            return Ok(result);
         }
     }
 }

@@ -100,6 +100,14 @@ export class ApiService {
     return this.http.get<any>(`${this.SalesRequisitionUrl}getSalesRequisitionDetailsList?${queryString}`);
   }
 
+  updateTimeSetting(obj: any) {
+    return this.http.post<any>(`${this.SalesRequisitionUrl}updateTimeSetting`, obj)
+  }
+  
+  getTimeSetting(){
+    return this.http.get<any>(`${this.SalesRequisitionUrl}getTimeSetting`);
+  }
+
   getProductWiseDailyRequisition()
   {
     return this.http.get<any>(`${this.SalesRequisitionUrl}getProductWiseDailyRequisition`);
