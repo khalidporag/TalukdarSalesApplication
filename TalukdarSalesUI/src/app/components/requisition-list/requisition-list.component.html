@@ -24,6 +24,9 @@
         <table class="requisitions-table">
             <thead>
                 <tr>
+                  <th scope="col">
+                    <input type="checkbox" (change)="toggleSelectAll($event)">
+                  </th>
                     <th scope="col">#</th>
                     <th scope="col">Requisition No</th>
                     <th scope="col">Requisition By</th>
@@ -33,6 +36,9 @@
             </thead>
             <tbody>
                 <tr *ngFor="let requisition of requisitionList; let i= index">
+                  <td>
+                    <input type="checkbox" [(ngModel)]="requisition.selected" (change)="onCheckboxChange()">
+                 </td>
                     <td>{{i+1}}</td>
                     <td>{{requisition.requisitionSerial}}</td>
                     <td>{{requisition.userName}}</td>
@@ -43,5 +49,7 @@
             </tbody>
         </table>
     </div>
+    <button (click)="sendSelectedRequisitions()">Send Selected</button>
+
   </div>
   
