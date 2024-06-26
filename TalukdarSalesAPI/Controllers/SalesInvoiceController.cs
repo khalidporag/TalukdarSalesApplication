@@ -17,18 +17,21 @@ namespace TalukdarSalesAPI.Controllers
         private readonly ISalesInvoiceDetailsRepository _salesInvoiceDetailsRepository;
         private readonly ISalesRequisitionRepository _salesRequisitioinRepository;
         private readonly IUserRepository _userRepository;
+        private readonly ISalesRequisitionDetailRepository _salesRequisitionDetailRepository;
 
         public SalesInvoiceController(ICollectionLedgerRepository collectionLedgerRepository,
             ISalesInvoiceRepository salesInvoiceRepository,
             ISalesInvoiceDetailsRepository salesInvoiceDetailsRepository,
             ISalesRequisitionRepository salesRequisitioinRepository,
-            IUserRepository userRepository)
+            IUserRepository userRepository,
+            ISalesRequisitionDetailRepository salesRequisitionDetailRepository)
         {
             _collectionLedgerRepository = collectionLedgerRepository;
             _salesInvoiceRepository = salesInvoiceRepository;
             _salesInvoiceDetailsRepository = salesInvoiceDetailsRepository;
             _salesRequisitioinRepository = salesRequisitioinRepository;
             _userRepository = userRepository;
+            _salesRequisitionDetailRepository = salesRequisitionDetailRepository;
 
         }
         [HttpPost("createCollectionLedger")]
@@ -76,6 +79,90 @@ namespace TalukdarSalesAPI.Controllers
                 UserId = s.UserId
             }).ToList();
             return Ok(collectionHistory);
+        }
+
+        [HttpPost("createBulkInvoiceWithDetails")]
+        public IActionResult CreateBulkInvoiceWithDetails(RequisitionDto obj)
+        {
+            List<int> requisitionId = obj.RequistionIds
+            .Split(',')
+            .Select(int.Parse)
+            .ToList();
+
+            var requisitionList = _salesRequisitioinRepository.GetAll().Where(n => n.IsActive == true).ToList();
+            requisitionList = requisitionList.Where(n => requisitionId.Contains(n.Id)).ToList();
+            if (requisitionList.Count == 0)
+                return BadRequest();
+            foreach (var requisition in requisitionList)
+            {
+                var requisitionDetails = _salesRequisitionDetailRepository.GetAll().ToList();
+                requisitionDetails = requisitionDetails.Where(n => n.SalesRequisitionId == requisition.Id).ToList();
+                var totalQuantity = 0.0;
+                var totalPrice = 0.0;
+                foreach (var details in requisitionDetails)
+                {
+                    totalQuantity += (double)details.Quantity;
+                    totalPrice += (double)details.Price * (double)details.Quantity;
+                }
+
+                var createSalesInvoice = new SalesInvoice();
+                var invoiceDetailsList = new List<SalesInvoiceDetails>();
+
+                createSalesInvoice.TotalPrice = totalPrice;
+                createSalesInvoice.Quantity = totalQuantity;
+                createSalesInvoice.UserId = requisition.UserId;
+                createSalesInvoice.SalesRequisitionId = requisition.Id;
+                createSalesInvoice.DiscountAmount = 0;
+                createSalesInvoice.DiscountPercentage = 0;
+                createSalesInvoice.CollectionAmount = 0;
+                createSalesInvoice.CreatedDateTime = DateTime.Now;
+
+                _salesInvoiceRepository.Add(createSalesInvoice);
+                _salesInvoiceRepository.Commit();
+
+                if (createSalesInvoice?.Id != null)
+                {
+                    var userInfo = _userRepository.GetSingle(createSalesInvoice.UserId);
+                    userInfo.DueAmount = (decimal)createSalesInvoice?.TotalPrice;
+                    _userRepository.Update(userInfo);
+                    _userRepository.Commit();
+
+                    string invoiceSerialNo = "INV - " + createSalesInvoice.Id.ToString("D6");
+
+                    createSalesInvoice.InvoiceSerialNo = invoiceSerialNo;
+                    _salesInvoiceRepository.Update(createSalesInvoice);
+                    _salesInvoiceRepository.Commit();
+
+                    foreach (var details in requisitionDetails)
+                    {
+                        var invoiceDetails = new SalesInvoiceDetails();
+                        invoiceDetails.SalesInvoiceId = createSalesInvoice.Id;
+                        invoiceDetails.FinishedGoodsId = details.FinishedGoodId;
+                        invoiceDetails.CreatedDateTime = DateTime.Now;
+                        invoiceDetails.Quantity = (double)details?.Quantity;
+                        invoiceDetails.Price = (double)details?.Price;
+                        invoiceDetails.DiscountAmount = 0;
+                        invoiceDetails.DiscountPercentage = 0;
+
+                        invoiceDetailsList.Add(invoiceDetails);
+                    }
+
+                    _salesInvoiceDetailsRepository.AddRange(invoiceDetailsList);
+                    _salesInvoiceDetailsRepository.Commit();
+
+                    var requisitionInfo = _salesRequisitioinRepository.GetSingle((int)createSalesInvoice?.SalesRequisitionId);
+                    requisitionInfo.IsActive = false;
+                    _salesRequisitioinRepository.Update(requisitionInfo);
+                    _salesRequisitioinRepository.Commit();
+                }
+
+
+            }
+            return Ok(new
+            {
+                Status = 200,
+                Message = "Sales Invoice Created!"
+            });
         }
 
         [HttpPost("createSalesInvoiceWithDetails")]

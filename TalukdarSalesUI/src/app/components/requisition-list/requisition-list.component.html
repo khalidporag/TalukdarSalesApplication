@@ -21,6 +21,7 @@
       <button class="create-new" (click)="onCreateNew()">Create New</button>
     </div>
     <div class="table-responsive">
+      <button (click)="sendSelectedRequisitions()">Approve Selected</button>
         <table class="requisitions-table">
             <thead>
                 <tr>
@@ -49,7 +50,6 @@
             </tbody>
         </table>
     </div>
-    <button (click)="sendSelectedRequisitions()">Send Selected</button>
 
   </div>
   

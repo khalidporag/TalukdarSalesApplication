@@ -59,10 +59,21 @@ export class RequisitionListComponent implements OnInit {
   }
 
   sendSelectedRequisitions() {
-    // const selectedIds = this.requisitionList.filter(requisition => requisition.selected).map(requisition => requisition.id);
-    // this.http.post('YOUR_BACKEND_API_ENDPOINT', { ids: selectedIds }).subscribe(response => {
-    //   // Handle response
-    // });
+    const selectedIds = this.requisitionList.filter(requisition => requisition.selected).map(requisition => requisition.id).join(",");
+    let ids = {
+      requistionIds : selectedIds
+    }
+    this.api.createBulkInvoiceWithDetails(ids).subscribe({
+      next: (res) => {
+        this.toast.success({detail:"SUCCESS", summary:res.message, duration: 5000});
+        this.getRequisitionList();
+      },
+      error: (err) => {
+        this.toast.error({detail:"ERROR", summary:"Something when wrong!", duration: 5000});
+        console.log(err);
+        this.getRequisitionList();
+      },    
+    });
   }
 
   getRequisitionList() {
