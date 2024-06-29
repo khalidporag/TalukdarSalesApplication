@@ -42,6 +42,7 @@ builder.Services.AddScoped<ICollectionLedgerRepository, CollectionLedgerReposito
 builder.Services.AddScoped<ISalesInvoiceRepository, SalesInvoiceRepository>();
 builder.Services.AddScoped<ISalesInvoiceDetailsRepository, SalesInvoiceDetailsRepository>();
 builder.Services.AddScoped<ITimeSettingRepository, TimeSettingRepository>();
+builder.Services.AddScoped<INoticeRepository, NoticeRepository>();
 
 builder.Services.AddAuthentication(x =>
 {

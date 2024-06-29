@@ -26,6 +26,7 @@ import { CollectionHistoryComponent } from './components/collection-history/coll
 import { RequisitionDetailsComponent } from './components/requisition-details/requisition-details.component';
 import { ProductwiseRequisitionComponent } from './components/productwise-requisition/productwise-requisition.component';
 import { TimeSettingComponent } from './components/time-setting/time-setting.component';
+import { NoticeComponent } from './components/notice/notice.component';
 
 @NgModule({
   declarations: [
@@ -47,7 +48,8 @@ import { TimeSettingComponent } from './components/time-setting/time-setting.com
     CollectionHistoryComponent,
     RequisitionDetailsComponent,
     ProductwiseRequisitionComponent,
-    TimeSettingComponent
+    TimeSettingComponent,
+    NoticeComponent
   ],
   imports: [
     BrowserModule,
@@ -56,7 +58,8 @@ import { TimeSettingComponent } from './components/time-setting/time-setting.com
     NgToastModule,
     SharedModule,
     FormsModule,
-    BrowserAnimationsModule
+    BrowserAnimationsModule,
+    // QuillModule.forRoot()
   ],
   providers: [{
     provide:HTTP_INTERCEPTORS,

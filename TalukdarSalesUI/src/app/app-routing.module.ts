@@ -16,6 +16,7 @@ import { CollectionHistoryComponent } from './components/collection-history/coll
 import { RequisitionDetailsComponent } from './components/requisition-details/requisition-details.component';
 import { ProductwiseRequisitionComponent } from './components/productwise-requisition/productwise-requisition.component';
 import { TimeSettingComponent } from './components/time-setting/time-setting.component';
+import { NoticeComponent } from './components/notice/notice.component';
 
 const routes: Routes = [
   {path:'', redirectTo:'login', pathMatch:'full'},
@@ -35,7 +36,10 @@ const routes: Routes = [
   {path: 'collection-history', component: CollectionHistoryComponent},
   {path: 'requisition-list/:id', component: RequisitionDetailsComponent},
   {path: 'productionwise-requisition', component: ProductwiseRequisitionComponent},
-  {path: 'time-setting', component: TimeSettingComponent}
+  {path: 'time-setting', component: TimeSettingComponent},
+  {path: 'notice', component: NoticeComponent},
+
+
 
 ];
 

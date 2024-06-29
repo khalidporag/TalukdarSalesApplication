@@ -15,10 +15,11 @@ import { ModalService } from 'src/app/services/modal.service';
 })
 export class RequisitionListComponent implements OnInit {
 
-  selectedStatus: boolean = true;
+  selectedStatus: any = true;
   selectedUser: any;
   requisitionNo: string = '';
   selectedRequisition: any;
+  isShow = true;
 
   public productTypes:any = [];
   // public requisitionList= [];
@@ -94,6 +95,7 @@ export class RequisitionListComponent implements OnInit {
 
   onFilterChange() {
     this.getRequisitionList();
+    this.isShow = (this.selectedStatus == true || this.selectedStatus == "true" )? true : false;
   }
 
   getProductTypes(){

@@ -18,13 +18,15 @@ namespace TalukdarSalesAPI.Controllers
         private readonly ISalesRequisitionRepository _salesRequisitioinRepository;
         private readonly IUserRepository _userRepository;
         private readonly ISalesRequisitionDetailRepository _salesRequisitionDetailRepository;
+        private readonly IFinishedGoodsRepository _finishGoodRepository;
 
         public SalesInvoiceController(ICollectionLedgerRepository collectionLedgerRepository,
             ISalesInvoiceRepository salesInvoiceRepository,
             ISalesInvoiceDetailsRepository salesInvoiceDetailsRepository,
             ISalesRequisitionRepository salesRequisitioinRepository,
             IUserRepository userRepository,
-            ISalesRequisitionDetailRepository salesRequisitionDetailRepository)
+            ISalesRequisitionDetailRepository salesRequisitionDetailRepository,
+            IFinishedGoodsRepository finishGoodRepository)
         {
             _collectionLedgerRepository = collectionLedgerRepository;
             _salesInvoiceRepository = salesInvoiceRepository;
@@ -32,7 +34,7 @@ namespace TalukdarSalesAPI.Controllers
             _salesRequisitioinRepository = salesRequisitioinRepository;
             _userRepository = userRepository;
             _salesRequisitionDetailRepository = salesRequisitionDetailRepository;
-
+            _finishGoodRepository = finishGoodRepository;
         }
         [HttpPost("createCollectionLedger")]
         public IActionResult CreateCollectionLedger([FromBody] CollectionLedger collectionLedgerObj)
@@ -341,6 +343,88 @@ namespace TalukdarSalesAPI.Controllers
         public ActionResult<SalesInvoiceDetails> GetAllSalesInvoiceDetails()
         {
             return Ok(_salesInvoiceDetailsRepository.GetAll());
+        }
+
+        [HttpGet("getTopFiveSeller")]
+        public ActionResult<TopSellerDto> GetTopFiveSeller()
+        {
+            var userList = _userRepository.GetAll().ToDictionary(n => n.Id);
+            var result = _salesInvoiceRepository.GetAll();
+            var oneMonthAgo = DateTime.Now.AddMonths(-1);
+
+            var topSellers = result
+            .Where(s => s.CreatedOn >= oneMonthAgo)
+            .GroupBy(s => s.UserId)
+            .Select(g => new TopSellerDto
+            {
+                UserId = g.Key,
+                UserName = userList.ContainsKey(g.Key)? userList[g.Key].FirstName + " " + userList[g.Key].LastName : "",
+                TotalAmount = g.Sum(s => s.TotalPrice)
+            })
+            .OrderByDescending(g => g.TotalAmount)
+            .Take(5)
+            .ToList();
+
+            return Ok(topSellers);
+        }
+
+        [HttpGet("getTopFiveSellingProduct")]
+        public ActionResult<SellingProductDto> GetTopFiveSellingProduct()
+        {
+            var productList = _finishGoodRepository.GetAll().ToDictionary(n => n.Id);
+            var result = _salesInvoiceDetailsRepository.GetAll();
+            var oneMonthAgo = DateTime.Now.AddMonths(-1);
+
+            var topSellingProduct = result
+            .Where(s => s.CreatedOn >= oneMonthAgo)
+            .GroupBy(s => s.FinishedGoodsId)
+            .Select(g => new SellingProductDto
+            {
+                FinishedGoodId = g.Key,
+                FinishGoodName = productList.ContainsKey(g.Key) ? productList[g.Key].Name : "",
+                Quantity = g.Sum(s => s.Quantity)
+            })
+            .OrderByDescending(g => g.Quantity)
+            .Take(5)
+            .ToList();
+
+            return Ok(topSellingProduct);
+        }
+
+        [HttpGet("getLessFiveSellingProduct")]
+        public ActionResult<SellingProductDto> GetLessFiveSellingProduct()
+        {
+            var productList = _finishGoodRepository.GetAll().ToDictionary(n => n.Id);
+            var result = _salesInvoiceDetailsRepository.GetAll();
+            var oneMonthAgo = DateTime.Now.AddMonths(-1);
+
+            var topSellingProduct = result
+            .Where(s => s.CreatedOn >= oneMonthAgo)
+            .GroupBy(s => s.FinishedGoodsId)
+            .Select(g => new SellingProductDto
+            {
+                FinishedGoodId = g.Key,
+                FinishGoodName = productList.ContainsKey(g.Key) ? productList[g.Key].Name : "",
+                Quantity = g.Sum(s => s.Quantity)
+            })
+            .OrderBy(g => g.Quantity)
+            .Take(5)
+            .ToList();
+
+            return Ok(topSellingProduct);
+        }
+
+        [HttpGet("getTopFiveSellerWithDueAmount")]
+        public ActionResult<User> GetTopFiveSellerWithDueAmount()
+        {
+            var oneMonthAgo = DateTime.Now.AddMonths(-1);
+
+            var topUsersWithDueAmount = _userRepository.GetAll().Where(s => s.CreatedOn >= oneMonthAgo)
+            .OrderByDescending(u => u.DueAmount)
+            .Take(5)
+            .ToList();
+
+            return Ok(topUsersWithDueAmount);
         }
     }
 }

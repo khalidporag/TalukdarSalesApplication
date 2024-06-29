@@ -10,6 +10,8 @@ export class ApiService {
   private finishedGoodUrl: string = 'https://localhost:7019/api/FinishedGood/';
   private SalesRequisitionUrl: string = 'https://localhost:7019/api/SalesRequisition/';
   private SalesInvoiceUrl: string = 'https://localhost:7019/api/SalesInvoice/';
+  private NoticeUrl: string = 'https://localhost:7019/api/Notice/';
+
 
 
 
@@ -138,6 +140,14 @@ export class ApiService {
     if (param2 !== undefined) params.salesInvoiceId = param2;
     const queryString = new URLSearchParams(params).toString();
     return this.http.get<any>(`${this.SalesInvoiceUrl}getCollectionHistory?${queryString}`);
+  }
+
+  createNotice(obj: any) {
+    return this.http.post<any>(`${this.NoticeUrl}createNotice`, obj)
+  }
+
+  getAllNotices() {
+    return this.http.get<any>(`${this.NoticeUrl}getAllNotices`);
   }
   
 }
