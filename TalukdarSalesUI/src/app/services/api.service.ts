@@ -142,6 +142,31 @@ export class ApiService {
     return this.http.get<any>(`${this.SalesInvoiceUrl}getCollectionHistory?${queryString}`);
   }
 
+  getTopFiveSeller()
+  {
+    return this.http.get<any>(`${this.SalesInvoiceUrl}getTopFiveSeller`);
+  }
+
+  getTopFiveSellingProduct()
+  {
+    return this.http.get<any>(`${this.SalesInvoiceUrl}getTopFiveSellingProduct`);
+  }
+
+  getLessFiveSellingProduct()
+  {
+    return this.http.get<any>(`${this.SalesInvoiceUrl}getLessFiveSellingProduct`);
+  }
+
+  getTopFiveSellerWithDueAmount()
+  {
+    return this.http.get<any>(`${this.SalesInvoiceUrl}getTopFiveSellerWithDueAmount`);
+  }
+
+  getDailyAccumulatedOrderSummary()
+  {
+    return this.http.get<any>(`${this.SalesRequisitionUrl}getDailyAccumulatedOrderSummary`);
+  }
+
   createNotice(obj: any) {
     return this.http.post<any>(`${this.NoticeUrl}createNotice`, obj)
   }

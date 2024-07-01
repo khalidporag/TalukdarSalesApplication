@@ -254,9 +254,10 @@ namespace TalukdarSalesAPI.Controllers
         }
 
         [HttpGet("getDailyAccumulatedOrderSummary")]
-        public ActionResult<ProductWiseRequisitionDto> GetDailyAccumulatedOrderSummary(DateTime from, DateTime to)
+        public ActionResult<ProductWiseRequisitionDto> GetDailyAccumulatedOrderSummary()
         {
-            var requisitionList = _salesRequisitionDetailRepository.GetAll().Where(n => n.CreatedDateTime.Date >= from.Date && n.CreatedDateTime.Date <= to.Date).ToList();
+            var oneMonthAgo = DateTime.Now.AddMonths(-1);
+            var requisitionList = _salesRequisitionDetailRepository.GetAll().Where(n => n.CreatedDateTime.Date >= oneMonthAgo.Date).ToList();
             var finishedGoodList = _finishedGoodsRepository.GetAll().ToDictionary(n => n.Id);
             var dailyFinishedGoodsQuantities = requisitionList
            .GroupBy(r => new { Date = r.CreatedDateTime.Date, r.FinishedGoodId })

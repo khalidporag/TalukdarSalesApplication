@@ -417,9 +417,9 @@ namespace TalukdarSalesAPI.Controllers
         [HttpGet("getTopFiveSellerWithDueAmount")]
         public ActionResult<User> GetTopFiveSellerWithDueAmount()
         {
-            var oneMonthAgo = DateTime.Now.AddMonths(-1);
+            var oneMonthAgo = DateTime.Now.AddMonths(-2);
 
-            var topUsersWithDueAmount = _userRepository.GetAll().Where(s => s.CreatedOn >= oneMonthAgo)
+            var topUsersWithDueAmount = _userRepository.GetAll().Where(s => s.CreatedOn >= oneMonthAgo && s.DueAmount > 0)
             .OrderByDescending(u => u.DueAmount)
             .Take(5)
             .ToList();
