@@ -5,6 +5,7 @@
         public int UserTypeId { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
+        public string ImageName { get; set; }
         public string PhoneNumber { get; set; }
         public decimal DueAmount { get; set; }
         public decimal MaxCreditLimit { get; set; }

@@ -13,6 +13,10 @@ import { ModalService } from 'src/app/services/modal.service';
   styleUrls: ['./product.component.scss']
 })
 export class ProductComponent implements OnInit {
+
+  file: File | null = null;
+  fileError: string = '';
+
   public products:any = [];
   public finishedGoodTypes:any = [];
   public createFinishedGoodForm!: FormGroup;
@@ -41,6 +45,16 @@ export class ProductComponent implements OnInit {
     this.getFinishGoodTypes();
   }
 
+  onFileChange(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.file = file;
+      this.fileError = '';
+    } else {
+      this.fileError = 'Please select an image file.';
+    }
+  }
+
   getFinishedGoods(){
     this.api.getallFinishedGoods(this.selectedType, this.productName)
     .subscribe(res=>{
@@ -67,7 +81,8 @@ export class ProductComponent implements OnInit {
       uOM:['', Validators.required],
       finishedGoodTypeId:[null, Validators.required],
       description:['', Validators.required],
-      unitPrice:['', Validators.required]
+      unitPrice:['', Validators.required],
+      image: [null, Validators.required]
     });
   }
 
@@ -104,14 +119,27 @@ export class ProductComponent implements OnInit {
   onSubmit(){
     if (this.createFinishedGoodForm.valid) {
       this.submitting = true;
-      let product = {
-        name: this.createFinishedGoodForm.value.name,
-        uom: this.createFinishedGoodForm.value.uOM,
-        goodTypeId: this.createFinishedGoodForm.value.finishedGoodTypeId,
-        description: this.createFinishedGoodForm.value.description,
-        unitPrice: this.createFinishedGoodForm.value.unitPrice
-      }
-      this.api.createFinishedGood(product).subscribe({
+      // let product = {
+      //   name: this.createFinishedGoodForm.value.name,
+      //   uom: this.createFinishedGoodForm.value.uOM,
+      //   goodTypeId: this.createFinishedGoodForm.value.finishedGoodTypeId,
+      //   description: this.createFinishedGoodForm.value.description,
+      //   unitPrice: this.createFinishedGoodForm.value.unitPrice
+      // }
+
+      const formData = new FormData();
+    formData.append('name', this.createFinishedGoodForm.value.name);
+    formData.append('uOM', this.createFinishedGoodForm.value.uOM);
+    formData.append('finishedGoodTypeId', this.createFinishedGoodForm.value.finishedGoodTypeId);
+    formData.append('description', this.createFinishedGoodForm.value.description);
+    formData.append('unitPrice', this.createFinishedGoodForm.value.unitPrice);
+
+    // Append the image file to the FormData object if it exists
+    if (this.file) {
+      formData.append('image', this.file, this.file.name);
+    }
+
+      this.api.createFinishedGood(formData).subscribe({
         next: (res) => {
           this.createFinishedGoodForm.reset();
           this.toast.success({detail:"SUCCESS", summary:res.message, duration: 5000});

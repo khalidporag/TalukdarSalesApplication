@@ -42,17 +42,45 @@ namespace TalukdarSalesAPI.Controllers
         }
 
         [HttpPost("createFinishedGood")]
-        public IActionResult CreateFinishGood([FromBody] FinishedGood finishedGoodObj)
+        public async Task<IActionResult> CreateFinishGoodAsync([FromForm] CreateFinishGoodDto input)
         {
-            if (finishedGoodObj == null)
+            if (input == null)
                 return BadRequest();
+            string uniqueFileName = "";
+            if (input.Image != null)
+            {
+                uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(input.Image.FileName);
+                var directoryPath = "wwwroot/images/products";
+                var filePath = Path.Combine(directoryPath, uniqueFileName);
+
+                // Ensure the directory exists
+                if (!Directory.Exists(directoryPath))
+                {
+                    Directory.CreateDirectory(directoryPath);
+                }
+
+                // Save the file
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await input.Image.CopyToAsync(stream);
+                }
+            }
+
+            var finishedGoodObj = new FinishedGood();
+            finishedGoodObj.Name = input.Name;
+            finishedGoodObj.LogoName = uniqueFileName;
             finishedGoodObj.IsActive = true;
+            finishedGoodObj.UOM = input.UOM;
+            finishedGoodObj.UnitPrice = input.UnitPrice;
+            finishedGoodObj.Description = input.Description;
+            finishedGoodObj.GoodTypeId = input.GoodTypeId;
+
             _finishedGoodsRepository.Add(finishedGoodObj);
             _finishedGoodsRepository.Commit();
             return Ok(new
             {
                 Status = 200,
-                Message = "Finish Good Type Added!"
+                Message = "Finish Good Added!"
             });
         }
 
