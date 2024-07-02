@@ -13,6 +13,10 @@ import { ModalService } from 'src/app/services/modal.service';
   styleUrls: ['./notice.component.scss']
 })
 export class NoticeComponent implements OnInit {
+
+  file: File | null = null;
+  fileError: string = '';
+
   public notices:any = [];
   public createNoticeForm!: FormGroup;
   createModal: boolean = false;
@@ -32,6 +36,16 @@ export class NoticeComponent implements OnInit {
     this.getNotices();
   }
 
+  onFileChange(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.file = file;
+      this.fileError = '';
+    } else {
+      this.fileError = 'Please select an image file.';
+    }
+  }
+
   getNotices(){
     this.api.getAllNotices()
     .subscribe(res=>{
@@ -43,7 +57,8 @@ export class NoticeComponent implements OnInit {
   private createInit(): void {
     this.createNoticeForm = this.fb.group({
       title:['', Validators.required],
-      description:['', Validators.required]
+      description:['', Validators.required],
+      image: [null, Validators.required]
     });
   }
 
@@ -61,7 +76,17 @@ export class NoticeComponent implements OnInit {
   onSubmit(){
     if (this.createNoticeForm.valid) {
       this.submitting = true;
-      this.api.createNotice(this.createNoticeForm.value).subscribe({
+
+    const formData = new FormData();
+    formData.append('title', this.createNoticeForm.value.title);
+    formData.append('description', this.createNoticeForm.value.description);
+
+    // Append the image file to the FormData object if it exists
+    if (this.file) {
+      formData.append('image', this.file, this.file.name);
+    }
+
+      this.api.createNotice(formData).subscribe({
         next: (res) => {
           this.createNoticeForm.reset();
           this.toast.success({detail:"SUCCESS", summary:res.message, duration: 5000});

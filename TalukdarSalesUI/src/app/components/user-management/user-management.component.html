@@ -10,6 +10,7 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
                 <thead>
                     <tr>
                         <th scope="col">#</th>
+                        <th scope="col"></th>
                         <th scope="col">First name</th>
                         <th scope="col">Last name</th>
                         <th scope="col">Username</th>
@@ -20,6 +21,7 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
                 <tbody>
                     <tr *ngFor="let user of users; let i= index">
                         <td>{{i+1}}</td>
+                        <img [src]="'/wwwroot/images/users/' + user.imageName" alt="User Image" width="50" height="50">
                         <td>{{user.firstName}}</td>
                         <td>{{user.lastName}}</td>
                         <td>{{user.username}}</td>
@@ -53,7 +55,7 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
                         <div class="form-group pt-3">
                             <div class="input-field" [class.error]="createUserForm.controls['userTypeId'].dirty && createUserForm.controls['userTypeId'].hasError('required')">
                               <span class="fa fa-user p-2"></span>
-                              <select formControlName="userTypeId" class="form-control">
+                              <select formControlName="userTypeId" class="form-control" [(ngModel)]="selectedUserType">
                                 <option value=null disabled>Select User Type</option>
                                 <option *ngFor="let type of userTypes" [value]="type.id">{{ type.typeName }}</option>
                               </select>
@@ -75,7 +77,14 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
                         <small *ngIf="createUserForm.controls['maxCreditLimit'].dirty && createUserForm.hasError('required','maxCreditLimit')" class="text-danger">*Max Credit Limit is required*</small>
                         
                         <!-- <button *ngIf="!submitting" class="cancel-btn" (click)="closeModal()">Cancel</button> -->
-                        
+                        <div class="form-group pt-3">
+                            <div class="input-field">
+                                <span class="fa fa-user p-2"></span>
+                                <input formControlName="image" type="file" (change)="onFileChange($event)">
+                            </div>
+                        </div>
+                        <small *ngIf="fileError" class="text-danger">{{ fileError }}</small>
+
                         <button *ngIf="!submitting" type="submit" class="btn btn-primary btn-block mt-4 w-100">Save</button>
                         <button type="button" class="btn btn-primary" *ngIf="submitting">
                             <i class="fas fa-spinner fa-pulse"></i>

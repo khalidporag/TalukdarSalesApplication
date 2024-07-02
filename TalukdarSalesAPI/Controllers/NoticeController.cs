@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using TalukdarSalesAPI.Interfaces;
 using TalukdarSalesAPI.Models;
+using TalukdarSalesAPI.Models.Dto;
 
 namespace TalukdarSalesAPI.Controllers
 {
@@ -15,17 +16,40 @@ namespace TalukdarSalesAPI.Controllers
         }
 
         [HttpPost("createNotice")]
-        public IActionResult CreateRole([FromBody] Notice input)
+        public async Task<IActionResult> CreateNoticeAsync([FromForm] CreateNoticeDto input)
         {
             if (input == null)
                 return BadRequest();
+
+            string uniqueFileName = "";
+            if (input.Image != null)
+            {
+                uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(input.Image.FileName);
+                var directoryPath = "wwwroot/images/notices";
+                var filePath = Path.Combine(directoryPath, uniqueFileName);
+
+                if (!Directory.Exists(directoryPath))
+                {
+                    Directory.CreateDirectory(directoryPath);
+                }
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await input.Image.CopyToAsync(stream);
+                }
+            }
 
             var notice = _noticeRepository.FindBy(x => x.Title == input.Title).FirstOrDefault();
 
             if (notice != null)
                 return NotFound(new { Message = "Title already Exist. Please try with another title!"});
 
-            _noticeRepository.Add(input);
+            var createNotice = new Notice();
+            createNotice.Title = input.Title;
+            createNotice.Description = input.Description;
+            createNotice.LogoName = uniqueFileName;
+
+            _noticeRepository.Add(createNotice);
             _noticeRepository.Commit();
 
             return Ok(new

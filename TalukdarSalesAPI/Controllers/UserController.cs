@@ -67,10 +67,46 @@ namespace TalukdarSalesAPI.Controllers
         }
 
         [HttpPost("register")]
-        public IActionResult RegisterUser([FromBody] User userObj)
+        public async Task<IActionResult> RegisterUserAsync([FromForm] CreateUserDto input)
         {
-            if (userObj == null)
+            if (input == null)
                 return BadRequest();
+
+            var userObj = new User();
+            userObj.UserTypeId = input.UserTypeId;
+            userObj.FirstName = input.FirstName;
+            userObj.LastName = input.LastName;
+            userObj.PhoneNumber = input.PhoneNumber;
+            userObj.DueAmount = input.DueAmount;
+            userObj.MaxCreditLimit = input.MaxCreditLimit;
+            userObj.MaxCreditDays = input.MaxCreditDays;
+            userObj.Address = input.Address;
+            userObj.ContactPersonName = input.ContactPersonName;
+            userObj.ContactPersonPhone = input.ContactPersonPhone;
+            userObj.Username = input.Username;
+            userObj.IsPayRollUser = input.IsPayRollUser;
+            userObj.RefreshToken = input.RefreshToken;
+            userObj.RefreshTokenExpiryTime = input.RefreshTokenExpiryTime;
+
+            string uniqueFileName = "";
+            if (input.Image != null)
+            {
+                uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(input.Image.FileName);
+                var directoryPath = "wwwroot/images/users";
+                var filePath = Path.Combine(directoryPath, uniqueFileName);
+
+                if (!Directory.Exists(directoryPath))
+                {
+                    Directory.CreateDirectory(directoryPath);
+                }
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await input.Image.CopyToAsync(stream);
+                }
+            }
+
+            userObj.ImageName = uniqueFileName;
 
             //check username
             if (CheckUsernameExistAsync(userObj.Username))

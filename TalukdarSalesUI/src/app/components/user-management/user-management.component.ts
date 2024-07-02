@@ -13,6 +13,12 @@ import { ModalService } from 'src/app/services/modal.service';
   styleUrls: ['./user-management.component.scss']
 })
 export class UserManagementComponent implements OnInit {
+
+  file: File | null = null;
+  fileError: string = '';
+  selectedUserType : any;
+  selectedRole: any;
+
   public users:any = [];
   public userTypes:any = [];
   public createUserForm!: FormGroup;
@@ -31,6 +37,16 @@ export class UserManagementComponent implements OnInit {
 
   ngOnInit(): void {
     this.getUsers();
+  }
+
+  onFileChange(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.file = file;
+      this.fileError = '';
+    } else {
+      this.fileError = 'Please select an image file.';
+    }
   }
 
   getUsers(){
@@ -55,7 +71,8 @@ export class UserManagementComponent implements OnInit {
       userTypeId:[null, Validators.required],
       userName:['', Validators.required],
       phoneNumber:['', Validators.required],
-      maxCreditLimit:[null, Validators.required]
+      maxCreditLimit:[null, Validators.required],
+      image: [null, Validators.required]
     });
   }
 
@@ -75,7 +92,21 @@ export class UserManagementComponent implements OnInit {
   onSubmit(){
     if (this.createUserForm.valid) {
       this.submitting = true;
-      this.auth.signUp(this.createUserForm.value).subscribe({
+
+    const formData = new FormData();
+    formData.append('firstName', this.createUserForm.value.firstName);
+    formData.append('lastName', this.createUserForm.value.lastName);
+    formData.append('userTypeId', this.selectedUserType);
+    formData.append('userName', this.createUserForm.value.userName);
+    formData.append('phoneNumber', this.createUserForm.value.phoneNumber);
+    formData.append('maxCreditLimit', this.createUserForm.value.maxCreditLimit);
+
+    // Append the image file to the FormData object if it exists
+    if (this.file) {
+      formData.append('image', this.file, this.file.name);
+    }
+
+      this.auth.signUp(formData).subscribe({
         next: (res) => {
           this.createUserForm.reset();
           this.toast.success({detail:"SUCCESS", summary:res.message, duration: 5000});

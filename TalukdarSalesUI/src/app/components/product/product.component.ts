@@ -119,15 +119,8 @@ export class ProductComponent implements OnInit {
   onSubmit(){
     if (this.createFinishedGoodForm.valid) {
       this.submitting = true;
-      // let product = {
-      //   name: this.createFinishedGoodForm.value.name,
-      //   uom: this.createFinishedGoodForm.value.uOM,
-      //   goodTypeId: this.createFinishedGoodForm.value.finishedGoodTypeId,
-      //   description: this.createFinishedGoodForm.value.description,
-      //   unitPrice: this.createFinishedGoodForm.value.unitPrice
-      // }
 
-      const formData = new FormData();
+    const formData = new FormData();
     formData.append('name', this.createFinishedGoodForm.value.name);
     formData.append('uOM', this.createFinishedGoodForm.value.uOM);
     formData.append('finishedGoodTypeId', this.createFinishedGoodForm.value.finishedGoodTypeId);
