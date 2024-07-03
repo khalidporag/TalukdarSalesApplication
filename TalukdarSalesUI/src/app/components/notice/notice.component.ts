@@ -8,20 +8,17 @@ import { AuthService } from 'src/app/services/auth.service';
 import { ModalService } from 'src/app/services/modal.service';
 
 @Component({
-  selector: 'app-user-management',
-  templateUrl: './user-management.component.html',
-  styleUrls: ['./user-management.component.scss']
+  selector: 'app-notice',
+  templateUrl: './notice.component.html',
+  styleUrls: ['./notice.component.scss']
 })
-export class UserManagementComponent implements OnInit {
+export class NoticeComponent implements OnInit {
 
   file: File | null = null;
   fileError: string = '';
-  selectedUserType : any;
-  selectedRole: any;
 
-  public users:any = [];
-  public userTypes:any = [];
-  public createUserForm!: FormGroup;
+  public notices:any = [];
+  public createNoticeForm!: FormGroup;
   createModal: boolean = false;
   submitting: boolean = false;
   bodyText = 'This text can be updated in modal 1';
@@ -36,7 +33,7 @@ export class UserManagementComponent implements OnInit {
   ){}
 
   ngOnInit(): void {
-    this.getUsers();
+    this.getNotices();
   }
 
   onFileChange(event: any): void {
@@ -49,39 +46,26 @@ export class UserManagementComponent implements OnInit {
     }
   }
 
-  getUsers(){
-    this.api.getUsers()
+  getNotices(){
+    this.api.getAllNotices()
     .subscribe(res=>{
-    this.users = res;
+    this.notices = res;
     });
   }
 
-  getUserTypes(){
-    this.api.getUserTypes()
-    .subscribe(res=>{
-    this.userTypes = res;
-    console.log(this.userTypes)
-    });
-  }
 
-  private createUserInit(): void {
-    this.createUserForm = this.fb.group({
-      firstName:['', Validators.required],
-      lastName:['', Validators.required],
-      userTypeId:[null, Validators.required],
-      userName:['', Validators.required],
-      phoneNumber:['', Validators.required],
-      maxCreditLimit:[null, Validators.required],
+  private createInit(): void {
+    this.createNoticeForm = this.fb.group({
+      title:['', Validators.required],
+      description:['', Validators.required],
       image: [null, Validators.required]
     });
   }
 
-  openUserModal() {
-    // this.modalService.open('modal-1');
+  openNoticeModal() {
     this.createModal = true;
     this.submitting = false;
-    this.getUserTypes();
-    this.createUserInit();
+    this.createInit();
   }
 
   closeModal(){
@@ -90,37 +74,33 @@ export class UserManagementComponent implements OnInit {
   }
 
   onSubmit(){
-    if (this.createUserForm.valid) {
+    if (this.createNoticeForm.valid) {
       this.submitting = true;
 
     const formData = new FormData();
-    formData.append('firstName', this.createUserForm.value.firstName);
-    formData.append('lastName', this.createUserForm.value.lastName);
-    formData.append('userTypeId', this.selectedUserType);
-    formData.append('userName', this.createUserForm.value.userName);
-    formData.append('phoneNumber', this.createUserForm.value.phoneNumber);
-    formData.append('maxCreditLimit', this.createUserForm.value.maxCreditLimit);
+    formData.append('title', this.createNoticeForm.value.title);
+    formData.append('description', this.createNoticeForm.value.description);
 
     // Append the image file to the FormData object if it exists
     if (this.file) {
       formData.append('image', this.file, this.file.name);
     }
 
-      this.auth.signUp(formData).subscribe({
+      this.api.createNotice(formData).subscribe({
         next: (res) => {
-          this.createUserForm.reset();
+          this.createNoticeForm.reset();
           this.toast.success({detail:"SUCCESS", summary:res.message, duration: 5000});
           this.closeModal();
-          this.getUsers();
+          this.getNotices();
         },
         error: (err) => {
-          this.toast.error({detail:"ERROR", summary:"Something when wrong!", duration: 5000});
+          this.toast.error({detail:"ERROR", summary:"Something went wrong!", duration: 5000});
           console.log(err);
           this.closeModal();
         },
       });
     } else {
-      ValidateForm.validateAllFormFields(this.createUserForm);
+      ValidateForm.validateAllFormFields(this.createNoticeForm);
     }
   }
 }

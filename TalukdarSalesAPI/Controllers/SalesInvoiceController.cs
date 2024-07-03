@@ -17,19 +17,24 @@ namespace TalukdarSalesAPI.Controllers
         private readonly ISalesInvoiceDetailsRepository _salesInvoiceDetailsRepository;
         private readonly ISalesRequisitionRepository _salesRequisitioinRepository;
         private readonly IUserRepository _userRepository;
+        private readonly ISalesRequisitionDetailRepository _salesRequisitionDetailRepository;
+        private readonly IFinishedGoodsRepository _finishGoodRepository;
 
         public SalesInvoiceController(ICollectionLedgerRepository collectionLedgerRepository,
             ISalesInvoiceRepository salesInvoiceRepository,
             ISalesInvoiceDetailsRepository salesInvoiceDetailsRepository,
             ISalesRequisitionRepository salesRequisitioinRepository,
-            IUserRepository userRepository)
+            IUserRepository userRepository,
+            ISalesRequisitionDetailRepository salesRequisitionDetailRepository,
+            IFinishedGoodsRepository finishGoodRepository)
         {
             _collectionLedgerRepository = collectionLedgerRepository;
             _salesInvoiceRepository = salesInvoiceRepository;
             _salesInvoiceDetailsRepository = salesInvoiceDetailsRepository;
             _salesRequisitioinRepository = salesRequisitioinRepository;
             _userRepository = userRepository;
-
+            _salesRequisitionDetailRepository = salesRequisitionDetailRepository;
+            _finishGoodRepository = finishGoodRepository;
         }
         [HttpPost("createCollectionLedger")]
         public IActionResult CreateCollectionLedger([FromBody] CollectionLedger collectionLedgerObj)
@@ -76,6 +81,90 @@ namespace TalukdarSalesAPI.Controllers
                 UserId = s.UserId
             }).ToList();
             return Ok(collectionHistory);
+        }
+
+        [HttpPost("createBulkInvoiceWithDetails")]
+        public IActionResult CreateBulkInvoiceWithDetails(RequisitionDto obj)
+        {
+            List<int> requisitionId = obj.RequistionIds
+            .Split(',')
+            .Select(int.Parse)
+            .ToList();
+
+            var requisitionList = _salesRequisitioinRepository.GetAll().Where(n => n.IsActive == true).ToList();
+            requisitionList = requisitionList.Where(n => requisitionId.Contains(n.Id)).ToList();
+            if (requisitionList.Count == 0)
+                return BadRequest();
+            foreach (var requisition in requisitionList)
+            {
+                var requisitionDetails = _salesRequisitionDetailRepository.GetAll().ToList();
+                requisitionDetails = requisitionDetails.Where(n => n.SalesRequisitionId == requisition.Id).ToList();
+                var totalQuantity = 0.0;
+                var totalPrice = 0.0;
+                foreach (var details in requisitionDetails)
+                {
+                    totalQuantity += (double)details.Quantity;
+                    totalPrice += (double)details.Price * (double)details.Quantity;
+                }
+
+                var createSalesInvoice = new SalesInvoice();
+                var invoiceDetailsList = new List<SalesInvoiceDetails>();
+
+                createSalesInvoice.TotalPrice = totalPrice;
+                createSalesInvoice.Quantity = totalQuantity;
+                createSalesInvoice.UserId = requisition.UserId;
+                createSalesInvoice.SalesRequisitionId = requisition.Id;
+                createSalesInvoice.DiscountAmount = 0;
+                createSalesInvoice.DiscountPercentage = 0;
+                createSalesInvoice.CollectionAmount = 0;
+                createSalesInvoice.CreatedDateTime = DateTime.Now;
+
+                _salesInvoiceRepository.Add(createSalesInvoice);
+                _salesInvoiceRepository.Commit();
+
+                if (createSalesInvoice?.Id != null)
+                {
+                    var userInfo = _userRepository.GetSingle(createSalesInvoice.UserId);
+                    userInfo.DueAmount = (decimal)createSalesInvoice?.TotalPrice;
+                    _userRepository.Update(userInfo);
+                    _userRepository.Commit();
+
+                    string invoiceSerialNo = "INV - " + createSalesInvoice.Id.ToString("D6");
+
+                    createSalesInvoice.InvoiceSerialNo = invoiceSerialNo;
+                    _salesInvoiceRepository.Update(createSalesInvoice);
+                    _salesInvoiceRepository.Commit();
+
+                    foreach (var details in requisitionDetails)
+                    {
+                        var invoiceDetails = new SalesInvoiceDetails();
+                        invoiceDetails.SalesInvoiceId = createSalesInvoice.Id;
+                        invoiceDetails.FinishedGoodsId = details.FinishedGoodId;
+                        invoiceDetails.CreatedDateTime = DateTime.Now;
+                        invoiceDetails.Quantity = (double)details?.Quantity;
+                        invoiceDetails.Price = (double)details?.Price;
+                        invoiceDetails.DiscountAmount = 0;
+                        invoiceDetails.DiscountPercentage = 0;
+
+                        invoiceDetailsList.Add(invoiceDetails);
+                    }
+
+                    _salesInvoiceDetailsRepository.AddRange(invoiceDetailsList);
+                    _salesInvoiceDetailsRepository.Commit();
+
+                    var requisitionInfo = _salesRequisitioinRepository.GetSingle((int)createSalesInvoice?.SalesRequisitionId);
+                    requisitionInfo.IsActive = false;
+                    _salesRequisitioinRepository.Update(requisitionInfo);
+                    _salesRequisitioinRepository.Commit();
+                }
+
+
+            }
+            return Ok(new
+            {
+                Status = 200,
+                Message = "Sales Invoice Created!"
+            });
         }
 
         [HttpPost("createSalesInvoiceWithDetails")]
@@ -254,6 +343,88 @@ namespace TalukdarSalesAPI.Controllers
         public ActionResult<SalesInvoiceDetails> GetAllSalesInvoiceDetails()
         {
             return Ok(_salesInvoiceDetailsRepository.GetAll());
+        }
+
+        [HttpGet("getTopFiveSeller")]
+        public ActionResult<TopSellerDto> GetTopFiveSeller()
+        {
+            var userList = _userRepository.GetAll().ToDictionary(n => n.Id);
+            var result = _salesInvoiceRepository.GetAll();
+            var oneMonthAgo = DateTime.Now.AddMonths(-1);
+
+            var topSellers = result
+            .Where(s => s.CreatedOn >= oneMonthAgo)
+            .GroupBy(s => s.UserId)
+            .Select(g => new TopSellerDto
+            {
+                UserId = g.Key,
+                UserName = userList.ContainsKey(g.Key)? userList[g.Key].FirstName + " " + userList[g.Key].LastName : "",
+                TotalAmount = g.Sum(s => s.TotalPrice)
+            })
+            .OrderByDescending(g => g.TotalAmount)
+            .Take(5)
+            .ToList();
+
+            return Ok(topSellers);
+        }
+
+        [HttpGet("getTopFiveSellingProduct")]
+        public ActionResult<SellingProductDto> GetTopFiveSellingProduct()
+        {
+            var productList = _finishGoodRepository.GetAll().ToDictionary(n => n.Id);
+            var result = _salesInvoiceDetailsRepository.GetAll();
+            var oneMonthAgo = DateTime.Now.AddMonths(-1);
+
+            var topSellingProduct = result
+            .Where(s => s.CreatedOn >= oneMonthAgo)
+            .GroupBy(s => s.FinishedGoodsId)
+            .Select(g => new SellingProductDto
+            {
+                FinishedGoodId = g.Key,
+                FinishGoodName = productList.ContainsKey(g.Key) ? productList[g.Key].Name : "",
+                Quantity = g.Sum(s => s.Quantity)
+            })
+            .OrderByDescending(g => g.Quantity)
+            .Take(5)
+            .ToList();
+
+            return Ok(topSellingProduct);
+        }
+
+        [HttpGet("getLessFiveSellingProduct")]
+        public ActionResult<SellingProductDto> GetLessFiveSellingProduct()
+        {
+            var productList = _finishGoodRepository.GetAll().ToDictionary(n => n.Id);
+            var result = _salesInvoiceDetailsRepository.GetAll();
+            var oneMonthAgo = DateTime.Now.AddMonths(-1);
+
+            var topSellingProduct = result
+            .Where(s => s.CreatedOn >= oneMonthAgo)
+            .GroupBy(s => s.FinishedGoodsId)
+            .Select(g => new SellingProductDto
+            {
+                FinishedGoodId = g.Key,
+                FinishGoodName = productList.ContainsKey(g.Key) ? productList[g.Key].Name : "",
+                Quantity = g.Sum(s => s.Quantity)
+            })
+            .OrderBy(g => g.Quantity)
+            .Take(5)
+            .ToList();
+
+            return Ok(topSellingProduct);
+        }
+
+        [HttpGet("getTopFiveSellerWithDueAmount")]
+        public ActionResult<User> GetTopFiveSellerWithDueAmount()
+        {
+            var oneMonthAgo = DateTime.Now.AddMonths(-2);
+
+            var topUsersWithDueAmount = _userRepository.GetAll().Where(s => s.CreatedOn >= oneMonthAgo && s.DueAmount > 0)
+            .OrderByDescending(u => u.DueAmount)
+            .Take(5)
+            .ToList();
+
+            return Ok(topUsersWithDueAmount);
         }
     }
 }

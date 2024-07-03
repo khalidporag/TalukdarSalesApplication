@@ -12,6 +12,18 @@ export class DashboardComponent implements OnInit{
   public users:any = [];
   public role!:string;
 
+  public topFiveSeller:any = [];
+  public topFiveSellingProduct:any = [];
+
+  public lessFiveSellingProduct:any = [];
+
+  public topFiveSellerWithDueAmount:any = [];
+
+  public dailyAccumulatedOrderSummary:any = [];
+
+
+
+
   public fullName : string = "";
   constructor(private api : ApiService, private auth: AuthService, private userStore: UserStoreService) { }
 
@@ -32,6 +44,49 @@ export class DashboardComponent implements OnInit{
       const roleFromToken = this.auth.getRoleFromToken();
       this.role = val || roleFromToken;
     })
+
+    this.getTopFiveSeller();
+    this.getTopFiveSellingProduct();
+    this.getLessFiveSellingProduct();
+    this.getTopFiveSellerWithDueAmount();
+    this.getDailyAccumulatedOrderSummary();
+  }
+
+  getTopFiveSeller(){
+    this.api.getTopFiveSeller()
+    .subscribe(res=>{
+    this.topFiveSeller = res;
+    console.log(this.topFiveSeller);
+    });
+  }
+
+  getTopFiveSellingProduct(){
+    this.api.getTopFiveSellingProduct()
+    .subscribe(res=>{
+    this.topFiveSellingProduct = res;
+    });
+  }
+
+  getLessFiveSellingProduct(){
+    this.api.getLessFiveSellingProduct()
+    .subscribe(res=>{
+    this.lessFiveSellingProduct = res;
+    });
+  }
+
+  getTopFiveSellerWithDueAmount(){
+    this.api.getTopFiveSellerWithDueAmount()
+    .subscribe(res=>{
+    this.topFiveSellerWithDueAmount = res;
+    });
+  }
+
+  getDailyAccumulatedOrderSummary()
+  {
+    this.api.getDailyAccumulatedOrderSummary()
+    .subscribe(res=>{
+    this.dailyAccumulatedOrderSummary = res;
+    });
   }
 
   logout(){

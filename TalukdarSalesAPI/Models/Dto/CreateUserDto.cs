@@ -1,6 +1,6 @@
-﻿namespace TalukdarSalesAPI.Models
+﻿namespace TalukdarSalesAPI.Models.Dto
 {
-    public class User: EntityBase
+    public class CreateUserDto
     {
         public int UserTypeId { get; set; }
         public string FirstName { get; set; }
@@ -19,5 +19,6 @@
         public string Token { get; set; }
         public string RefreshToken { get; set; }
         public DateTime RefreshTokenExpiryTime { get; set; }
+        public IFormFile Image { get; set; }
     }
 }

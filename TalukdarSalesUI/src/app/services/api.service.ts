@@ -10,6 +10,8 @@ export class ApiService {
   private finishedGoodUrl: string = 'https://localhost:7019/api/FinishedGood/';
   private SalesRequisitionUrl: string = 'https://localhost:7019/api/SalesRequisition/';
   private SalesInvoiceUrl: string = 'https://localhost:7019/api/SalesInvoice/';
+  private NoticeUrl: string = 'https://localhost:7019/api/Notice/';
+
 
 
 
@@ -113,6 +115,10 @@ export class ApiService {
     return this.http.get<any>(`${this.SalesRequisitionUrl}getProductWiseDailyRequisition`);
   }
 
+  createBulkInvoiceWithDetails(obj: any) {
+    return this.http.post<any>(`${this.SalesInvoiceUrl}createBulkInvoiceWithDetails`, obj);
+  }
+
   createSalesInvoiceWithDetails(obj: any) {
     return this.http.post<any>(`${this.SalesInvoiceUrl}createSalesInvoiceWithDetails`, obj)
   }
@@ -134,6 +140,39 @@ export class ApiService {
     if (param2 !== undefined) params.salesInvoiceId = param2;
     const queryString = new URLSearchParams(params).toString();
     return this.http.get<any>(`${this.SalesInvoiceUrl}getCollectionHistory?${queryString}`);
+  }
+
+  getTopFiveSeller()
+  {
+    return this.http.get<any>(`${this.SalesInvoiceUrl}getTopFiveSeller`);
+  }
+
+  getTopFiveSellingProduct()
+  {
+    return this.http.get<any>(`${this.SalesInvoiceUrl}getTopFiveSellingProduct`);
+  }
+
+  getLessFiveSellingProduct()
+  {
+    return this.http.get<any>(`${this.SalesInvoiceUrl}getLessFiveSellingProduct`);
+  }
+
+  getTopFiveSellerWithDueAmount()
+  {
+    return this.http.get<any>(`${this.SalesInvoiceUrl}getTopFiveSellerWithDueAmount`);
+  }
+
+  getDailyAccumulatedOrderSummary()
+  {
+    return this.http.get<any>(`${this.SalesRequisitionUrl}getDailyAccumulatedOrderSummary`);
+  }
+
+  createNotice(obj: any) {
+    return this.http.post<any>(`${this.NoticeUrl}createNotice`, obj)
+  }
+
+  getAllNotices() {
+    return this.http.get<any>(`${this.NoticeUrl}getAllNotices`);
   }
   
 }

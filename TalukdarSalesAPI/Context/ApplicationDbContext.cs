@@ -24,5 +24,6 @@ namespace TalukdarSalesAPI.Context
         public DbSet<SalesInvoice> SalesInvoices { get; set; }
         public DbSet<SalesInvoiceDetails> SalesInvoiceDetails { get; set; }
         public DbSet<TimeSetting> TimeSettings { get; set; }
+        public DbSet<Notice> Notices { get; set; }
     }
 }

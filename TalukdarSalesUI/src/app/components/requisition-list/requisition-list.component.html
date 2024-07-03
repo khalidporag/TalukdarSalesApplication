@@ -21,11 +21,11 @@
       <button class="create-new" (click)="onCreateNew()">Create New</button>
     </div>
     <div class="table-responsive">
-      <button (click)="sendSelectedRequisitions()">Approve Selected</button>
+      <button (click)="sendSelectedRequisitions()" *ngIf="isShow">Approve Selected</button>
         <table class="requisitions-table">
             <thead>
                 <tr>
-                  <th scope="col">
+                  <th scope="col" *ngIf="isShow">
                     <input type="checkbox" (change)="toggleSelectAll($event)">
                   </th>
                     <th scope="col">#</th>
@@ -37,7 +37,7 @@
             </thead>
             <tbody>
                 <tr *ngFor="let requisition of requisitionList; let i= index">
-                  <td>
+                  <td *ngIf="isShow">
                     <input type="checkbox" [(ngModel)]="requisition.selected" (change)="onCheckboxChange()">
                  </td>
                     <td>{{i+1}}</td>

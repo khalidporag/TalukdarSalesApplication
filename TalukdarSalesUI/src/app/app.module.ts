@@ -28,6 +28,7 @@ import { ProductwiseRequisitionComponent } from './components/productwise-requis
 import { TimeSettingComponent } from './components/time-setting/time-setting.component';
 import { SidebarAreaComponent } from './sidebar-area/sidebar-area.component';
 import { HeaderComponent } from './header/header.component';
+import { NoticeComponent } from './components/notice/notice.component';
 
 @NgModule({
   declarations: [
@@ -51,7 +52,8 @@ import { HeaderComponent } from './header/header.component';
     ProductwiseRequisitionComponent,
     TimeSettingComponent,
     SidebarAreaComponent,
-    HeaderComponent
+    HeaderComponent,
+    NoticeComponent
   ],
   imports: [
     BrowserModule,
@@ -60,7 +62,8 @@ import { HeaderComponent } from './header/header.component';
     NgToastModule,
     SharedModule,
     FormsModule,
-    BrowserAnimationsModule
+    BrowserAnimationsModule,
+    // QuillModule.forRoot()
   ],
   providers: [{
     provide:HTTP_INTERCEPTORS,
