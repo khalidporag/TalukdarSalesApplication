@@ -72,7 +72,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles(); // This line enables serving static files
+
+
 app.UseCors("MyPolicy");
+
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -24,14 +24,18 @@ namespace TalukdarSalesAPI.Controllers
     {
         private readonly IUserRepository _userRepository;
         private readonly IUserTypeRepository _userTypeRepository;
+        private readonly IUserRoleMappingRepository _userRoleMappingRepository;
+
         private readonly ApplicationDbContext _authContext;
         public UserController(
             IUserRepository userRepository,
             IUserTypeRepository userTypeRepository,
+            IUserRoleMappingRepository userRoleMappingRepository,
             ApplicationDbContext authContext)
         {
             _userRepository = userRepository;
             _userTypeRepository = userTypeRepository;
+            _userRoleMappingRepository = userRoleMappingRepository;
             _authContext = authContext;
         }
 
@@ -120,6 +124,16 @@ namespace TalukdarSalesAPI.Controllers
             userObj.Token = "";
             _userRepository.Add(userObj);
             _userRepository.Commit();
+
+            if( userObj.Id > 0 && input.RoleId > 0)
+            {
+                var userRoleMapping = new UserRoleMapping();
+                userRoleMapping.UserId = userObj.Id;
+                userRoleMapping.RoleId = input.RoleId;
+                _userRoleMappingRepository.Add(userRoleMapping);
+                _userRoleMappingRepository.Commit();
+            }
+
             return Ok(new
             {
                 Status = 200,

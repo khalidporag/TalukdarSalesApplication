@@ -37,6 +37,10 @@ export class ApiService {
     return this.http.post<any>(`${this.roleUrl}createRole`, obj)
   }
 
+  addRoleWiseModule(obj: any) {
+    return this.http.post<any>(`${this.roleUrl}addRoleWiseModule`, obj)
+  }
+
   getRoles() {
     return this.http.get<any>(`${this.roleUrl}getAllRoles`);
   }

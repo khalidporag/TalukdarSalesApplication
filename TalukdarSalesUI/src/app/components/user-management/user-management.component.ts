@@ -19,6 +19,7 @@ export class UserManagementComponent implements OnInit {
   selectedUserType : any;
   selectedRole: any;
 
+  public roles:any = [];
   public users:any = [];
   public userTypes:any = [];
   public createUserForm!: FormGroup;
@@ -37,6 +38,7 @@ export class UserManagementComponent implements OnInit {
 
   ngOnInit(): void {
     this.getUsers();
+    this.getRoles();
   }
 
   onFileChange(event: any): void {
@@ -47,6 +49,13 @@ export class UserManagementComponent implements OnInit {
     } else {
       this.fileError = 'Please select an image file.';
     }
+  }
+
+  getRoles(){
+    this.api.getRoles()
+    .subscribe(res=>{
+    this.roles = res;
+    });
   }
 
   getUsers(){
@@ -69,6 +78,7 @@ export class UserManagementComponent implements OnInit {
       firstName:['', Validators.required],
       lastName:['', Validators.required],
       userTypeId:[null, Validators.required],
+      roleId:[null, Validators.required],
       userName:['', Validators.required],
       phoneNumber:['', Validators.required],
       maxCreditLimit:[null, Validators.required],
@@ -96,6 +106,7 @@ export class UserManagementComponent implements OnInit {
     const formData = new FormData();
     formData.append('firstName', this.createUserForm.value.firstName);
     formData.append('lastName', this.createUserForm.value.lastName);
+    formData.append('roleId', this.selectedRole);
     formData.append('userTypeId', this.selectedUserType);
     formData.append('userName', this.createUserForm.value.userName);
     formData.append('phoneNumber', this.createUserForm.value.phoneNumber);

@@ -21,7 +21,7 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
                 <tbody>
                     <tr *ngFor="let user of users; let i= index">
                         <td>{{i+1}}</td>
-                        <img [src]="'/wwwroot/images/users/' + user.imageName" alt="User Image" width="50" height="50">
+                        <img [src]="'/images/users/' + user.imageName" alt="User Image" width="50" height="50">
                         <td>{{user.firstName}}</td>
                         <td>{{user.lastName}}</td>
                         <td>{{user.username}}</td>
@@ -52,6 +52,18 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
                             <div class="input-field" [class.error]="createUserForm.controls['lastName'].dirty && createUserForm.hasError('required','lastName')"> <span class="fa fa-user p-2"></span> <input formControlName="lastName" type="text" placeholder="Last Name"> </div>
                         </div>
                         <small *ngIf="createUserForm.controls['lastName'].dirty && createUserForm.hasError('required','lastName')" class="text-danger">*Last Name is required*</small>
+                        
+                        <div class="form-group pt-3">
+                            <div class="input-field" [class.error]="createUserForm.controls['roleId'].dirty && createUserForm.controls['roleId'].hasError('required')">
+                              <span class="fa fa-user p-2"></span>
+                              <select formControlName="roleId" class="form-control" [(ngModel)]="selectedRole">
+                                <option value=null disabled>Select Role</option>
+                                <option *ngFor="let role of roles" [value]="role.id">{{ role.name }}</option>
+                              </select>
+                            </div>
+                        </div>
+                        <small *ngIf="createUserForm.controls['userTypeId'].dirty && createUserForm.controls['userTypeId'].hasError('required')" class="text-danger">*User Type is required*</small>
+                        
                         <div class="form-group pt-3">
                             <div class="input-field" [class.error]="createUserForm.controls['userTypeId'].dirty && createUserForm.controls['userTypeId'].hasError('required')">
                               <span class="fa fa-user p-2"></span>
@@ -60,8 +72,8 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
                                 <option *ngFor="let type of userTypes" [value]="type.id">{{ type.typeName }}</option>
                               </select>
                             </div>
-                          </div>
-                          <small *ngIf="createUserForm.controls['userTypeId'].dirty && createUserForm.controls['userTypeId'].hasError('required')" class="text-danger">*User Type is required*</small>
+                        </div>
+                        <small *ngIf="createUserForm.controls['userTypeId'].dirty && createUserForm.controls['userTypeId'].hasError('required')" class="text-danger">*User Type is required*</small>
                         
                         <div class="form-group pt-3">
                             <div class="input-field" [class.error]="createUserForm.controls['userName'].dirty && createUserForm.hasError('required','userName')"> <span class="fa fa-user p-2"></span> <input formControlName="userName" type="text" placeholder="User Name"> </div>
