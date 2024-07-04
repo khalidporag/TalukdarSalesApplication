@@ -1,33 +1,86 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #f2f2f2;
+// body {
+//     font-family: Arial, sans-serif;
+//     margin: 0;
+//     padding: 0;
+//     display: flex;
+//     justify-content: center;
+//     align-items: center;
+//     height: 100vh;
+//     background-color: #f2f2f2;
+//   }
+
+//   .message {
+//     background-color: #fff;
+//     border-radius: 8px;
+//     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+//     padding: 20px;
+//     max-width: 400px;
+//     text-align: center;
+//   }
+
+//   .message h2 {
+//     color: #333;
+//     margin-top: 0;
+//   }
+
+//   .message p {
+//     color: #666;
+//     margin-bottom: 0;
+//   }
+
+//   .hidden {
+//     display: none;
+// }
+
+
+@use "variables" as *;
+@use "mixins" as *;
+
+.whole-dashboard {
+  height: 100%;
+}
+
+.dashboard-body {
+  padding: 30px;
+  position: relative;
+  overflow-x: hidden;
+
+  @include breakpoint-max (991px) {
+    padding: 15px;
   }
-  
-  .message {
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    max-width: 400px;
-    text-align: center;
+
+  &::before {
+    content: "";
+    position: absolute;
+    height: 100%;
+    width: 90px;
+    background-color: $primaryColor;
+    left: 0;
+    bottom: 0;
+    z-index: -1;
+    pointer-events: none;
+
+    @include breakpoint-max (991px) {
+      width: 0;
+    }
   }
-  
-  .message h2 {
-    color: #333;
-    margin-top: 0;
+
+  &__inner {
+    margin-left: 300px;
+    transition: 0.3s;
+    margin-top: 100px;
+
+    @include breakpoint-max(991px) {
+      margin-left: 0;
+    }
+
+    &--active {
+      margin-left: 90px;
+    }
+
+    p {
+      color: #717171;
+      font-size: 15px;
+    }
   }
-  
-  .message p {
-    color: #666;
-    margin-bottom: 0;
-  }
-  
-  .hidden {
-    display: none;
 }

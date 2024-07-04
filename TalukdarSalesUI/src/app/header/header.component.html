@@ -1,0 +1,23 @@
+<div class="header" [ngClass]="{ header__active: isHeaderFullArea }">
+    <div class="header__inner">
+        <div class="hamburger">
+            <button (click)="openSidebar()">
+                <img src="assets/images/hambar.svg" alt="">
+            </button>
+
+            <button class="mobile-ham" (click)="openSidebarMobile()">
+                <!-- <i class="fa-solid fa-align-left"></i> -->
+                <img src="assets/images/hambar.svg" alt="">
+            </button>
+        </div>
+    </div>
+
+    <div class="header-bottom">
+        <div class="header-bottom__inner">
+            <h3>{{ pageTitle }}</h3>
+            <!-- <ul>
+                <li>{{ parentPage }} <img src="assets/images/right-arrow.svg" alt=""> {{ pageTitle }}</li>
+            </ul> -->
+        </div>
+    </div>
+</div>

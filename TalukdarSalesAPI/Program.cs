@@ -42,6 +42,7 @@ builder.Services.AddScoped<ICollectionLedgerRepository, CollectionLedgerReposito
 builder.Services.AddScoped<ISalesInvoiceRepository, SalesInvoiceRepository>();
 builder.Services.AddScoped<ISalesInvoiceDetailsRepository, SalesInvoiceDetailsRepository>();
 builder.Services.AddScoped<ITimeSettingRepository, TimeSettingRepository>();
+builder.Services.AddScoped<INoticeRepository, NoticeRepository>();
 
 builder.Services.AddAuthentication(x =>
 {
@@ -71,7 +72,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles(); // This line enables serving static files
+
+
 app.UseCors("MyPolicy");
+
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -20,6 +20,7 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
                 <thead>
                     <tr>
                         <th scope="col">#</th>
+                        <th scope="col"></th>
                         <th scope="col">Name</th>
                         <th scope="col">UOM</th>
                         <th scope="col">Unit Price</th>
@@ -31,6 +32,7 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
                 <tbody>
                     <tr *ngFor="let product of products; let i= index">
                         <td>{{i+1}}</td>
+                        <img [src]="'/wwwroot/images/products/' + product.logoName" alt="Product Logo" width="50" height="50">
                         <td>{{product.name}}</td>
                         <td>{{product.uom}}</td>
                         <td>{{product.unitPrice}}</td>
@@ -83,6 +85,15 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
                             <div class="input-field" [class.error]="createFinishedGoodForm.controls['description'].dirty && createFinishedGoodForm.hasError('required','description')"> <span class="fa fa-user p-2"></span> <input formControlName="description" type="text" placeholder="Description"> </div>
                         </div>
                         <small *ngIf="createFinishedGoodForm.controls['description'].dirty && createFinishedGoodForm.hasError('required','description')" class="text-danger">*Description is required*</small>
+                        
+                        <div class="form-group pt-3">
+                            <div class="input-field">
+                                <span class="fa fa-user p-2"></span>
+                                <input formControlName="image" type="file" (change)="onFileChange($event)">
+                            </div>
+                        </div>
+                        <small *ngIf="fileError" class="text-danger">{{ fileError }}</small>
+
                         <button *ngIf="!submitting" type="submit" class="btn btn-primary btn-block mt-4 w-100">Save</button>
                         <button type="button" class="btn btn-primary" *ngIf="submitting">
                             <i class="fas fa-spinner fa-pulse"></i>

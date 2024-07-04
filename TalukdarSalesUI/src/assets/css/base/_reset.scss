@@ -62,13 +62,13 @@ img {
 }
 
 @include breakpoint-max (991px) {
-    .col-rev{
+    .col-rev {
         flex-direction: column-reverse;
     }
 }
 
 @include breakpoint-max (768px) {
-    .col-rev-md{
+    .col-rev-md {
         flex-direction: column-reverse;
     }
 }

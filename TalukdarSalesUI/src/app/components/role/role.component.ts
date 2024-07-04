@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgToastService } from 'ng-angular-popup';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import ValidateForm from 'src/app/helpers/validationform';
+import { ApplicationModule } from 'src/app/models/application-module.model';
 import { ApiService } from 'src/app/services/api.service';
 import { AuthService } from 'src/app/services/auth.service';
 import { ModalService } from 'src/app/services/modal.service';
@@ -14,10 +15,14 @@ import { ModalService } from 'src/app/services/modal.service';
 })
 export class RoleComponent implements OnInit {
   public roles:any = [];
-  public applicationModules:any = [];
+  applicationModules: ApplicationModule[] = [];
+  // public applicationModules:any = [];
   public userTypes:any = [];
   public createRoleForm!: FormGroup;
   public addModuleToRoleForm!: FormGroup;
+
+  roleId: any; // Assuming you have a way to set the roleId
+  errorMessage: any;
 
   createModal: boolean = false;
   addModuleToRoleModal: boolean = false;
@@ -95,8 +100,9 @@ export class RoleComponent implements OnInit {
     this.createInit();
   }
 
-  openAddModuleModal() {
+  openAddModuleModal(id: any) {
     // this.modalService.open('modal-1');
+    this.roleId = id;
     this.addModuleToRoleModal = true;
     this.submitting = false;
     this.getApplicationModuleList();
@@ -131,10 +137,33 @@ export class RoleComponent implements OnInit {
     }
   }
 
-  assignModuleToRole()
-  {
+  assignModuleToRole() {
+    const selectedModuleIds = this.applicationModules
+      .filter(item => item.checked)
+      .map(item => item.id);
+
+    const obj = {
+      RoleId: this.roleId,
+      ModuleIds: selectedModuleIds
+    };
+
     this.submitting = true;
+    this.errorMessage = null; // Clear previous error message
+
+    this.api.addRoleWiseModule(obj).subscribe({
+      next: (res) => {
+        this.toast.success({detail:"SUCCESS", summary:res.message, duration: 5000});
+        this.closeModal();
+        this.getRoles();
+      },
+      error: (err) => {
+        this.toast.error({detail:"ERROR", summary:"Something when wrong!", duration: 5000});
+        console.log(err);
+        this.closeModal();
+      },
+    });
   }
+
   onModuleSubmitToRole(){
     if (this.createRoleForm.valid) {
       this.submitting = true;

@@ -252,5 +252,27 @@ namespace TalukdarSalesAPI.Controllers
             var result = _timeSettingRepository.GetAll().OrderByDescending(n => n.CreatedOn).FirstOrDefault();
             return Ok(result);
         }
+
+        [HttpGet("getDailyAccumulatedOrderSummary")]
+        public ActionResult<ProductWiseRequisitionDto> GetDailyAccumulatedOrderSummary()
+        {
+            var oneMonthAgo = DateTime.Now.AddMonths(-1);
+            var requisitionList = _salesRequisitionDetailRepository.GetAll().Where(n => n.CreatedDateTime.Date >= oneMonthAgo.Date).ToList();
+            var finishedGoodList = _finishedGoodsRepository.GetAll().ToDictionary(n => n.Id);
+            var dailyFinishedGoodsQuantities = requisitionList
+           .GroupBy(r => new { Date = r.CreatedDateTime.Date, r.FinishedGoodId })
+           .Select(g => new ProductWiseRequisitionDto
+           {
+               RequisitionDate = g.Key.Date,
+               FinishedGoodId = g.Key.FinishedGoodId,
+               FinishedGoodName = finishedGoodList.ContainsKey(g.Key.FinishedGoodId) ? finishedGoodList[g.Key.FinishedGoodId].Name : "",
+               TotalQuantity = g.Sum(r => r.Quantity)
+           })
+           .OrderBy(result => result.RequisitionDate)
+           .ThenBy(result => result.FinishedGoodId)
+           .ToList();
+
+            return Ok(dailyFinishedGoodsQuantities);
+        }
     }
 }

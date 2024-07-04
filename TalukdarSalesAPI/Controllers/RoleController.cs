@@ -78,7 +78,7 @@ namespace TalukdarSalesAPI.Controllers
             return Ok(new
             {
                 Status = 200,
-                Message = "Role Added!"
+                Message = "Module Added to Role!"
             });
         }
 
