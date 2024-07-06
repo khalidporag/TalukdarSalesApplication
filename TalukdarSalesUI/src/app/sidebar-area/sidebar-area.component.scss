@@ -86,7 +86,6 @@
             left: 0;
             right: 0;
             z-index: 1;
-            // background: linear-gradient(205deg, rgb(7, 0, 121) 16%, rgb(169, 8, 126) 49%, rgb(178 10 109) 100%);
             background: linear-gradient(210deg, #43cea2 -19%, #185a9d 78%);
             border-bottom: 1px solid #4c7192;
             margin-bottom: 10px;
@@ -266,19 +265,6 @@
                         height: 0;
                     }
 
-                    .mobile-title {
-                        font-size: 16px;
-                        color: #fff;
-                        position: relative;
-                        cursor: pointer;
-                        padding-left: 0;
-                        display: none;
-
-                        &::before {
-                            width: 0;
-                        }
-                    }
-
                     li {
                         font-size: 1em;
                         padding-left: 28px;
@@ -329,7 +315,9 @@
         }
 
         .sidebar-inner {
-            overflow: initial;
+            // overflow: initial;
+            overflow-y: overlay;
+            overflow-x: hidden;
             padding: 0;
 
             .logo {
@@ -347,12 +335,6 @@
                 height: 100%;
 
                 .nav {
-                    // position: fixed;
-                    // left: -70px;
-                    // top: 120px;
-                    // height: calc(100vh - 100px);
-                    // overflow: overlay;
-
                     h4 {
                         width: 100%;
 
@@ -365,7 +347,6 @@
                             width: 20px;
                             margin-left: auto;
                             margin-right: auto;
-                            // filter: brightness(0) saturate(100%) invert(70%) sepia(97%) saturate(925%) hue-rotate(353deg) brightness(102%) contrast(102%);
                             filter: brightness(0) saturate(97%) invert(70%) sepia(10%) saturate(800%) hue-rotate(148deg) brightness(78%) contrast(42%);
                         }
                     }
@@ -389,22 +370,7 @@
                             }
 
                             span {
-                                position: absolute;
-                                left: 91px;
-                                // background-color: #173753;
-                                background: linear-gradient(329deg, #307a62 0%, #185a9d 100%);
-                                padding: 10px;
-                                z-index: 999;
-                                border-radius: 5px;
-                                min-width: 200px;
-                                margin-top: 10px;
                                 display: none;
-                            }
-
-                            &:hover {
-                                &>span {
-                                    display: block;
-                                }
                             }
 
                             .right-icon {
@@ -414,7 +380,6 @@
 
                         .dropdown-area {
                             position: absolute;
-                            // background-color: #173753;
                             background: linear-gradient(329deg, #307a62 0%, #185a9d 100%);
                             left: 90px;
                             top: 0;
@@ -428,16 +393,6 @@
 
                             &:not(.show) {
                                 height: auto;
-                            }
-
-                            .mobile-title {
-                                display: block;
-                            }
-                        }
-
-                        &:hover {
-                            .dropdown-area {
-                                display: block;
                             }
                         }
                     }

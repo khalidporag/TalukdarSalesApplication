@@ -2,7 +2,7 @@
 @use "mixins" as *;
 
 .header {
-    background-color: #fff;
+    background-color: #f6fdfd;
     position: fixed;
     top: 0;
     width: calc(100% - $sidebarWidth);
@@ -135,8 +135,8 @@
     }
 
     &-bottom {
-        border-top: 1px solid #ddd;
-        border-bottom: 1px solid #ddd;
+        border-top: 1px solid #b5e0e0;
+        border-bottom: 1px solid #b5e0e0;
 
         &__inner {
             display: flex;
@@ -149,6 +149,8 @@
             }
 
             h3 {
+                font-size: 18px;
+                color: #445760;
                 margin-bottom: 0;
             }
 

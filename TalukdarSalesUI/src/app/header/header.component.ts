@@ -23,8 +23,8 @@ export class HeaderComponent {
         if (event['url'] == '/') {
           this.pageTitle = 'Talukdar Sales';
           this.parentPage = 'Dashboard';
-        } else if (event['url'] == '/table-one') {
-          this.pageTitle = 'Table One';
+        } else if (event['url'] == '/user-management') {
+          this.pageTitle = 'User Management';
           this.parentPage = 'Table';
         }
         else if (event['url'] == '/deals-list') {
@@ -107,15 +107,24 @@ export class HeaderComponent {
   ngOnInit() {
   }
 
+  getfullHeader() {
+    this.commonService.dashboardBody$.subscribe((open) => {
+      this.isHeaderFullArea = !this.isHeaderFullArea;
+      console.log(this.isHeaderFullArea);
+    });
+  }
+
   openSidebar() {
     this.commonService.toggleSidebar();
     this.commonService.toggleBody();
-    this.isHeaderFullArea = !this.isHeaderFullArea;
+    this.commonService.headerState$.subscribe((open) => {
+      this.isHeaderFullArea = !this.isHeaderFullArea;
+      console.log(this.isHeaderFullArea);
+    });
   }
 
   openSidebarMobile() {
     this.commonService.toggleSidebarMobile();
-    // console.log("OPEN");
   }
 
   openUserModal() {

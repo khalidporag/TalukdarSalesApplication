@@ -15,10 +15,23 @@ export class CommonService {
   private dashboardBody = new BehaviorSubject<boolean>(false);
   public dashboardBody$ = this.dashboardBody.asObservable();
 
+  private headerState = new BehaviorSubject<boolean>(false);
+  public headerState$ = this.headerState.asObservable();
+
   constructor() { }
 
   toggleSidebar(): void {
     this.sidebarState.next(true);
+  }
+
+  // toggleHeader(): void {
+  //   this.headerState.next(true);
+  // }
+
+  toggleHeader(): void {
+    // const currentState = this.headerState.getValue();
+    // this.headerState.next(!currentState);
+    this.headerState.next(true);
   }
 
   toggleSidebarMobile(): void {

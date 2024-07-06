@@ -47,6 +47,14 @@ export class SidebarAreaComponent {
     });
   }
 
+  openSidebarFromMini() {
+    if (this.isSidebar === true) {
+      this.commonService.toggleSidebar();
+      this.commonService.toggleBody();
+      this.commonService.toggleHeader();
+    }
+  }
+
   closeSidebar() {
     this.isSidebarMobile = false;
   }
