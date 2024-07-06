@@ -1,0 +1,9 @@
+<div class="whole-dashboard">
+    <app-sidebar-area></app-sidebar-area>
+    <app-header></app-header>
+    <div class="dashboard-body">
+        <div class="dashboard-body__inner" [ngClass]="{ 'dashboard-body__inner--active': isfullArea }">
+            <router-outlet></router-outlet>
+        </div>
+    </div>
+</div>

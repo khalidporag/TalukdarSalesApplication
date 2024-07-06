@@ -1,0 +1,52 @@
+<div class="container">
+    <div class="header">
+
+        <div class="form-group">
+            <label for="user-group">User Group</label>
+            <select id="user-group" [(ngModel)]="selectedUserGroup" (change)="onUserGroupChange()">
+              <option *ngFor="let group of userTypes" [value]="group.id">{{ group.typeName }}</option>
+            </select>
+          </div>
+        <div class="form-group">
+            <label for="user">User</label>
+            <select id="user" [(ngModel)]="selectedUser" (change)="onUserChange()">
+                <option *ngFor="let user of users" [value]="user.id">{{ user.firstName + ' ' + user.lastName }}</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="requisition">Sales Requisition</label>
+            <select id="requisition" class="dropdown" [(ngModel)]="selectedRequisition" (change)="onRequisitionSelection()">
+                <option *ngFor="let requisition of salesRequisition" [value]="requisition.id">{{ requisition.requisitionSerial }}</option>
+            </select>
+        </div>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Product Name</th>
+                    <th>Requisition qty</th>
+                    <th>Invoice Qty</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let requisition of requisitionDetailsList; let i = index">
+                    <td>{{ requisition.finishedGoodName }}</td>
+                    <td>{{ requisition.quantity }}</td>
+                    <td><input type="number" [(ngModel)]="requisition.quantity"></td>
+                    <td>{{ requisition.price }}</td>
+                    <td><input type="number" [value]="requisition.price * requisition.quantity" [(ngModel)]="requisition.price * requisition.quantity"></td>
+                    <td>
+                        <input type="hidden" [(ngModel)]="requisition.finishedGoodsId" name="finishedGoodsId{{i}}">
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="submit-button">
+        <button type="button" (click)="submitInvoice()">Submit</button>
+    </div>
+</div>

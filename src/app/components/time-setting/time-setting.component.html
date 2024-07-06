@@ -1,0 +1,14 @@
+
+
+
+<div class="time-setting-container">
+    <div class="time-input-group">
+        <label for="fromTime" class="time-label">From Time:</label>
+        <input type="time" id="fromTime" [(ngModel)]="selectedFromTime" class="time-input" required>
+    </div>
+    <div class="time-input-group">
+        <label for="toTime" class="time-label">To Time:</label>
+        <input type="time" id="toTime" [(ngModel)]="selectedToTime" class="time-input" required>
+    </div>
+    <button type="button" (click)="onSubmit()" class="submit-button">Submit</button>
+</div>
