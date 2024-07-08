@@ -1,6 +1,10 @@
 @use "variables" as *;
 @use "mixins" as *;
 
+h6 {
+  color: red;
+}
+
 .whole-dashboard {
   height: 100%;
   background-color: #f6fdfd;
