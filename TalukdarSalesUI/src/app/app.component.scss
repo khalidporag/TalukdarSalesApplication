@@ -1,56 +1,56 @@
-@use "variables" as *;
-@use "mixins" as *;
+// @use "variables" as *;
+// @use "mixins" as *;
 
-h6 {
-  color: red;
-}
+// h6 {
+//   color: red;
+// }
 
-.whole-dashboard {
-  height: 100%;
-  background-color: #f6fdfd;
-}
+// .whole-dashboard {
+//   height: 100%;
+//   background-color: #f6fdfd;
+// }
 
-.dashboard-body {
-  padding: 30px;
-  position: relative;
-  overflow-x: hidden;
+// .dashboard-body {
+//   padding: 30px;
+//   position: relative;
+//   overflow-x: hidden;
 
-  @include breakpoint-max (991px) {
-    padding: 15px;
-  }
+//   @include breakpoint-max (991px) {
+//     padding: 15px;
+//   }
 
-  &::before {
-    content: "";
-    position: absolute;
-    height: 100%;
-    width: 90px;
-    background-color: $primaryColor;
-    left: 0;
-    bottom: 0;
-    z-index: -1;
-    pointer-events: none;
+//   &::before {
+//     content: "";
+//     position: absolute;
+//     height: 100%;
+//     width: 90px;
+//     background-color: $primaryColor;
+//     left: 0;
+//     bottom: 0;
+//     z-index: -1;
+//     pointer-events: none;
 
-    @include breakpoint-max (991px) {
-      width: 0;
-    }
-  }
+//     @include breakpoint-max (991px) {
+//       width: 0;
+//     }
+//   }
 
-  &__inner {
-    margin-left: 300px;
-    transition: 0.3s;
-    margin-top: 80px;
+//   &__inner {
+//     margin-left: 300px;
+//     transition: 0.3s;
+//     margin-top: 80px;
 
-    @include breakpoint-max(991px) {
-      margin-left: 0;
-    }
+//     @include breakpoint-max(991px) {
+//       margin-left: 0;
+//     }
 
-    &--active {
-      margin-left: 90px;
-    }
+//     &--active {
+//       margin-left: 90px;
+//     }
 
-    p {
-      color: #717171;
-      font-size: 15px;
-    }
-  }
-}
+//     p {
+//       color: #717171;
+//       font-size: 15px;
+//     }
+//   }
+// }

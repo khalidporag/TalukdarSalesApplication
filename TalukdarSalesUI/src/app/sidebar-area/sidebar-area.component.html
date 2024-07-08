@@ -27,7 +27,7 @@
                 <img src="assets/images/icons/close.svg" alt="">
             </button>
             <ul class="nav">
-                <li class="nav-item">
+                <li class="nav-item dropdown-item" (click)="openSidebarFromMini()">
                     <div class="nav-item__list" (click)="expandDropdown($event)">
                         <div class="left-icon">
                             <img src="assets/images/icons/user.svg" alt="">
@@ -38,7 +38,7 @@
                         </div>
                     </div>
                     <ul class="dropdown-area">
-                        <li class="mobile-title">User Administration</li>
+                        <!-- <li class="mobile-title">User Administration</li> -->
                         <li class="nav-item" (click)="goToPage('/user-management')"
                             [ngClass]="{'active': isActive('/user-management')}">
                             <div class="nav-item__list">
@@ -74,7 +74,7 @@
                         </div>
                     </div>
                 </li> -->
-                <li class="nav-item">
+                <li class="nav-item dropdown-item" (click)="openSidebarFromMini()">
                     <div class="nav-item__list" (click)="expandDropdown($event)">
                         <div class="left-icon">
                             <img src="assets/images/icons/product-type.svg" alt="">
@@ -85,7 +85,7 @@
                         </div>
                     </div>
                     <ul class="dropdown-area">
-                        <li class="mobile-title">Sales Requisition</li>
+                        <!-- <li class="mobile-title">Sales Requisition</li> -->
                         <li class="nav-item" (click)="goToPage('/sales-requisition')"
                             [ngClass]="{'active': isActive('/sales-requisition')}">
                             <div class="nav-item__list">
@@ -112,9 +112,9 @@
                         </div>
                     </div>
                 </li> -->
-                <li class="nav-item" (click)="goToPage('/requisition-list')"
+                <!-- <li class="nav-item" (click)="goToPage('/requisition-list')"
                     [ngClass]="{'active': isActive('/requisition-list')}">
-                    <!-- <div class="nav-item__list">
+                    <div class="nav-item__list">
                         <div class="left-icon">
                             <img src="assets/images/icons/requisition-list.svg" alt="">
                         </div>
@@ -122,7 +122,7 @@
                         <div class="right-icon drop-icon">
                             <img src="assets/images/icons/arrow-down.svg" alt="">
                         </div>
-                    </div> -->
+                    </div>
                     <ul class="dropdown-area">
                         <li class="mobile-title">Sales Invoice</li>
                         <li class="nav-item" (click)="goToPage('/sales-invoice')"
@@ -132,7 +132,7 @@
                             </div>
                         </li>
                     </ul>
-                </li>
+                </li> -->
                 <li class="nav-item" (click)="goToPage('/sales-invoice')"
                     [ngClass]="{'active': isActive('/sales-invoice')}">
                     <div class="nav-item__list">
@@ -145,7 +145,8 @@
                         </div>
                     </div>
                 </li>
-                <li class="nav-item" (click)="goToPage('/invoice-list')" [ngClass]="{'active': isActive('/invoice-list')}">
+                <li class="nav-item" (click)="goToPage('/invoice-list')"
+                    [ngClass]="{'active': isActive('/invoice-list')}">
                     <div class="nav-item__list">
                         <div class="left-icon">
                             <img src="assets/images/icons/invoice-list.svg" alt="">
@@ -156,7 +157,8 @@
                         </div>
                     </div>
                 </li>
-                <li class="nav-item" (click)="goToPage('collection-history/')" [ngClass]="{'active': isActive('collection-history/')}">
+                <li class="nav-item" (click)="goToPage('collection-history/')"
+                    [ngClass]="{'active': isActive('collection-history/')}">
                     <div class="nav-item__list">
                         <div class="left-icon">
                             <img src="assets/images/icons/collection-history.svg" alt="">
@@ -167,7 +169,8 @@
                         </div>
                     </div>
                 </li>
-                <li class="nav-item" (click)="goToPage('/productionwise-requisition')" [ngClass]="{'active': isActive('/productionwise-requisition')}">
+                <li class="nav-item" (click)="goToPage('/productionwise-requisition')"
+                    [ngClass]="{'active': isActive('/productionwise-requisition')}">
                     <div class="nav-item__list">
                         <div class="left-icon">
                             <img src="assets/images/icons/production.svg" alt="">
@@ -200,7 +203,7 @@
                         </div>
                     </div>
                 </li> -->
-                <li class="nav-item" (click)="openSidebarFromMini()">
+                <li class="nav-item nav dropdown-item" (click)="openSidebarFromMini()">
                     <div class="nav-item__list" (click)="expandDropdown($event)">
                         <div class="left-icon">
                             <img src="assets/images/icons/demo.svg" alt="">
@@ -211,14 +214,15 @@
                         </div>
                     </div>
                     <ul class="dropdown-area">
-                        <li class="mobile-title">Settings</li>
+                        <!-- <li class="mobile-title">Settings</li> -->
                         <li class="nav-item" (click)="goToPage('/product-type')"
                             [ngClass]="{'active': isActive('/product-type')}">
                             <div class="nav-item__list">
                                 <span>Product Type Setup</span>
                             </div>
                         </li>
-                        <li class="nav-item" (click)="goToPage('/product')" [ngClass]="{'active': isActive('/product')}">
+                        <li class="nav-item" (click)="goToPage('/product')"
+                            [ngClass]="{'active': isActive('/product')}">
                             <div class="nav-item__list">
                                 <span>Product Setup</span>
                             </div>
