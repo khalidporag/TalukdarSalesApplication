@@ -1,0 +1,12 @@
+body {
+    min-height: 100vh;
+    font-size: 1em;
+    max-height: 100%;
+    background-color: #f5f6f8 !important;
+  
+    &.modal-open {
+      overflow-y: hidden !important;
+      padding-right: 15px !important;
+      height: 100vh !important;
+    }
+  }
