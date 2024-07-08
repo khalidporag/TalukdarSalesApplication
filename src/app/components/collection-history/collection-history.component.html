@@ -1,0 +1,33 @@
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Collection History</h1>
+</div>
+<div class="filters">
+    <div class="filter">
+      <label for="user">Invoice Number</label>
+      <select id="invoiceNumber" [(ngModel)]="selectedInvoice" (change)="getCollectionList()">
+        <option *ngFor="let invoice of invoiceList" [value]="invoice.id">{{ invoice.invoiceNumber }}</option>
+      </select>
+    </div>
+</div>
+<div class="table-responsive">
+    <table class="table table-striped table-sm">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Invoice Number</th>
+                <th scope="col">Collection Amount</th>
+                <th scope="col">Payment Method</th>
+                <th scope="col">Collection Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let collection of collectionHistory; let i= index">
+                <td>{{i+1}}</td>
+                <td>{{collection.invoiceNumber}}</td>
+                <td>{{collection.collectionAmount}}</td>
+                <td>{{collection.paymentMethod}}</td>
+                <td>{{collection.collectionTime}}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
