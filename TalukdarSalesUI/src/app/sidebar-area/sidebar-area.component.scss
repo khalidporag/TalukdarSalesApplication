@@ -86,7 +86,7 @@
             left: 0;
             right: 0;
             z-index: 1;
-            background: linear-gradient(210deg, #43cea2 -19%, #185a9d 78%);
+            background: linear-gradient(308deg, #1e638d -20%, #185a9d 80%);
             border-bottom: 1px solid #4c7192;
             margin-bottom: 10px;
 
@@ -201,7 +201,7 @@
                 &-item {
                     width: 100%;
                     cursor: pointer;
-                    margin-bottom: 12px;
+                    margin-bottom: 20px;
                     position: relative;
                     overflow: hidden;
 
@@ -209,6 +209,10 @@
                         display: flex;
                         align-items: center;
                         margin-bottom: 10px;
+
+                        &:last-child {
+                            margin-bottom: 0;
+                        }
 
                         i {
                             color: #dfdddd;
@@ -257,6 +261,10 @@
                                 color: #afafaf;
                             }
                         }
+                    }
+
+                    &.dropdown-item {
+                        margin-bottom: 10px;
                     }
                 }
 

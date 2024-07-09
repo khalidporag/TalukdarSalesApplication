@@ -16,25 +16,25 @@ export class UserManagementComponent implements OnInit {
 
   file: File | null = null;
   fileError: string = '';
-  selectedUserType : any;
+  selectedUserType: any;
   selectedRole: any;
 
-  public roles:any = [];
-  public users:any = [];
-  public userTypes:any = [];
+  public roles: any = [];
+  public users: any = [];
+  public userTypes: any = [];
   public createUserForm!: FormGroup;
   createModal: boolean = false;
   submitting: boolean = false;
   bodyText = 'This text can be updated in modal 1';
 
   constructor(
-    private api : ApiService,
+    private api: ApiService,
     private modalService1: NzModalService,
     protected modalService: ModalService,
     private auth: AuthService,
     private toast: NgToastService,
     private fb: FormBuilder,
-  ){}
+  ) { }
 
   ngOnInit(): void {
     this.getUsers();
@@ -51,37 +51,37 @@ export class UserManagementComponent implements OnInit {
     }
   }
 
-  getRoles(){
+  getRoles() {
     this.api.getRoles()
-    .subscribe(res=>{
-    this.roles = res;
-    });
+      .subscribe(res => {
+        this.roles = res;
+      });
   }
 
-  getUsers(){
+  getUsers() {
     this.api.getUsers()
-    .subscribe(res=>{
-    this.users = res;
-    });
+      .subscribe(res => {
+        this.users = res;
+      });
   }
 
-  getUserTypes(){
+  getUserTypes() {
     this.api.getUserTypes()
-    .subscribe(res=>{
-    this.userTypes = res;
-    console.log(this.userTypes)
-    });
+      .subscribe(res => {
+        this.userTypes = res;
+        console.log(this.userTypes)
+      });
   }
 
   private createUserInit(): void {
     this.createUserForm = this.fb.group({
-      firstName:['', Validators.required],
-      lastName:['', Validators.required],
-      userTypeId:[null, Validators.required],
-      roleId:[null, Validators.required],
-      userName:['', Validators.required],
-      phoneNumber:['', Validators.required],
-      maxCreditLimit:[null, Validators.required],
+      firstName: ['', Validators.required],
+      lastName: ['', Validators.required],
+      userTypeId: [null, Validators.required],
+      roleId: [null, Validators.required],
+      userName: ['', Validators.required],
+      phoneNumber: ['', Validators.required],
+      maxCreditLimit: [null, Validators.required],
       image: [null, Validators.required]
     });
   }
@@ -94,38 +94,38 @@ export class UserManagementComponent implements OnInit {
     this.createUserInit();
   }
 
-  closeModal(){
+  closeModal() {
     this.createModal = false;
     this.submitting = false;
   }
 
-  onSubmit(){
+  onSubmit() {
     if (this.createUserForm.valid) {
       this.submitting = true;
 
-    const formData = new FormData();
-    formData.append('firstName', this.createUserForm.value.firstName);
-    formData.append('lastName', this.createUserForm.value.lastName);
-    formData.append('roleId', this.selectedRole);
-    formData.append('userTypeId', this.selectedUserType);
-    formData.append('userName', this.createUserForm.value.userName);
-    formData.append('phoneNumber', this.createUserForm.value.phoneNumber);
-    formData.append('maxCreditLimit', this.createUserForm.value.maxCreditLimit);
+      const formData = new FormData();
+      formData.append('firstName', this.createUserForm.value.firstName);
+      formData.append('lastName', this.createUserForm.value.lastName);
+      formData.append('roleId', this.selectedRole);
+      formData.append('userTypeId', this.selectedUserType);
+      formData.append('userName', this.createUserForm.value.userName);
+      formData.append('phoneNumber', this.createUserForm.value.phoneNumber);
+      formData.append('maxCreditLimit', this.createUserForm.value.maxCreditLimit);
 
-    // Append the image file to the FormData object if it exists
-    if (this.file) {
-      formData.append('image', this.file, this.file.name);
-    }
+      // Append the image file to the FormData object if it exists
+      if (this.file) {
+        formData.append('image', this.file, this.file.name);
+      }
 
       this.auth.signUp(formData).subscribe({
         next: (res) => {
           this.createUserForm.reset();
-          this.toast.success({detail:"SUCCESS", summary:res.message, duration: 5000});
+          this.toast.success({ detail: "SUCCESS", summary: res.message, duration: 5000 });
           this.closeModal();
           this.getUsers();
         },
         error: (err) => {
-          this.toast.error({detail:"ERROR", summary:"Something when wrong!", duration: 5000});
+          this.toast.error({ detail: "ERROR", summary: "Something when wrong!", duration: 5000 });
           console.log(err);
           this.closeModal();
         },

@@ -1,0 +1,152 @@
+@use "variables" as *;
+@use "mixins" as *;
+
+.authentication {
+    &-banner {
+        // background: linear-gradient(329deg, #307a62 0%, #185a9d 100%);
+        background-color: #f0f1ff;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    &-content {
+        // background-color: #f4f5f6;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        .form-area {
+            padding: 30px;
+            margin: auto;
+            width: 100%;
+            padding-left: 100px;
+            padding-right: 100px;
+
+            @include breakpoint-max(1199px) {
+                padding-left: 50px;
+                padding-right: 50px;
+            }
+
+            @include breakpoint-max(991px) {
+                max-width: 700px;
+            }
+
+            @include breakpoint-max(575px) {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+
+            .title-area {
+                margin-bottom: 30px;
+                text-align: center;
+
+                img {
+                    width: 100px;
+                    border-radius: 5px;
+                    margin-bottom: 10px;
+                }
+
+                h2 {
+                    font-size: 32px;
+                    font-weight: 700;
+                    margin-bottom: 5px;
+                    // background: linear-gradient(329deg, #307a62 0%, #185a9d 100%);
+                    background: linear-gradient(to right, #47ab8b, #2889ea, #2eac84, #0862bb);
+                    -webkit-text-fill-color: transparent;
+                    -webkit-background-clip: text;
+                }
+
+                h3 {
+                    font-size: 18px;
+                    font-weight: 500;
+                    color: #5b5b5b;
+                }
+            }
+
+            form {
+                margin: auto;
+
+                input {
+                    width: 100%;
+                    padding: 12px;
+                    border-radius: 5px;
+                }
+
+                .input-field {
+                    position: relative;
+
+                    span,
+                    .text-muted {
+                        position: absolute;
+                        right: 10px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                    }
+
+                    .text-muted {
+                        right: 30px;
+                        border: none;
+                        background-color: none;
+                        font-size: 18px;
+                    }
+                }
+
+                .auth-help {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+
+                    p {
+                        font-size: 1em;
+                        margin-bottom: 0;
+
+                        a {
+                            text-decoration: underline;
+                            color: #212121;
+                        }
+                    }
+                }
+
+                .main-btn {
+                    width: 100%;
+                    font-size: 16px;
+                    text-transform: capitalize;
+                    margin-top: 25px;
+                    background: linear-gradient(329deg, #307a62 0%, #185a9d 100%);
+                }
+            }
+        }
+    }
+}
+
+.show-password {
+    position: absolute;
+    top: 20px;
+    right: 40px;
+    cursor: pointer;
+}
+
+
+::ng-deep {
+
+    /* Chrome, Safari, Edge, Opera */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    /* Edge */
+    input[type=number] {
+        appearance: textfield;
+    }
+}
