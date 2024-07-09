@@ -52,8 +52,30 @@ export class ReportsComponent implements OnInit{
     this.getDailyAccumulatedOrderSummary();
   }
 
+  onDateChange(listType: string) {
+    switch (listType) {
+      case 'topSellers':
+        this.getTopFiveSeller();
+        break;
+      case 'topProducts':
+        this.getTopFiveSellingProduct();
+        break;
+      case 'lessProducts':
+        this.getLessFiveSellingProduct();
+        break;
+      case 'sellersDue':
+        this.getTopFiveSellerWithDueAmount();
+        break;
+      case 'accumulatedOrders':
+        this.getDailyAccumulatedOrderSummary();
+        break;
+      default:
+        break;
+    }
+  }
+
   getTopFiveSeller(){
-    this.api.getTopFiveSeller()
+    this.api.getTopFiveSeller(this.fromDateTopSellers, this.toDateTopSellers)
     .subscribe(res=>{
     this.topFiveSeller = res;
     console.log(this.topFiveSeller);

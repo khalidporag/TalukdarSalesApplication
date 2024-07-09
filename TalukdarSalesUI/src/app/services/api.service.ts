@@ -1,5 +1,6 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -145,11 +146,24 @@ export class ApiService {
     const queryString = new URLSearchParams(params).toString();
     return this.http.get<any>(`${this.SalesInvoiceUrl}getCollectionHistory?${queryString}`);
   }
+  
+  getTopFiveSeller(fromDate?: string, toDate?: string): Observable<any[]> {
+    let params = new HttpParams();
+    if (fromDate) {
+      params = params.set('from', fromDate);
+    }
+    if (toDate) {
+      params = params.set('to', toDate);
+    }
+    // return this.http.get<any[]>('your-api-url/top-sellers', { params });
+    return this.http.get<any>(`${this.SalesInvoiceUrl}getTopFiveSeller`, {params});
 
-  getTopFiveSeller()
-  {
-    return this.http.get<any>(`${this.SalesInvoiceUrl}getTopFiveSeller`);
   }
+
+  // getTopFiveSeller()
+  // {
+  //   return this.http.get<any>(`${this.SalesInvoiceUrl}getTopFiveSeller`);
+  // }
 
   getTopFiveSellingProduct()
   {
