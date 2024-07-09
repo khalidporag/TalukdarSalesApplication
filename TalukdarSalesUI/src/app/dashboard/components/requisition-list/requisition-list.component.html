@@ -1,6 +1,3 @@
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-  <h1 class="h2">Requisition List</h1>
-</div>
 <div class="sales-requisitions">
   <div class="sales-requisitions">
     <div class="filters">
@@ -23,36 +20,35 @@
       </div>
       <button class="create-new" (click)="onCreateNew()">Create New</button>
     </div>
-    <div class="table-responsive">
-      <button (click)="sendSelectedRequisitions()" *ngIf="isShow">Approve Selected</button>
-        <table class="requisitions-table">
-            <thead>
-                <tr>
-                  <th scope="col" *ngIf="isShow">
-                    <input type="checkbox" (change)="toggleSelectAll($event)">
-                  </th>
-                    <th scope="col">#</th>
-                    <th scope="col">Requisition No</th>
-                    <th scope="col">Requisition By</th>
-                    <th scope="col">Creation Time</th>
-                    <th scope="col">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngFor="let requisition of requisitionList; let i= index">
-                  <td *ngIf="isShow">
-                    <input type="checkbox" [(ngModel)]="requisition.selected" (change)="onCheckboxChange()">
-                 </td>
-                    <td>{{i+1}}</td>
-                    <td>{{requisition.requisitionSerial}}</td>
-                    <td>{{requisition.userName}}</td>
-                    <td>{{requisition.createdDateTime}}</td>
-                    <td><button [routerLink]="['/requisition-list', requisition.id]">Details</button></td>
-                </tr>
-    
-            </tbody>
-        </table>
+    <div class="table-responsive mt-25">
+      <button class="main-btn" (click)="sendSelectedRequisitions()" *ngIf="isShow">Approve Selected</button>
+      <table class="requisitions-table mt-25">
+        <thead>
+          <tr>
+            <th scope="col" *ngIf="isShow">
+              <input type="checkbox" (change)="toggleSelectAll($event)">
+            </th>
+            <th scope="col">#</th>
+            <th scope="col">Requisition No</th>
+            <th scope="col">Requisition By</th>
+            <th scope="col">Creation Time</th>
+            <th scope="col">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let requisition of requisitionList; let i= index">
+            <td *ngIf="isShow">
+              <input type="checkbox" [(ngModel)]="requisition.selected" (change)="onCheckboxChange()">
+            </td>
+            <td>{{i+1}}</td>
+            <td>{{requisition.requisitionSerial}}</td>
+            <td>{{requisition.userName}}</td>
+            <td>{{requisition.createdDateTime}}</td>
+            <td><button [routerLink]="['/requisition-list', requisition.id]">Details</button></td>
+          </tr>
+
+        </tbody>
+      </table>
     </div>
 
   </div>
-  

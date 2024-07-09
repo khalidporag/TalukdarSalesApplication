@@ -1,66 +1,64 @@
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Invoice List</h1>
-</div>
 <div class="sales-requisitions">
     <div class="sales-requisitions">
-      <div class="filters">
-        <div class="filter">
-            <label for="user-group">User Group</label>
-            <select id="user-group" [(ngModel)]="selectedUserGroup" (change)="onUserGroupChange()">
-              <option *ngFor="let group of userTypes" [value]="group.id">{{ group.typeName }}</option>
-            </select>
+        <div class="filters">
+            <div class="filter">
+                <label for="user-group">User Group</label>
+                <select id="user-group" [(ngModel)]="selectedUserGroup" (change)="onUserGroupChange()">
+                    <option *ngFor="let group of userTypes" [value]="group.id">{{ group.typeName }}</option>
+                </select>
+            </div>
+
+            <div class="filter">
+                <label for="user">User</label>
+                <select id="user" [(ngModel)]="selectedUser" (change)="onFilterChange()">
+                    <option *ngFor="let user of users" [value]="user.id">{{ user.firstName +" "+ user.lastName }}
+                    </option>
+                </select>
+            </div>
         </div>
-        
-        <div class="filter">
-          <label for="user">User</label>
-          <select id="user" [(ngModel)]="selectedUser" (change)="onFilterChange()">
-            <option *ngFor="let user of users" [value]="user.id">{{ user.firstName +" "+ user.lastName }}</option>
-          </select>
-        </div>
-      </div>
-      <div class="table-responsive">
-          <table class="requisitions-table">
-              <thead>
-                  <tr>
-                      <th scope="col">#</th>
-                      <th scope="col">Invoice For</th>
-                      <th scope="col">Invoice Number</th>
-                      <th scope="col">Requisition Serial</th>
-                      <th scope="col">Total Amount</th>
-                      <th scope="col">Collection Amount</th>
-                      <th scope="col">Creation Time</th>
-                      <th scope="col">Action</th>
-                  </tr>
-              </thead>
-              <tbody>
-                  <tr *ngFor="let invoice of invoiceList; let i= index">
-                      <td>{{i+1}}</td>
-                      <td>{{invoice.userName}}</td>
-                      <td>{{invoice.invoiceNumber}}</td>
-                      <td>{{invoice.salesRequisitionNo}}</td>
-                      <td>{{invoice.totalPrice}}</td>
-                      <td>{{invoice.collectionAmount}}</td>
-                      <td>{{invoice.createdDateTime}}</td>
-                      <td>
-                        <tr>
-                            <td><a (click)="getCollectionList(invoice.id)" >Collection History
+        <div class="table-responsive mt-25">
+            <table class="requisitions-table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Invoice For</th>
+                        <th scope="col">Invoice Number</th>
+                        <th scope="col">Requisition Serial</th>
+                        <th scope="col">Total Amount</th>
+                        <th scope="col">Collection Amount</th>
+                        <th scope="col">Creation Time</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let invoice of invoiceList; let i= index">
+                        <td>{{i+1}}</td>
+                        <td>{{invoice.userName}}</td>
+                        <td>{{invoice.invoiceNumber}}</td>
+                        <td>{{invoice.salesRequisitionNo}}</td>
+                        <td>{{invoice.totalPrice}}</td>
+                        <td>{{invoice.collectionAmount}}</td>
+                        <td>{{invoice.createdDateTime}}</td>
+                        <td>
+                    <tr>
+                        <td><a (click)="getCollectionList(invoice.id)">Collection History
                                 <i class="fa fa-history"></i>
                             </a></td>
-                            <td><a (click)="openCollectionModal(invoice.id)">Collect Amount 
+                        <td><a (click)="openCollectionModal(invoice.id)">Collect Amount
                                 <i class="fa fa-credit-card"></i>
                             </a></td>
+                    </tr>
+                    <td>
                         </tr>
-                      <td>
-                  </tr>
-      
-              </tbody>
-          </table>
-      </div>
+
+                </tbody>
+            </table>
+        </div>
     </div>
-    
+
     <div>
-            
-        <modal id="collectionModal" *ngIf="createCollectionModal" >
+
+        <modal id="collectionModal" *ngIf="createCollectionModal">
             <div class="modal-header">
                 <h5 class="modal-title">Collect Amount</h5>
                 <button type="button" class="btn-close" (click)="closeModal()"></button>
@@ -68,16 +66,26 @@
             <div class="modal-body">
                 <form (ngSubmit)="onSubmit()" [formGroup]="createCollectionForm">
                     <div class="form-group pt-3">
-                        <div class="input-field" [class.error]="createCollectionForm.controls['collectionAmount'].dirty && createCollectionForm.hasError('required','collectionAmount')"> 
-                            <span class="fa fa-user p-2"></span> 
-                            <input formControlName="collectionAmount" type="text" placeholder="Collection Amount"> </div>
+                        <div class="input-field"
+                            [class.error]="createCollectionForm.controls['collectionAmount'].dirty && createCollectionForm.hasError('required','collectionAmount')">
+                            <span class="fa fa-user p-2"></span>
+                            <input formControlName="collectionAmount" type="text" placeholder="Collection Amount">
+                        </div>
                     </div>
-                    <small *ngIf="createCollectionForm.controls['collectionAmount'].dirty && createCollectionForm.hasError('required','collectionAmount')" class="text-danger">*Collection Amount is required*</small>
+                    <small
+                        *ngIf="createCollectionForm.controls['collectionAmount'].dirty && createCollectionForm.hasError('required','collectionAmount')"
+                        class="text-danger">*Collection Amount is required*</small>
                     <div class="form-group pt-3">
-                        <div class="input-field" [class.error]="createCollectionForm.controls['paymentMethod'].dirty && createCollectionForm.hasError('required','paymentMethod')"> <span class="fa fa-user p-2"></span> <input formControlName="paymentMethod" type="text" placeholder="Payment Method"> </div>
+                        <div class="input-field"
+                            [class.error]="createCollectionForm.controls['paymentMethod'].dirty && createCollectionForm.hasError('required','paymentMethod')">
+                            <span class="fa fa-user p-2"></span> <input formControlName="paymentMethod" type="text"
+                                placeholder="Payment Method">
+                        </div>
                     </div>
-                    <small *ngIf="createCollectionForm.controls['paymentMethod'].dirty && createCollectionForm.hasError('required','paymentMethod')" class="text-danger">*Payment Method is required*</small>
-                    
+                    <small
+                        *ngIf="createCollectionForm.controls['paymentMethod'].dirty && createCollectionForm.hasError('required','paymentMethod')"
+                        class="text-danger">*Payment Method is required*</small>
+
                     <!-- <div class="form-group pt-3">
                         <div class="input-field" [class.error]="createCollectionForm.controls['unitPrice'].dirty && createCollectionForm.hasError('required','unitPrice')"> <span class="fa fa-user p-2"></span> <input formControlName="unitPrice" type="text" placeholder="Unit Price"> </div>
                     </div>

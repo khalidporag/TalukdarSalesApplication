@@ -32,6 +32,7 @@ export class CommonService {
     // const currentState = this.headerState.getValue();
     // this.headerState.next(!currentState);
     this.headerState.next(true);
+    console.log("CCC", this.headerState);
   }
 
   toggleSidebarMobile(): void {
