@@ -17,6 +17,7 @@ export class InvoiceListComponent implements OnInit {
 
   public collectionHistory:any = [];
 
+  selectedUserGroup: any;
   selectedStatus: any;
   selectedUser: any;
   requisitionNo: string = '';
@@ -44,6 +45,7 @@ export class InvoiceListComponent implements OnInit {
     this.getProductTypes();
     this.getInvoiceList();
     this.getUsers();
+    this.getUserTypes();
   }
 
   getInvoiceList() {
@@ -77,6 +79,13 @@ export class InvoiceListComponent implements OnInit {
     .subscribe(res=>{
     this.userTypes = res;
     console.log(this.userTypes)
+    });
+  }
+
+  onUserGroupChange() {
+    this.api.getUsersByType(this.selectedUserGroup)
+    .subscribe(res=>{
+    this.users = res;
     });
   }
 

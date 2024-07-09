@@ -77,7 +77,7 @@
                 <li class="nav-item dropdown-item" (click)="openSidebarFromMini()">
                     <div class="nav-item__list" (click)="expandDropdown($event)">
                         <div class="left-icon">
-                            <img src="assets/images/icons/product-type.svg" alt="">
+                            <img src="assets/images/icons/requisition.svg" alt="">
                         </div>
                         <span>Sales Requisition </span>
                         <div class="right-icon drop-icon">
@@ -98,6 +98,32 @@
                                 <span>Requisition List</span>
                             </div>
                         </li>
+                    </ul>
+                </li>
+
+                <li class="nav-item dropdown-item" (click)="openSidebarFromMini()">
+                    <div class="nav-item__list" (click)="expandDropdown($event)">
+                        <div class="left-icon">
+                            <img src="assets/images/icons/invoice.svg" alt="">
+                        </div>
+                        <span>Sales Invoice </span>
+                        <div class="right-icon drop-icon">
+                            <img src="assets/images/icons/arrow-down.svg" alt="">
+                        </div>
+                    </div>
+                    <ul class="dropdown-area">
+                        <li class="nav-item" (click)="goToPage('/sales-invoice')"
+                    [ngClass]="{'active': isActive('/sales-invoice')}">
+                    <div class="nav-item__list">
+                        <span>Invoice Form</span>
+                    </div>
+                </li>
+                <li class="nav-item" (click)="goToPage('/invoice-list')"
+                    [ngClass]="{'active': isActive('/invoice-list')}">
+                    <div class="nav-item__list">
+                        <span>Invoice List</span>
+                    </div>
+                </li>
                     </ul>
                 </li>
                 <!-- <li class="nav-item" (click)="goToPage('/sales-requisition')"
@@ -133,30 +159,6 @@
                         </li>
                     </ul>
                 </li> -->
-                <li class="nav-item" (click)="goToPage('/sales-invoice')"
-                    [ngClass]="{'active': isActive('/sales-invoice')}">
-                    <div class="nav-item__list">
-                        <div class="left-icon">
-                            <img src="assets/images/icons/invoice.svg" alt="">
-                        </div>
-                        <span>Sales Invoice</span>
-                        <div class="right-icon">
-                            <img src="assets/images/right-arrow.svg" alt="">
-                        </div>
-                    </div>
-                </li>
-                <li class="nav-item" (click)="goToPage('/invoice-list')"
-                    [ngClass]="{'active': isActive('/invoice-list')}">
-                    <div class="nav-item__list">
-                        <div class="left-icon">
-                            <img src="assets/images/icons/invoice-list.svg" alt="">
-                        </div>
-                        <span>Invoice List</span>
-                        <div class="right-icon">
-                            <img src="assets/images/right-arrow.svg" alt="">
-                        </div>
-                    </div>
-                </li>
                 <li class="nav-item" (click)="goToPage('collection-history/')"
                     [ngClass]="{'active': isActive('collection-history/')}">
                     <div class="nav-item__list">
@@ -187,6 +189,17 @@
                             <img src="assets/images/icons/notice.svg" alt="">
                         </div>
                         <span>Notices</span>
+                        <div class="right-icon">
+                            <img src="assets/images/right-arrow.svg" alt="">
+                        </div>
+                    </div>
+                </li>
+                <li class="nav-item" (click)="goToPage('/report')" [ngClass]="{'active': isActive('/report')}">
+                    <div class="nav-item__list">
+                        <div class="left-icon">
+                            <img src="assets/images/icons/invoice-list.svg" alt="">
+                        </div>
+                        <span>Reports</span>
                         <div class="right-icon">
                             <img src="assets/images/right-arrow.svg" alt="">
                         </div>

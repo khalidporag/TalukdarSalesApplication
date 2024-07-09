@@ -16,6 +16,7 @@ import { ProductwiseRequisitionComponent } from './components/productwise-requis
 import { TimeSettingComponent } from './components/time-setting/time-setting.component';
 import { NoticeComponent } from './components/notice/notice.component';
 import { LandingPageComponent } from './components/landing-page/landing-page.component';
+import { ReportsComponent } from './components/reports/reports.component';
 
 const routes: Routes = [{
   path: '', component: DashboardComponent,
@@ -38,6 +39,7 @@ const routes: Routes = [{
     { path: 'productionwise-requisition', component: ProductwiseRequisitionComponent },
     { path: 'time-setting', component: TimeSettingComponent },
     { path: 'notice', component: NoticeComponent },
+    { path: 'report', component: ReportsComponent },
   ],
 
 }];

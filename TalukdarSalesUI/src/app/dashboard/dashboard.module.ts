@@ -28,6 +28,7 @@ import { NgToastModule } from 'ng-angular-popup';
 import { HttpClientModule } from '@angular/common/http';
 import { AppRoutingModule } from '../app-routing.module';
 import { BrowserModule } from '@angular/platform-browser';
+import { ReportsComponent } from './components/reports/reports.component';
 // import { LandingPageComponent } from './components/landing-page/landing-page.component';
 
 
@@ -54,6 +55,7 @@ import { BrowserModule } from '@angular/platform-browser';
     SidebarAreaComponent,
     HeaderComponent,
     NoticeComponent,
+    ReportsComponent,
     // LandingPageComponent
   ],
   imports: [

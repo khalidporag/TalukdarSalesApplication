@@ -5,6 +5,13 @@
     <div class="sales-requisitions">
       <div class="filters">
         <div class="filter">
+            <label for="user-group">User Group</label>
+            <select id="user-group" [(ngModel)]="selectedUserGroup" (change)="onUserGroupChange()">
+              <option *ngFor="let group of userTypes" [value]="group.id">{{ group.typeName }}</option>
+            </select>
+        </div>
+        
+        <div class="filter">
           <label for="user">User</label>
           <select id="user" [(ngModel)]="selectedUser" (change)="onFilterChange()">
             <option *ngFor="let user of users" [value]="user.id">{{ user.firstName +" "+ user.lastName }}</option>
