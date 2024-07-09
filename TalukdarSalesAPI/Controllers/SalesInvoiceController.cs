@@ -346,14 +346,18 @@ namespace TalukdarSalesAPI.Controllers
         }
 
         [HttpGet("getTopFiveSeller")]
-        public ActionResult<TopSellerDto> GetTopFiveSeller()
+        public ActionResult<TopSellerDto> GetTopFiveSeller(DateTime? from, DateTime? to)
         {
             var userList = _userRepository.GetAll().ToDictionary(n => n.Id);
             var result = _salesInvoiceRepository.GetAll();
             var oneMonthAgo = DateTime.Now.AddMonths(-1);
 
+            if (from != null && to != null)
+                result = result.Where(n => n.CreatedOn >= from && n.CreatedOn <= to);
+            else
+                result = result.Where(s => s.CreatedOn >= oneMonthAgo);
+
             var topSellers = result
-            .Where(s => s.CreatedOn >= oneMonthAgo)
             .GroupBy(s => s.UserId)
             .Select(g => new TopSellerDto
             {
@@ -369,14 +373,18 @@ namespace TalukdarSalesAPI.Controllers
         }
 
         [HttpGet("getTopFiveSellingProduct")]
-        public ActionResult<SellingProductDto> GetTopFiveSellingProduct()
+        public ActionResult<SellingProductDto> GetTopFiveSellingProduct(DateTime? from, DateTime? to)
         {
             var productList = _finishGoodRepository.GetAll().ToDictionary(n => n.Id);
             var result = _salesInvoiceDetailsRepository.GetAll();
             var oneMonthAgo = DateTime.Now.AddMonths(-1);
 
+            if (from != null && to != null)
+                result = result.Where(n => n.CreatedOn >= from && n.CreatedOn <= to);
+            else
+                result = result.Where(s => s.CreatedOn >= oneMonthAgo);
+
             var topSellingProduct = result
-            .Where(s => s.CreatedOn >= oneMonthAgo)
             .GroupBy(s => s.FinishedGoodsId)
             .Select(g => new SellingProductDto
             {
@@ -392,14 +400,18 @@ namespace TalukdarSalesAPI.Controllers
         }
 
         [HttpGet("getLessFiveSellingProduct")]
-        public ActionResult<SellingProductDto> GetLessFiveSellingProduct()
+        public ActionResult<SellingProductDto> GetLessFiveSellingProduct(DateTime? from, DateTime? to)
         {
             var productList = _finishGoodRepository.GetAll().ToDictionary(n => n.Id);
             var result = _salesInvoiceDetailsRepository.GetAll();
             var oneMonthAgo = DateTime.Now.AddMonths(-1);
 
+            if (from != null && to != null)
+                result = result.Where(n => n.CreatedOn >= from && n.CreatedOn <= to);
+            else
+                result = result.Where(s => s.CreatedOn >= oneMonthAgo);
+
             var topSellingProduct = result
-            .Where(s => s.CreatedOn >= oneMonthAgo)
             .GroupBy(s => s.FinishedGoodsId)
             .Select(g => new SellingProductDto
             {
@@ -415,16 +427,50 @@ namespace TalukdarSalesAPI.Controllers
         }
 
         [HttpGet("getTopFiveSellerWithDueAmount")]
-        public ActionResult<User> GetTopFiveSellerWithDueAmount()
+        public ActionResult<User> GetTopFiveSellerWithDueAmount(DateTime? from, DateTime? to)
         {
             var oneMonthAgo = DateTime.Now.AddMonths(-2);
+            var result = _userRepository.GetAll();
+            if (from != null && to != null)
+                result = result.Where(n => n.CreatedOn >= from && n.CreatedOn <= to);
+            else
+                result = result.Where(s => s.CreatedOn >= oneMonthAgo);
 
-            var topUsersWithDueAmount = _userRepository.GetAll().Where(s => s.CreatedOn >= oneMonthAgo && s.DueAmount > 0)
+            var topUsersWithDueAmount = result.Where(s => s.DueAmount > 0)
             .OrderByDescending(u => u.DueAmount)
             .Take(5)
             .ToList();
 
             return Ok(topUsersWithDueAmount);
+        }
+
+        [HttpGet("getDailyAccumulatedSalesSummary")]
+        public ActionResult<ProductWiseRequisitionDto> GetDailyAccumulatedSalesSummary(DateTime? from, DateTime? to)
+        {
+            var oneMonthAgo = DateTime.Now.AddMonths(-1);
+            var invoiceList = _salesInvoiceDetailsRepository.GetAll().ToList();
+
+            if (from != null && to != null)
+                invoiceList = invoiceList.Where(n => n.CreatedOn >= from && n.CreatedOn <= to).ToList();
+            else
+                invoiceList = invoiceList.Where(s => s.CreatedOn >= oneMonthAgo).ToList();
+
+            var finishedGoodList = _finishGoodRepository.GetAll().ToDictionary(n => n.Id);
+
+            var dailyFinishedGoodsQuantities = invoiceList
+           .GroupBy(r => new { Date = r.CreatedDateTime.Date, r.FinishedGoodsId })
+           .Select(g => new ProductWiseRequisitionDto
+           {
+               RequisitionDate = g.Key.Date,
+               FinishedGoodId = g.Key.FinishedGoodsId,
+               FinishedGoodName = finishedGoodList.ContainsKey(g.Key.FinishedGoodsId) ? finishedGoodList[g.Key.FinishedGoodsId].Name : "",
+               TotalQuantity = g.Sum(r => r.Quantity)
+           })
+           .OrderBy(result => result.RequisitionDate)
+           .ThenBy(result => result.FinishedGoodId)
+           .ToList();
+
+            return Ok(dailyFinishedGoodsQuantities);
         }
     }
 }
