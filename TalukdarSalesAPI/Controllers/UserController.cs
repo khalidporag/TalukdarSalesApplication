@@ -77,6 +77,7 @@ namespace TalukdarSalesAPI.Controllers
                 return BadRequest();
 
             var userObj = new User();
+            userObj.SequencialUserId = "1981-" + GetUserCountAsync();
             userObj.UserTypeId = input.UserTypeId;
             userObj.FirstName = input.FirstName;
             userObj.LastName = input.LastName;
@@ -87,7 +88,7 @@ namespace TalukdarSalesAPI.Controllers
             userObj.Address = input.Address;
             userObj.ContactPersonName = input.ContactPersonName;
             userObj.ContactPersonPhone = input.ContactPersonPhone;
-            userObj.Username = input.Username;
+            userObj.Username = "1981-" + GetUserCountAsync();
             userObj.IsPayRollUser = input.IsPayRollUser;
             userObj.RefreshToken = input.RefreshToken;
             userObj.RefreshTokenExpiryTime = input.RefreshTokenExpiryTime;
@@ -125,7 +126,7 @@ namespace TalukdarSalesAPI.Controllers
             _userRepository.Add(userObj);
             _userRepository.Commit();
 
-            if( userObj.Id > 0 && input.RoleId > 0)
+            if (userObj.Id > 0 && input.RoleId > 0)
             {
                 var userRoleMapping = new UserRoleMapping();
                 userRoleMapping.UserId = userObj.Id;
@@ -143,6 +144,14 @@ namespace TalukdarSalesAPI.Controllers
 
         private bool CheckUsernameExistAsync(string? username)
            => _userRepository.FindBy(x => x.Username == username).Any();
+
+        private string GetUserCountAsync() 
+        {
+            var userCount = _userRepository.GetAll().Where(n => n.Id > 0).Count() + 1;
+            var result = userCount.ToString("D4");
+            return result;
+        }
+
 
         //private static string CheckPasswordStrength(string pass)
         //{

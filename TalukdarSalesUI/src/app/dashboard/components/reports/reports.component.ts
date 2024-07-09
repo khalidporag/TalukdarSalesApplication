@@ -9,6 +9,18 @@ import { UserStoreService } from 'src/app/services/user-store.service';
   styleUrls: ['./reports.component.scss']
 })
 export class ReportsComponent implements OnInit{
+
+  fromDateTopSellers: any;
+  toDateTopSellers: any;
+  fromDateTopProducts: any;
+  toDateTopProducts: any;
+  fromDateLessProducts: any;
+  toDateLessProducts: any;
+  fromDateSellersDue: any;
+  toDateSellersDue: any;
+  fromDateAccumulatedOrders: any;
+  toDateAccumulatedOrders: any;
+
   public users:any = [];
   public role!:string;
 
