@@ -109,9 +109,13 @@ nz-form-item-feedback-icon.ant-input-suffix {
         input {
             padding: 10px;
             border-radius: 5px;
+            width: 100%;
+            border: 1px solid #6c98aa;
+            box-shadow: none !important;
 
             &:focus {
                 box-shadow: none !important;
+                outline: none !important;
             }
         }
     }

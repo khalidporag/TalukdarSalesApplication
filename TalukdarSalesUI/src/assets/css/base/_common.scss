@@ -44,56 +44,8 @@
   }
 }
 
-.icon-box {
-  height: 50px;
-  width: 50px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 5px;
-  margin-right: 20px;
-  background-color: #f6f7f9;
-
-  i {
-    font-size: 30px;
-    line-height: 1;
-    display: inline-flex;
-  }
-}
-
 .cursor {
   cursor: pointer;
-}
-
-.img-box {
-  border-radius: 5px;
-  overflow: hidden;
-}
-
-.no-data-found {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 80vh;
-  flex-direction: column;
-  background-color: #fff;
-  border-radius: 5px;
-  margin-bottom: 25px;
-
-  img {
-    text-align: center;
-    margin-bottom: 30px;
-  }
-}
-
-.flex-align {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.no-align-center {
-  align-items: normal !important;
 }
 
 .disbled-select {
@@ -145,6 +97,7 @@
   border-bottom: 1px solid #dceaf0 !important;
 
   h2 {
+    font-size: 1.4em;
     margin-bottom: 0 !important;
   }
 
@@ -177,10 +130,12 @@
   .cancel-btn {
     background-color: #dceaf0;
     color: #727272;
+    padding: 8px 30px;
   }
 
   .add-btn {
-    background-color: $btnBg;
-    color: $btnText;
+    background: linear-gradient(329deg, #307a62 0%, #185a9d 100%);
+    color: #fff;
+    padding: 8px 30px;
   }
 }
