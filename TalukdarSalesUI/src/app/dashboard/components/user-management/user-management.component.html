@@ -38,7 +38,7 @@
 
 <div>
 
-    <modal *ngIf="createModal">
+    <modal id="createUserModal" *ngIf="createModal">
         <div class="modal-header">
             <h5 class="modal-title">Create User</h5>
             <button type="button" class="btn-close" (click)="closeModal()"></button>
@@ -90,7 +90,7 @@
                     *ngIf="createUserForm.controls['userTypeId'].dirty && createUserForm.controls['userTypeId'].hasError('required')"
                     class="text-danger">*User Type is required*</small>
 
-                <div class="form-group pt-3">
+                <!-- <div class="form-group pt-3">
                     <div class="input-field"
                         [class.error]="createUserForm.controls['userName'].dirty && createUserForm.hasError('required','userName')">
                         <span class="fa fa-user p-2"></span> <input formControlName="userName" type="text"
@@ -99,7 +99,7 @@
                 </div>
                 <small
                     *ngIf="createUserForm.controls['userName'].dirty && createUserForm.hasError('required','userName')"
-                    class="text-danger">*Username is required*</small>
+                    class="text-danger">*Username is required*</small> -->
                 <div class="form-group pt-3">
                     <div class="input-field"
                         [class.error]="createUserForm.controls['phoneNumber'].dirty && createUserForm.hasError('required','phoneNumber')">

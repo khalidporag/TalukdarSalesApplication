@@ -79,7 +79,7 @@ export class UserManagementComponent implements OnInit {
       lastName: ['', Validators.required],
       userTypeId: [null, Validators.required],
       roleId: [null, Validators.required],
-      userName: ['', Validators.required],
+      // userName: ['', Validators.required],
       phoneNumber: ['', Validators.required],
       maxCreditLimit: [null, Validators.required],
       image: [null, Validators.required]
@@ -108,7 +108,7 @@ export class UserManagementComponent implements OnInit {
       formData.append('lastName', this.createUserForm.value.lastName);
       formData.append('roleId', this.selectedRole);
       formData.append('userTypeId', this.selectedUserType);
-      formData.append('userName', this.createUserForm.value.userName);
+      // formData.append('userName', this.createUserForm.value.userName);
       formData.append('phoneNumber', this.createUserForm.value.phoneNumber);
       formData.append('maxCreditLimit', this.createUserForm.value.maxCreditLimit);
 

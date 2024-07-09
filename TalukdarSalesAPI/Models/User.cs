@@ -2,6 +2,7 @@
 {
     public class User: EntityBase
     {
+        public string SequencialUserId { get; set; }
         public int UserTypeId { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
