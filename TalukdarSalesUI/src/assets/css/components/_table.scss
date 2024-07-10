@@ -1,107 +1,82 @@
 @use "variables" as *;
 @use "mixins" as *;
 
-.table {
-  position: relative;
+.table-one {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  box-shadow: #eff7f8 0px 0px 24px 5px;
+  border-radius: 5px;
+  font-family: arial;
+  border-radius: 5px;
+  overflow: hidden;
 
   thead {
-    th {
-      padding: 10px 16px;
+    tr {
+      background-image: $themeGradient;
 
-      &:last-child {
-        text-align: right;
+      th {
+        padding: 10px 16px;
+        text-align: left;
+        overflow: hidden;
+        color: #fff;
+
+        &:first-child {
+          border-radius: 5px 0 0 0;
+        }
+
+        &:last-child {
+          display: flex;
+          justify-content: flex-end;
+          border-radius: 0 5px 0 0;
+        }
       }
     }
+
   }
 
   tbody {
-
     tr {
-      background-color: #fff;
-      border-bottom: 1px solid #dceaf0;
-
-      td {
-        padding: 10px 16px;
-      }
-
-      .action {
-        display: flex;
-        justify-content: end;
-        text-align: right;
-        border: 0;
-
-        span {
-          display: block;
-          margin-right: 10px;
-          cursor: pointer;
-
-          &:last-child {
-            margin-right: 0;
+      &:last-child {
+        td {
+          &:first-child {
+            border-radius: 0 0 0 5px;
           }
         }
       }
 
-    }
-
-    .table-loader {
-      height: 50vh;
-      position: relative;
-      background-color: transparent;
-
-      &__center {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-      }
-
       td {
-        position: relative !important;
-        top: 50% !important;
-        left: 50% !important;
-        transform: translate(-50%, -50%);
-      }
-    }
-  }
-}
+        padding: 10px 16px;
+        border-bottom: 1px solid #eee;
 
-.table-one {
+        &:last-child {
+          display: flex;
+          justify-content: flex-end;
+        }
 
-  table {
-    margin: 0 auto;
-    overflow-x: auto;
-    margin-bottom: 20px;
-  }
-
-  td {
-    img {
-      width: 60px;
-      height: 60px;
-      object-fit: cover;
-      border: 1px solid #c7cdcf;
-    }
-
-    .status {
-      background-color: #daf4f0;
-      color: #137f6e;
-      border: 1px solid #137f6e;
-      padding: 2px 8px;
-      border-radius: 25px;
-      font-size: 12px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-
-      &.inactive {
-        background-color: #f4dada;
-        color: #7f1313;
-        border: 1px solid #7f1313;
+        img {
+          width: 30px;
+          border-radius: 5px;
+        }
       }
 
-      &.pending {
-        background-color: #fef4e4;
-        color: #f6b84b;
-        border: 1px solid #f6b84b;
+      .action {
+        button {
+          margin-right: 10px;
+          cursor: pointer;
+          border: none;
+          background-color: transparent;
+          padding: 0;
+
+          &:last-child {
+            margin-right: 0;
+          }
+
+          img {
+            width: 22px;
+            opacity: 0.8;
+          }
+        }
       }
     }
   }
@@ -110,7 +85,10 @@
     display: none;
   }
 
-  @include breakpoint-max(767px) {
+  @media screen and (max-width: 767px) {
+    background-color: transparent;
+    box-shadow: none;
+
     thead {
       display: none;
     }
@@ -121,29 +99,24 @@
         flex-wrap: wrap;
         margin-bottom: 10px;
         background-color: #fff;
-        padding: 40px 10px 10px 10px;
+        padding: 50px 10px 10px 10px;
         position: relative;
+        background-color: #fff;
+        box-shadow: rgb(185 188 191 / 20%) 0px 0px 24px 5px;
 
         td {
-          padding-top: 30px;
           display: flex;
           background-color: transparent;
           padding: 0;
           margin-bottom: 5px;
-          margin-right: 10px;
+          margin-right: 16px;
           border: none;
           flex-wrap: wrap;
 
           .res-head {
             display: block;
             font-weight: 700;
-            margin-right: 10px;
-          }
-
-          &:first-child {
-            position: absolute;
-            top: 10px;
-            left: 10px;
+            margin-right: 5px;
           }
         }
 
@@ -151,9 +124,21 @@
           position: absolute;
           top: 10px;
           right: 10px;
-          border: 0;
+        }
+
+        .user-thumb {
+          position: absolute;
+          top: 10px;
+          left: 10px;
         }
       }
     }
   }
+}
+
+.pagination-area {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 25px;
 }

@@ -6,18 +6,35 @@
             </button>
 
             <button class="mobile-ham" (click)="openSidebarMobile()">
-                <!-- <i class="fa-solid fa-align-left"></i> -->
                 <img src="assets/images/hambar.svg" alt="">
             </button>
         </div>
+        <nav>
+            <ul>
+
+                <li class="notification" routerLink="/all-notification"><img src="assets/images/icons/notification.svg"
+                        alt="Notification" />
+                </li>
+
+                <li nz-dropdown nzTrigger="click" nzOverlayClassName="profile-dropdown" [nzDropdownMenu]="menu">
+                    <img src="assets/images/icons/user.jpg" alt=""
+                        onerror="this.src = 'assets/images/icons/default-user.jpg'">
+                    <nz-dropdown-menu #menu="nzDropdownMenu">
+                        <ul nz-menu>
+                            <li nz-menu-item (click)="openUserModal()"> <img src="assets/images/icons/profile.svg"
+                                    alt="">Profile</li>
+                            <li nz-menu-item routerLink="/login"><img src="assets/images/icons/logout.svg" alt="">
+                                Logout</li>
+                        </ul>
+                    </nz-dropdown-menu>
+                </li>
+            </ul>
+        </nav>
     </div>
 
     <div class="header-bottom">
         <div class="header-bottom__inner">
             <h3>{{ pageTitle }}</h3>
-            <!-- <ul>
-                <li>{{ parentPage }} <img src="assets/images/right-arrow.svg" alt=""> {{ pageTitle }}</li>
-            </ul> -->
         </div>
     </div>
 </div>

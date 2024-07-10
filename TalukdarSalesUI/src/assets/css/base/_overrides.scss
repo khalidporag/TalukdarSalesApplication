@@ -6,7 +6,25 @@
 }
 
 .profile-dropdown {
-    top: 8px !important;
+    top: 0px !important;
+    min-width: 150px !important;
+    max-width: 100% !important;
+
+    ul {
+        li {
+            border-bottom: 1px solid #b5e0e0;
+            font-size: 16px;
+            font-weight: 500;
+
+            &:last-child {
+                border-bottom: none;
+            }
+
+            img {
+                margin-right: 10px;
+            }
+        }
+    }
 }
 
 .ant-modal-close {
@@ -142,15 +160,9 @@ nz-form-item-feedback-icon.ant-input-suffix {
     border-radius: 5px !important;
 }
 
-.ant-btn-primary {
-    color: $btnText !important;
-    border-color: $btnBg !important;
-    background-color: $btnBg !important;
-}
-
 select {
     appearance: none;
-    border: 1px solid $btnBg;
+    border: 1px solid 212121;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16px' height='16px' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M6.1018 8C5.02785 8 4.45387 9.2649 5.16108 10.0731L10.6829 16.3838C11.3801 17.1806 12.6197 17.1806 13.3169 16.3838L18.8388 10.0731C19.5459 9.2649 18.972 8 17.898 8H6.1018Z' fill='%23212121'/%3E%3C/svg%3E") !important;
     background-repeat: no-repeat !important;
     background-position: right 5px center !important;
@@ -163,4 +175,13 @@ select {
 .form-control:focus {
     box-shadow: none !important;
     outline: none !important;
+}
+
+.ant-pagination-item-active {
+    border-color: $themeGradient !important;
+    background: $themeGradient !important;
+
+    a {
+        color: #fff !important;
+    }
 }

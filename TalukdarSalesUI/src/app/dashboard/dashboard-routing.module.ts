@@ -17,6 +17,7 @@ import { TimeSettingComponent } from './components/time-setting/time-setting.com
 import { NoticeComponent } from './components/notice/notice.component';
 import { LandingPageComponent } from './components/landing-page/landing-page.component';
 import { ReportsComponent } from './components/reports/reports.component';
+import { DemoComponent } from './components/demo/demo.component';
 
 const routes: Routes = [{
   path: '', component: DashboardComponent,
@@ -40,6 +41,7 @@ const routes: Routes = [{
     { path: 'time-setting', component: TimeSettingComponent },
     { path: 'notice', component: NoticeComponent },
     { path: 'report', component: ReportsComponent },
+    { path: 'demo', component: DemoComponent },
   ],
 
 }];

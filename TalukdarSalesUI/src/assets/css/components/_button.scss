@@ -32,7 +32,7 @@ button {
   }
 
   &:hover {
-    background-color: $primaryDark;
+    background-color: $primaryColor;
     color: #fff;
   }
 
@@ -49,14 +49,14 @@ button {
 
   &:active,
   &:focus {
-    background-color: $textColor;
+    background-color: #999;
     color: #ffffff;
   }
 }
 
 .add-btn {
-  background-color: $btnBg;
-  color: $btnText;
+  background-color: red;
+  color: #fff;
   border: none;
   padding: 4px 12px;
 }
