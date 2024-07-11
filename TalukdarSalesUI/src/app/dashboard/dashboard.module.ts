@@ -29,6 +29,9 @@ import { HttpClientModule } from '@angular/common/http';
 import { AppRoutingModule } from '../app-routing.module';
 import { BrowserModule } from '@angular/platform-browser';
 import { ReportsComponent } from './components/reports/reports.component';
+import { DemoComponent } from './components/demo/demo.component';
+import { TableComponent } from './components/demo/components/table/table.component';
+import { CardDesignComponent } from './components/demo/components/card-design/card-design.component';
 // import { LandingPageComponent } from './components/landing-page/landing-page.component';
 
 
@@ -56,6 +59,9 @@ import { ReportsComponent } from './components/reports/reports.component';
     HeaderComponent,
     NoticeComponent,
     ReportsComponent,
+    DemoComponent,
+    TableComponent,
+    CardDesignComponent,
     // LandingPageComponent
   ],
   imports: [

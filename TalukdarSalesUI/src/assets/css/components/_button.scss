@@ -18,7 +18,7 @@ button {
   justify-content: center;
   align-items: center;
   font-size: 1.2em;
-  background: $primaryColor;
+  background: linear-gradient(329deg, #307a62 0%, #185a9d 100%);
   color: #ffffff;
   text-decoration: none;
   border-radius: 5px;
@@ -32,7 +32,7 @@ button {
   }
 
   &:hover {
-    background-color: $primaryDark;
+    background-color: $primaryColor;
     color: #fff;
   }
 
@@ -49,14 +49,14 @@ button {
 
   &:active,
   &:focus {
-    background-color: $textColor;
+    background-color: #999;
     color: #ffffff;
   }
 }
 
 .add-btn {
-  background-color: $btnBg;
-  color: $btnText;
+  background-color: red;
+  color: #fff;
   border: none;
   padding: 4px 12px;
 }

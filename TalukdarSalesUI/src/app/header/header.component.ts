@@ -22,83 +22,41 @@ export class HeaderComponent {
         this.pageTitle = event.url;
         if (event['url'] == '/') {
           this.pageTitle = 'Talukdar Sales';
-          this.parentPage = 'Dashboard';
         } else if (event['url'] == '/user-management') {
           this.pageTitle = 'User Management';
-          this.parentPage = 'Table';
         }
-        else if (event['url'] == '/deals-list') {
-          this.pageTitle = 'Deal List';
-          this.parentPage = 'Deal Management';
+        else if (event['url'] == '/role') {
+          this.pageTitle = 'Role Management';
         }
-        else if (event['url'].startsWith('/vendor-list/')) {
-          this.pageTitle = 'Vendor Details';
-          this.parentPage = 'Vendor List';
+        else if (event['url'] == '/report') {
+          this.pageTitle = 'Report';
         }
-        else if (event['url'].startsWith('/vendors/')) {
-          this.pageTitle = 'Review';
-          this.parentPage = 'Review Management';
+        else if (event['url'] == '/notice') {
+          this.pageTitle = 'Notice';
         }
-        else if (event['url'] == '/vendor-list') {
-          this.pageTitle = 'Vendor List';
-          this.parentPage = 'Vendor Management';
+        else if (event['url'] == '/sales-invoice') {
+          this.pageTitle = 'Invice Form';
         }
-        else if (event['url'].startsWith('/deals-list/')) {
-          this.pageTitle = 'Deal Details';
-          this.parentPage = 'Deal List';
+        else if (event['url'] == '/invoice-list') {
+          this.pageTitle = 'Invoice List';
         }
-        else if (event['url'] == '/location') {
-          this.pageTitle = 'Location';
-          this.parentPage = 'Location Management';
+        else if (event['url'] == '/product-type') {
+          this.pageTitle = 'Product Type Setup';
         }
-        else if (event['url'].startsWith('/location/')) {
-          this.pageTitle = 'Area List';
-          this.parentPage = 'Area';
+        else if (event['url'] == '/product') {
+          this.pageTitle = 'Product Setup';
         }
-        else if (event['url'] == '/category') {
-          this.pageTitle = 'Category';
-          this.parentPage = 'Category Management';
+        else if (event['url'] == '/time-setting') {
+          this.pageTitle = 'Time Setting';
         }
-        else if (event['url'] == '/feeds') {
-          this.pageTitle = 'Feed List';
-          this.parentPage = 'Feeds Management';
+        else if (event['url'] == '/productionwise-requisition') {
+          this.pageTitle = 'Production Planning';
         }
-        else if (event['url'].startsWith('/feeds/')) {
-          this.pageTitle = 'Feeds Details';
-          this.parentPage = 'Feeds List';
-        }
-        else if (event['url'] == '/user-list') {
-          this.pageTitle = 'User List';
-          this.parentPage = 'User Management';
-        }
-        else if (event['url'].startsWith('/user-list/')) {
-          this.pageTitle = 'User Details';
-          this.parentPage = 'User List';
-        }
-        else if (event['url'] == '/all-sms') {
-          this.pageTitle = 'Sms List';
-          this.parentPage = 'Sms Management';
-        }
-        else if (event['url'] == '/review') {
-          this.pageTitle = 'Review List';
-          this.parentPage = 'Review Management';
-        }
-        else if (event['url'].startsWith('/review/')) {
-          this.pageTitle = 'Review List';
-          this.parentPage = 'Review Management';
-        }
-        else if (event['url'] == '/visited-history') {
-          this.pageTitle = 'Visited Data';
-          this.parentPage = 'Visited History';
-        }
-        else if (event['url'] == '/voucher-list') {
-          this.pageTitle = 'Voucher';
-          this.parentPage = 'Voucher List';
+        else if (event['url'] == '/collection-history') {
+          this.pageTitle = 'Collection History';
         }
         else {
-          // console.log(event['url']);
           this.pageTitle = 'Talukdar Sales';
-          this.parentPage = 'Talukdar Sales';
         }
       }
     });

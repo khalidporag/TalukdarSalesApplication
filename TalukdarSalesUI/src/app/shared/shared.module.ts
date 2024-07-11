@@ -32,6 +32,7 @@ import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzPipesModule } from 'ng-zorro-antd/pipes';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NzImageModule } from 'ng-zorro-antd/image';
+import { NzSelectModule } from 'ng-zorro-antd/select';
 
 @NgModule({
   declarations: [
@@ -71,6 +72,7 @@ import { NzImageModule } from 'ng-zorro-antd/image';
     NzTransButtonModule,
     NzWaveModule,
     NzPipesModule,
+    NzSelectModule
   ],
   exports: [
     NzImageModule,
@@ -106,6 +108,7 @@ import { NzImageModule } from 'ng-zorro-antd/image';
     NzPipesModule,
     FormsModule,
     ReactiveFormsModule,
+    NzSelectModule,
   ],
   providers: [],
 })

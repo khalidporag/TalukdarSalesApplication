@@ -1,61 +1,66 @@
-
-<div
-class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-<h1 class="h2">Application Module Setup</h1>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Application Module Setup</h1>
 </div>
-        <button (click)="openAppModuleModal()"><span>Add Application Module</span></button>
-        
-        <div class="table-responsive">
-            <table class="table table-striped table-sm">
-                <thead>
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Name</th>
-                        <th scope="col">URL</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let module of applicationModules; let i= index">
-                        <td>{{ i+1 }}</td>
-                        <td>{{ module.name }}</td>
-                        <td>{{ module.url }}</td>
-                    </tr>
-        
-                </tbody>
-            </table>
-        </div>
-        
-        <div>
-            
-            <modal *ngIf="createModal" >
-                <div class="modal-header">
-                    <h5 class="modal-title">Add Application Module</h5>
-                    <button type="button" class="btn-close" (click)="closeModal()"></button>
-                </div>
-                <div class="modal-body">
-                    <form (ngSubmit)="onSubmit()" [formGroup]="addApplicationModuleForm">
-                        <div class="form-group pt-3">
-                            <div class="input-field" [class.error]="addApplicationModuleForm.controls['name'].dirty && addApplicationModuleForm.hasError('required','name')"> 
-                                <span class="fa fa-user p-2"></span> 
-                                <input formControlName="name" type="text" placeholder="Name"> </div>
-                        </div>
-                        <small *ngIf="addApplicationModuleForm.controls['name'].dirty && addApplicationModuleForm.hasError('required','name')" class="text-danger">*Name is required*</small>
+<button (click)="openAppModuleModal()"><span>Add Application Module</span></button>
 
-                        <div class="form-group pt-3">
-                            <div class="input-field" [class.error]="addApplicationModuleForm.controls['url'].dirty && addApplicationModuleForm.hasError('required','url')"> 
-                                <span class="fa fa-user p-2"></span> 
-                                <input formControlName="url" type="text" placeholder="URL"> </div>
-                        </div>
-                        <small *ngIf="addApplicationModuleForm.controls['url'].dirty && addApplicationModuleForm.hasError('required','url')" class="text-danger">*URL is required*</small>
-                        
-                        <button *ngIf="!submitting" type="submit" class="btn btn-primary btn-block mt-4 w-100">Save</button>
-                        <button type="button" class="btn btn-primary" *ngIf="submitting">
-                            <i class="fas fa-spinner fa-pulse"></i>
-                        </button>
-                    </form>
-                </div>
-            </modal>
-            
-         
+<div class="table-responsive mt-25">
+    <table class="table table-striped table-sm">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Name</th>
+                <th scope="col">URL</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let module of applicationModules; let i= index">
+                <td>{{ i+1 }}</td>
+                <td>{{ module.name }}</td>
+                <td>{{ module.url }}</td>
+            </tr>
+
+        </tbody>
+    </table>
+</div>
+
+<div>
+
+    <modal *ngIf="createModal">
+        <div class="modal-header">
+            <h5 class="modal-title">Add Application Module</h5>
+            <button type="button" class="btn-close" (click)="closeModal()"></button>
         </div>
- 
+        <div class="modal-body">
+            <form (ngSubmit)="onSubmit()" [formGroup]="addApplicationModuleForm">
+                <div class="form-group pt-3">
+                    <div class="input-field"
+                        [class.error]="addApplicationModuleForm.controls['name'].dirty && addApplicationModuleForm.hasError('required','name')">
+                        <span class="fa fa-user p-2"></span>
+                        <input formControlName="name" type="text" placeholder="Name">
+                    </div>
+                </div>
+                <small
+                    *ngIf="addApplicationModuleForm.controls['name'].dirty && addApplicationModuleForm.hasError('required','name')"
+                    class="text-danger">*Name is required*</small>
+
+                <div class="form-group pt-3">
+                    <div class="input-field"
+                        [class.error]="addApplicationModuleForm.controls['url'].dirty && addApplicationModuleForm.hasError('required','url')">
+                        <span class="fa fa-user p-2"></span>
+                        <input formControlName="url" type="text" placeholder="URL">
+                    </div>
+                </div>
+                <small
+                    *ngIf="addApplicationModuleForm.controls['url'].dirty && addApplicationModuleForm.hasError('required','url')"
+                    class="text-danger">*URL is required*</small>
+
+                <button *ngIf="!submitting" type="submit" class="btn btn-primary btn-block mt-4 w-100">Save</button>
+                <button type="button" class="btn btn-primary" *ngIf="submitting">
+                    <i class="fas fa-spinner fa-pulse"></i>
+                </button>
+            </form>
+        </div>
+    </modal>
+
+
+</div>

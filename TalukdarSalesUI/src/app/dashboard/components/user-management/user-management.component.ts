@@ -13,7 +13,6 @@ import { ModalService } from 'src/app/services/modal.service';
   styleUrls: ['./user-management.component.scss']
 })
 export class UserManagementComponent implements OnInit {
-
   file: File | null = null;
   fileError: string = '';
   selectedUserType: any;
@@ -82,7 +81,7 @@ export class UserManagementComponent implements OnInit {
       // userName: ['', Validators.required],
       phoneNumber: ['', Validators.required],
       maxCreditLimit: [null, Validators.required],
-      image: [null, Validators.required]
+      image: [null, Validators.nullValidator]
     });
   }
 

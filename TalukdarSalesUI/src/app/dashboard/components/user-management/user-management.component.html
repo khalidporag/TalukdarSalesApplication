@@ -8,7 +8,7 @@
     </div>
 </div>
 
-<div class="table-responsive">
+<div class="table-responsive mt-25">
     <table class="table table-striped table-sm">
         <thead>
             <tr>
@@ -36,167 +36,163 @@
     </table>
 </div>
 
-<div>
 
-    <modal id="createUserModal" *ngIf="createModal">
+<!-- <modal id="createUserModal" *ngIf="createModal">
+    <div class="modal-header">
+        <h5 class="modal-title">Create User</h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+    </div>
+    <div class="modal-body">
+        <form (ngSubmit)="onSubmit()" [formGroup]="createUserForm">
+            <div class="form-group pt-3">
+                <div class="input-field"
+                    [class.error]="createUserForm.controls['firstName'].dirty && createUserForm.hasError('required','firstName')">
+                    <span class="fa fa-user p-2"></span>
+                    <input formControlName="firstName" type="text" placeholder="First Name">
+                </div>
+            </div>
+            <small *ngIf="createUserForm.controls['firstName'].dirty && createUserForm.hasError('required','firstName')"
+                class="text-danger">*First Name is required*</small>
+            <div class="form-group pt-3">
+                <div class="input-field"
+                    [class.error]="createUserForm.controls['lastName'].dirty && createUserForm.hasError('required','lastName')">
+                    <span class="fa fa-user p-2"></span> <input formControlName="lastName" type="text"
+                        placeholder="Last Name">
+                </div>
+            </div>
+            <small *ngIf="createUserForm.controls['lastName'].dirty && createUserForm.hasError('required','lastName')"
+                class="text-danger">*Last Name is required*</small>
+            <div class="form-group pt-3">
+                <div class="input-field"
+                    [class.error]="createUserForm.controls['roleId'].dirty && createUserForm.controls['roleId'].hasError('required')">
+                    <span class="fa fa-user p-2"></span>
+                    <select formControlName="roleId" class="form-control" [(ngModel)]="selectedRole">
+                        <option value=null disabled>Select Role</option>
+                        <option *ngFor="let role of roles" [value]="role.id">{{ role.name }}</option>
+                    </select>
+                </div>
+            </div>
+            <small
+                *ngIf="createUserForm.controls['roleId'].dirty && createUserForm.controls['roleId'].hasError('required')"
+                class="text-danger">*Role is required*</small>
+
+            <div class="form-group pt-3">
+                <div class="input-field"
+                    [class.error]="createUserForm.controls['userTypeId'].dirty && createUserForm.controls['userTypeId'].hasError('required')">
+                    <span class="fa fa-user p-2"></span>
+                    <select formControlName="userTypeId" class="form-control" [(ngModel)]="selectedUserType">
+                        <option value=null disabled>Select User Type</option>
+                        <option *ngFor="let type of userTypes" [value]="type.id">{{ type.typeName }}</option>
+                    </select>
+                </div>
+            </div>
+            <small
+                *ngIf="createUserForm.controls['userTypeId'].dirty && createUserForm.controls['userTypeId'].hasError('required')"
+                class="text-danger">*User Type is required*</small>
+            <div class="form-group pt-3">
+                <div class="input-field"
+                    [class.error]="createUserForm.controls['phoneNumber'].dirty && createUserForm.hasError('required','phoneNumber')">
+                    <span class="fa fa-user p-2"></span> <input formControlName="phoneNumber" type="text"
+                        placeholder="Phone Number">
+                </div>
+            </div>
+            <small
+                *ngIf="createUserForm.controls['phoneNumber'].dirty && createUserForm.hasError('required','phoneNumber')"
+                class="text-danger">*Phone Number is required*</small>
+            <div class="form-group pt-3">
+                <div class="input-field"
+                    [class.error]="createUserForm.controls['maxCreditLimit'].dirty && createUserForm.hasError('required','maxCreditLimit')">
+                    <span class="fa fa-user p-2"></span> <input formControlName="maxCreditLimit" type="text"
+                        placeholder="Max Credit Limit">
+                </div>
+            </div>
+            <small
+                *ngIf="createUserForm.controls['maxCreditLimit'].dirty && createUserForm.hasError('required','maxCreditLimit')"
+                class="text-danger">*Max Credit Limit is required*</small>
+            <div class="form-group pt-3">
+                <div class="input-field">
+                    <span class="fa fa-user p-2"></span>
+                    <input formControlName="image" type="file" (change)="onFileChange($event)">
+                </div>
+            </div>
+            <small *ngIf="fileError" class="text-danger">{{ fileError }}</small>
+
+            <button *ngIf="!submitting" type="submit" class="btn btn-primary btn-block mt-4 w-100">Save</button>
+            <button type="button" class="btn btn-primary" *ngIf="submitting">
+                <i class="fas fa-spinner fa-pulse"></i>
+            </button>
+        </form>
+    </div>
+</modal> -->
+
+<!-- New Modal -->
+<nz-modal [(nzVisible)]="createModal">
+    <ng-container *nzModalContent>
         <div class="modal-header">
-            <h5 class="modal-title">Create User</h5>
-            <button type="button" class="btn-close" (click)="closeModal()"></button>
+            <h2>Create User</h2>
+            <button (click)="closeModal()"><img src="assets/images/icons/close.svg" alt=""></button>
         </div>
         <div class="modal-body">
-            <form (ngSubmit)="onSubmit()" [formGroup]="createUserForm">
-                <div class="form-group pt-3">
-                    <div class="input-field"
-                        [class.error]="createUserForm.controls['firstName'].dirty && createUserForm.hasError('required','firstName')">
-                        <span class="fa fa-user p-2"></span>
-                        <input formControlName="firstName" type="text" placeholder="First Name">
-                    </div>
-                </div>
-                <small
-                    *ngIf="createUserForm.controls['firstName'].dirty && createUserForm.hasError('required','firstName')"
-                    class="text-danger">*First Name is required*</small>
-                <div class="form-group pt-3">
-                    <div class="input-field"
-                        [class.error]="createUserForm.controls['lastName'].dirty && createUserForm.hasError('required','lastName')">
-                        <span class="fa fa-user p-2"></span> <input formControlName="lastName" type="text"
-                            placeholder="Last Name">
-                    </div>
-                </div>
-                <small
-                    *ngIf="createUserForm.controls['lastName'].dirty && createUserForm.hasError('required','lastName')"
-                    class="text-danger">*Last Name is required*</small>
-                <div class="form-group pt-3">
-                        <div class="input-field" [class.error]="createUserForm.controls['roleId'].dirty && createUserForm.controls['roleId'].hasError('required')">
-                          <span class="fa fa-user p-2"></span>
-                          <select formControlName="roleId" class="form-control" [(ngModel)]="selectedRole">
-                            <option value=null disabled>Select Role</option>
-                            <option *ngFor="let role of roles" [value]="role.id">{{ role.name }}</option>
-                          </select>
+            <form nz-form (ngSubmit)="onSubmit()" [formGroup]="createUserForm" class="custom-form">
+                <nz-form-item>
+                    <nz-form-control nzHasFeedback>
+                        <input nz-input formControlName="firstName" placeholder="Enter first name" />
+                        <div *ngIf="createUserForm.get('firstName')?.dirty && createUserForm.get('firstName')?.errors">
+                            Enter first name plaese
                         </div>
-                </div>
-                <small *ngIf="createUserForm.controls['roleId'].dirty && createUserForm.controls['roleId'].hasError('required')" class="text-danger">*Role is required*</small>
-                    
-                <div class="form-group pt-3">
-                    <div class="input-field"
-                        [class.error]="createUserForm.controls['userTypeId'].dirty && createUserForm.controls['userTypeId'].hasError('required')">
-                        <span class="fa fa-user p-2"></span>
-                        <select formControlName="userTypeId" class="form-control" [(ngModel)]="selectedUserType">
-                            <option value=null disabled>Select User Type</option>
-                            <option *ngFor="let type of userTypes" [value]="type.id">{{ type.typeName }}</option>
-                        </select>
-                    </div>
-                </div>
-                <small
-                    *ngIf="createUserForm.controls['userTypeId'].dirty && createUserForm.controls['userTypeId'].hasError('required')"
-                    class="text-danger">*User Type is required*</small>
+                    </nz-form-control>
+                </nz-form-item>
 
-                <!-- <div class="form-group pt-3">
-                    <div class="input-field"
-                        [class.error]="createUserForm.controls['userName'].dirty && createUserForm.hasError('required','userName')">
-                        <span class="fa fa-user p-2"></span> <input formControlName="userName" type="text"
-                            placeholder="User Name">
-                    </div>
-                </div>
-                <small
-                    *ngIf="createUserForm.controls['userName'].dirty && createUserForm.hasError('required','userName')"
-                    class="text-danger">*Username is required*</small> -->
-                <div class="form-group pt-3">
-                    <div class="input-field"
-                        [class.error]="createUserForm.controls['phoneNumber'].dirty && createUserForm.hasError('required','phoneNumber')">
-                        <span class="fa fa-user p-2"></span> <input formControlName="phoneNumber" type="text"
-                            placeholder="Phone Number">
-                    </div>
-                </div>
-                <small
-                    *ngIf="createUserForm.controls['phoneNumber'].dirty && createUserForm.hasError('required','phoneNumber')"
-                    class="text-danger">*Phone Number is required*</small>
-                <div class="form-group pt-3">
-                    <div class="input-field"
-                        [class.error]="createUserForm.controls['maxCreditLimit'].dirty && createUserForm.hasError('required','maxCreditLimit')">
-                        <span class="fa fa-user p-2"></span> <input formControlName="maxCreditLimit" type="text"
-                            placeholder="Max Credit Limit">
-                    </div>
-                </div>
-                <small
-                    *ngIf="createUserForm.controls['maxCreditLimit'].dirty && createUserForm.hasError('required','maxCreditLimit')"
-                    class="text-danger">*Max Credit Limit is required*</small>
+                <nz-form-item>
+                    <nz-form-control nzHasFeedback>
+                        <input nz-input formControlName="lastName" placeholder="Enter last name" />
+                        <div *ngIf="createUserForm.get('lastName')?.dirty && createUserForm.get('lastName')?.errors">
+                            Enter last name plaese
+                        </div>
+                    </nz-form-control>
+                </nz-form-item>
 
-                <!-- <button *ngIf="!submitting" class="cancel-btn" (click)="closeModal()">Cancel</button> -->
-                <div class="form-group pt-3">
-                    <div class="input-field">
-                        <span class="fa fa-user p-2"></span>
-                        <input formControlName="image" type="file" (change)="onFileChange($event)">
-                    </div>
-                </div>
-                <small *ngIf="fileError" class="text-danger">{{ fileError }}</small>
+                <nz-form-item>
+                    <nz-form-control>
+                        <nz-select nzDropdownClassName="select-dropdown" formControlName="roleId"
+                            nzPlaceHolder="Select User Role">
+                            <nz-option *ngFor="let role of roles" [nzValue]="role.id" [nzLabel]="role.name">
+                            </nz-option>
+                        </nz-select>
+                    </nz-form-control>
+                </nz-form-item>
 
-                <button *ngIf="!submitting" type="submit" class="btn btn-primary btn-block mt-4 w-100">Save</button>
-                <button type="button" class="btn btn-primary" *ngIf="submitting">
-                    <i class="fas fa-spinner fa-pulse"></i>
-                </button>
+                <nz-form-item>
+                    <nz-form-control>
+                        <nz-select nzDropdownClassName="select-dropdown" formControlName="userTypeId"
+                            nzPlaceHolder="Select User Type">
+                            <nz-option *ngFor="let type of userTypes" [nzValue]="type.id" [nzLabel]="type.typeName">
+                            </nz-option>
+                        </nz-select>
+                    </nz-form-control>
+                </nz-form-item>
+                <nz-form-item>
+                    <nz-form-control nzHasFeedback>
+                        <input nz-input formControlName="phoneNumber" placeholder="Enter Phone Number" />
+                        <div *ngIf="createUserForm.get('phoneNumber')?.dirty && createUserForm.get('phoneNumber')?.errors">
+                            Phone Number is Required
+                        </div>
+                    </nz-form-control>
+                </nz-form-item>
+
+                <nz-form-item>
+                    <nz-form-control nzHasFeedback>
+                        <input nz-input type="number" formControlName="maxCreditLimit" placeholder="Enter Max CreditLimit" />
+                        <div *ngIf="createUserForm.get('maxCreditLimit')?.dirty && createUserForm.get('maxCreditLimit')?.errors">
+                            Max CreditLimit is Required
+                        </div>
+                    </nz-form-control>
+                </nz-form-item>
             </form>
         </div>
-        <!-- <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" (click)="modalService.close();">Close</button>
-                </div> -->
-    </modal>
-
-
-</div>
-
-
-<!-- <nz-modal >
-            <ng-container *nzModalContent>
-                <div class="modal-header">
-                    <h2>Create User</h2>
-                    <button (click)="closeModal()"><i class="fa fa-close"></i></button>
-                </div>
-                <div class="modal-body">
-                    
-                    <form nz-form [formGroup]="createUserForm" class="custom-form" (ngSubmit)="onSubmit()">
-        
-                        <nz-form-item>
-                            <nz-form-control nzHasFeedback>
-                                <input nz-input formControlName="firstName" placeholder="Enter first name" />
-                                <div *ngIf="createUserForm.get('firstName')?.dirty && createUserForm.get('firstName')?.errors">
-                                    Enter first name plaese
-                                </div>
-                            </nz-form-control>
-                        </nz-form-item>
-                        <nz-form-item>
-                            <nz-form-control nzHasFeedback>
-                                <input nz-input formControlName="lastName" placeholder="Enter last name" />
-                                <div *ngIf="createUserForm.get('lastName')?.dirty && createUserForm.get('lastName')?.errors">
-                                    Enter last name plaese
-                                </div>
-                            </nz-form-control>
-                        </nz-form-item>
-                        <nz-form-item>
-                            <nz-form-control nzHasFeedback>
-                                <input nz-input formControlName="phoneNumber" placeholder="Enter phone number" />
-                                <div *ngIf="createUserForm.get('phoneNumber')?.dirty && createUserForm.get('phoneNumber')?.errors">
-                                    Enter phone number plaese
-                                </div>
-                            </nz-form-control>
-                        </nz-form-item>
-                        <nz-form-item>
-                            <nz-form-control nzHasFeedback>
-                                <input nz-input formControlName="userName" placeholder="Enter username" />
-                                <div *ngIf="createUserForm.get('userName')?.dirty && createUserForm.get('userName')?.errors">
-                                    Enter user name plaese
-                                </div>
-                            </nz-form-control>
-                        </nz-form-item>
-                    </form>
-                </div>
-        
-                <div class="modal-footer">
-                    <button *ngIf="!submitting" class="cancel-btn" (click)="closeModal()">Cancel</button>
-                    <button *ngIf="!submitting" [disabled]="!createUserForm.valid" class="add-btn"
-                        (click)="onSubmit()">Create</button>
-                    <button type="button" class="main-btn" *ngIf="submitting">
-                        <i class="fas fa-spinner fa-pulse"></i>
-                    </button>
-                </div>
-            </ng-container>
-        </nz-modal> -->
+        <div class="modal-footer">
+            <button class="cancel-btn" (click)="closeModal()">Cancel</button>
+            <button class="add-btn" (click)="onSubmit()" >Create</button>
+        </div>
+    </ng-container>
+</nz-modal>

@@ -37,7 +37,7 @@
                             <img src="assets/images/icons/arrow-down.svg" alt="">
                         </div>
                     </div>
-                    <ul class="dropdown-area">
+                    <ul class="dropdown-area" [ngClass]="{'show': isActive('/user-management') || isActive('/role')}">
                         <!-- <li class="mobile-title">User Administration</li> -->
                         <li class="nav-item" (click)="goToPage('/user-management')"
                             [ngClass]="{'active': isActive('/user-management')}">
@@ -52,6 +52,7 @@
                         </li>
                     </ul>
                 </li>
+
                 <!-- <li class="nav-item" (click)="goToPage('/role')" [ngClass]="{'active': isActive('/role')}">
                     <div class="nav-item__list">
                         <div class="left-icon">
@@ -74,6 +75,9 @@
                         </div>
                     </div>
                 </li> -->
+
+
+
                 <li class="nav-item dropdown-item" (click)="openSidebarFromMini()">
                     <div class="nav-item__list" (click)="expandDropdown($event)">
                         <div class="left-icon">
@@ -84,8 +88,8 @@
                             <img src="assets/images/icons/arrow-down.svg" alt="">
                         </div>
                     </div>
-                    <ul class="dropdown-area">
-                        <!-- <li class="mobile-title">Sales Requisition</li> -->
+                    <ul class="dropdown-area"
+                        [ngClass]="{'show': isActive('/sales-requisition') || isActive('/requisition-list')}">
                         <li class="nav-item" (click)="goToPage('/sales-requisition')"
                             [ngClass]="{'active': isActive('/sales-requisition')}">
                             <div class="nav-item__list">
@@ -111,19 +115,20 @@
                             <img src="assets/images/icons/arrow-down.svg" alt="">
                         </div>
                     </div>
-                    <ul class="dropdown-area">
+                    <ul class="dropdown-area"
+                        [ngClass]="{'show': isActive('/sales-invoice') || isActive('/invoice-list')}">
                         <li class="nav-item" (click)="goToPage('/sales-invoice')"
-                    [ngClass]="{'active': isActive('/sales-invoice')}">
-                    <div class="nav-item__list">
-                        <span>Invoice Form</span>
-                    </div>
-                </li>
-                <li class="nav-item" (click)="goToPage('/invoice-list')"
-                    [ngClass]="{'active': isActive('/invoice-list')}">
-                    <div class="nav-item__list">
-                        <span>Invoice List</span>
-                    </div>
-                </li>
+                            [ngClass]="{'active': isActive('/sales-invoice')}">
+                            <div class="nav-item__list">
+                                <span>Invoice Form</span>
+                            </div>
+                        </li>
+                        <li class="nav-item" (click)="goToPage('/invoice-list')"
+                            [ngClass]="{'active': isActive('/invoice-list')}">
+                            <div class="nav-item__list">
+                                <span>Invoice List</span>
+                            </div>
+                        </li>
                     </ul>
                 </li>
                 <!-- <li class="nav-item" (click)="goToPage('/sales-requisition')"
@@ -219,14 +224,15 @@
                 <li class="nav-item nav dropdown-item" (click)="openSidebarFromMini()">
                     <div class="nav-item__list" (click)="expandDropdown($event)">
                         <div class="left-icon">
-                            <img src="assets/images/icons/demo.svg" alt="">
+                            <img src="assets/images/icons/settings.svg" alt="">
                         </div>
                         <span>Settings</span>
                         <div class="right-icon drop-icon">
                             <img src="assets/images/icons/arrow-down.svg" alt="">
                         </div>
                     </div>
-                    <ul class="dropdown-area">
+                    <ul class="dropdown-area"
+                        [ngClass]="{'show': isActive('/product-type') || isActive('/product') || isActive('/time-setting')}">
                         <!-- <li class="mobile-title">Settings</li> -->
                         <li class="nav-item" (click)="goToPage('/product-type')"
                             [ngClass]="{'active': isActive('/product-type')}">
