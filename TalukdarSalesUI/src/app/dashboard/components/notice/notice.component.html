@@ -1,15 +1,57 @@
-<button class="main-btn" (click)="openNoticeModal()"><span>Create Notice</span></button>
 <div class="page-header">
     <div class="page-header__inner">
-        <!-- <div class="search-area">
-            <input type="text" class="form-control" placeholder="search...">
-            <button><img src="assets/images/icons/search.svg" alt=""></button>
-        </div> -->
-        <!-- <button class="main-btn" (click)="openNoticeModal()">Create Notice</button> -->
+        <button class="main-btn" (click)="openNoticeModal()"><span>Create Notice</span></button>
     </div>
 </div>
-<div class="pt-4"></div>
-<table class="table-one">
+
+<!-- New Code -->
+<div class="notice-card mt-25">
+    <div class="row">
+        <div class="col-lg-4 col-md-6 pb-25" *ngFor="let item of cardData">
+            <div class="card-1" (click)="openNoticeDetailsModal(item)">
+                <div class="logo">
+                    <img src="{{item.logo}}" alt="">
+                </div>
+                <div class="content">
+                    <h3>{{item.title}}</h3>
+                    <p class="desc">{{item.desc}}</p>
+                    <div class="time">
+                        <p>Created at: <span>{{item.createdAt}}</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="pagination-area">
+    <h4>Total: 41</h4>
+    <nz-pagination [nzPageIndex]="1" [nzTotal]="50"></nz-pagination>
+</div>
+
+<!-- Notice Details -->
+<nz-modal [(nzVisible)]="noticeDetailsModal">
+    <ng-container *nzModalContent>
+        <div class="modal-header">
+            <h2>Details of {{detailsModalData?.title}}</h2>
+            <button (click)="closeNoticeDetailsModal()"><img src="assets/images/icons/close.svg" alt=""></button>
+        </div>
+        <div class="modal-body card-details">
+            <div class="logo">
+                <img src="{{detailsModalData?.logo}}" alt="">
+            </div>
+            <h3>{{detailsModalData?.title}}</h3>
+            <p>{{detailsModalData?.desc}}</p>
+        </div>
+    </ng-container>
+</nz-modal>
+<!-- New Code -->
+
+<!-- =======================================================
+======================================================= -->
+
+<!-- Old Code -->
+<table class="table-one mt-25">
     <thead>
         <tr>
             <th>#</th>
@@ -59,55 +101,50 @@
             </table>
         </div> -->
 
-<div>
-
-    <modal id="notice" *ngIf="createModal">
-        <div class="modal-header">
-            <h5 class="modal-title">Create Notice</h5>
-            <button type="button" class="btn-close" (click)="closeModal()"></button>
-        </div>
-        <div class="modal-body">
-            <form (ngSubmit)="onSubmit()" [formGroup]="createNoticeForm">
-                <div class="form-group pt-3">
-                    <div class="input-field"
-                        [class.error]="createNoticeForm.controls['title'].dirty && createNoticeForm.hasError('required','title')">
-                        <span class="fa fa-user p-2"></span>
-                        <input formControlName="title" type="text" placeholder="Title">
-                    </div>
+<modal id="notice" *ngIf="createModal">
+    <div class="modal-header">
+        <h5 class="modal-title">Create Notice</h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+    </div>
+    <div class="modal-body">
+        <form (ngSubmit)="onSubmit()" [formGroup]="createNoticeForm">
+            <div class="form-group pt-3">
+                <div class="input-field"
+                    [class.error]="createNoticeForm.controls['title'].dirty && createNoticeForm.hasError('required','title')">
+                    <span class="fa fa-user p-2"></span>
+                    <input formControlName="title" type="text" placeholder="Title">
                 </div>
-                <small *ngIf="createNoticeForm.controls['title'].dirty && createNoticeForm.hasError('required','title')"
-                    class="text-danger">*Title is required*</small>
+            </div>
+            <small *ngIf="createNoticeForm.controls['title'].dirty && createNoticeForm.hasError('required','title')"
+                class="text-danger">*Title is required*</small>
 
-                <div class="form-group pt-3">
-                    <div class="input-field"
-                        [class.error]="createNoticeForm.controls['description'].dirty && createNoticeForm.hasError('required','description')">
-                        <span class="fa fa-user p-2"></span>
-                        <textarea formControlName="description" rows="6" cols="160" type="text"
-                            placeholder="Description"> </textarea>
-                    </div>
+            <div class="form-group pt-3">
+                <div class="input-field"
+                    [class.error]="createNoticeForm.controls['description'].dirty && createNoticeForm.hasError('required','description')">
+                    <span class="fa fa-user p-2"></span>
+                    <textarea formControlName="description" rows="6" cols="160" type="text"
+                        placeholder="Description"> </textarea>
                 </div>
-                <!-- <div class="form-group pt-3">
+            </div>
+            <!-- <div class="form-group pt-3">
                             <quill-editor formControlName="description"></quill-editor>
                         </div> -->
-                <small
-                    *ngIf="createNoticeForm.controls['title'].dirty && createNoticeForm.hasError('required','description')"
-                    class="text-danger">*Description is required*</small>
+            <small
+                *ngIf="createNoticeForm.controls['title'].dirty && createNoticeForm.hasError('required','description')"
+                class="text-danger">*Description is required*</small>
 
-                <div class="form-group pt-3">
-                    <div class="input-field">
-                        <span class="fa fa-user p-2"></span>
-                        <input formControlName="image" type="file" (change)="onFileChange($event)">
-                    </div>
+            <div class="form-group pt-3">
+                <div class="input-field">
+                    <span class="fa fa-user p-2"></span>
+                    <input formControlName="image" type="file" (change)="onFileChange($event)">
                 </div>
-                <small *ngIf="fileError" class="text-danger">{{ fileError }}</small>
+            </div>
+            <small *ngIf="fileError" class="text-danger">{{ fileError }}</small>
 
-                <button *ngIf="!submitting" type="submit" class="btn btn-primary btn-block mt-4 w-100">Save</button>
-                <button type="button" class="btn btn-primary" *ngIf="submitting">
-                    <i class="fas fa-spinner fa-pulse"></i>
-                </button>
-            </form>
-        </div>
-    </modal>
-
-
-</div>
+            <button *ngIf="!submitting" type="submit" class="btn btn-primary btn-block mt-4 w-100">Save</button>
+            <button type="button" class="btn btn-primary" *ngIf="submitting">
+                <i class="fas fa-spinner fa-pulse"></i>
+            </button>
+        </form>
+    </div>
+</modal>

@@ -33,7 +33,7 @@ export class DashboardComponent {
   getfullBody() {
     this.commonService.dashboardBody$.subscribe((open) => {
       this.isfullArea = !this.isfullArea;
-      console.log(this.isfullArea);
+      // console.log(this.isfullArea);
     });
   }
 }

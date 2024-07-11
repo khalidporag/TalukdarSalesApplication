@@ -6,7 +6,7 @@ import { CommonService } from './services/common/common.service';
 
 @Component({
   selector: 'app-root',
-  templateUrl:'./app.component.html',
+  templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
@@ -27,15 +27,15 @@ export class AppComponent {
   title = 'TalukdarSalesUI';
 
   ngOnInit() {
-    this.getfullBody();
+    // this.getfullBody();
   }
 
-  getfullBody() {
-    this.commonService.dashboardBody$.subscribe((open) => {
-      this.isfullArea = !this.isfullArea;
-      console.log(this.isfullArea);
-    });
-  }
+  // getfullBody() {
+  //   this.commonService.dashboardBody$.subscribe((open) => {
+  //     this.isfullArea = !this.isfullArea;
+  //     console.log(this.isfullArea);
+  //   });
+  // }
 
   logout() {
     this.auth.signOut();

@@ -68,7 +68,7 @@ export class HeaderComponent {
   getfullHeader() {
     this.commonService.dashboardBody$.subscribe((open) => {
       this.isHeaderFullArea = !this.isHeaderFullArea;
-      console.log(this.isHeaderFullArea);
+      // console.log(this.isHeaderFullArea);
     });
   }
 
@@ -77,8 +77,8 @@ export class HeaderComponent {
     this.commonService.toggleBody();
     this.commonService.headerState$.subscribe((open) => {
       this.isHeaderFullArea = !this.isHeaderFullArea;
-      console.log(this.isHeaderFullArea);
     });
+    // this.commonService.toggleHeader();
   }
 
   openSidebarMobile() {
