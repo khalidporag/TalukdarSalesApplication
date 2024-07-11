@@ -1,30 +1,20 @@
-<!-- <div class="filters">
-    <div class="filter">
-      <label for="user">Invoice Number</label>
-      <select id="invoiceNumber" [(ngModel)]="selectedInvoice" (change)="getCollectionList()">
-        <option *ngFor="let invoice of invoiceList" [value]="invoice.id">{{ invoice.invoiceNumber }}</option>
-      </select>
-    </div>
-  </div> -->
-<div class="table-responsive mt-25">
-    <table class="table table-striped table-sm">
-        <thead>
-            <tr>
-                <th scope="col">#</th>
-                <th scope="col">Item Name</th>
-                <th scope="col">Quantity</th>
-                <th scope="col">Price</th>
-                <th scope="col">Created On</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr *ngFor="let requisition of requisitionDetailsList; let i= index">
-                <td>{{i+1}}</td>
-                <td>{{requisition.finishedGoodName}}</td>
-                <td>{{requisition.quantity}}</td>
-                <td>{{requisition.price}}</td>
-                <td>{{requisition.createdDateTime}}</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+<table class="table-one">
+    <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Item Name</th>
+            <th scope="col">Quantity</th>
+            <th scope="col">Price</th>
+            <th scope="col">Created On</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let requisition of requisitionDetailsList; let i= index">
+            <td><span class="res-head">Id:</span>{{i+1}}</td>
+            <td><span class="res-head">Item Name:</span>{{requisition.finishedGoodName}}</td>
+            <td><span class="res-head">Quantity:</span>{{requisition.quantity}}</td>
+            <td><span class="res-head">Price:</span>{{requisition.price}}</td>
+            <td><span class="res-head">Created On:</span>{{requisition.createdDateTime | date:'medium'}}</td>
+        </tr>
+    </tbody>
+</table>

@@ -1,11 +1,40 @@
-
-<div
-class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-<h1 class="h2">Notice</h1>
+<button class="main-btn" (click)="openNoticeModal()"><span>Create Notice</span></button>
+<div class="page-header">
+    <div class="page-header__inner">
+        <!-- <div class="search-area">
+            <input type="text" class="form-control" placeholder="search...">
+            <button><img src="assets/images/icons/search.svg" alt=""></button>
+        </div> -->
+        <!-- <button class="main-btn" (click)="openNoticeModal()">Create Notice</button> -->
+    </div>
 </div>
-        <button (click)="openNoticeModal()"><span>Create Notice</span></button>
-        
-        <div class="table-responsive">
+<div class="pt-4"></div>
+<table class="table-one">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th></th>
+            <th>Title</th>
+            <th>Creation Time</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of notices; let i= index">
+            <td><span class="res-head">Id:</span>{{i+1}}</td>
+            <td><span class="res-head">Id:</span><img nz-image nzSrc="{{item.thumb}}" alt="" class="user-thumb"
+                    onerror="this.src = 'assets/images/icons/default-user.jpg'"></td>
+            <td><span class="res-head">Title:</span>{{item.title}}</td>
+            <td><span class="res-head">Created On:</span>{{item.createdOn | date: 'medium'}}</td>
+            <td><span class="res-head">Description</span>{{item.description}}</td>
+            <!-- <td class="action">
+                <button (click)="openEditFinishedGoodModal(item)"><img src="assets/images/icons/edit.svg" alt=""></button>
+            </td> -->
+        </tr>
+    </tbody>
+</table>
+
+<!-- <div class="table-responsive">
             <table class="table table-striped table-sm">
                 <thead>
                     <tr>
@@ -28,51 +57,57 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
         
                 </tbody>
             </table>
+        </div> -->
+
+<div>
+
+    <modal id="notice" *ngIf="createModal">
+        <div class="modal-header">
+            <h5 class="modal-title">Create Notice</h5>
+            <button type="button" class="btn-close" (click)="closeModal()"></button>
         </div>
-        
-        <div>
-            
-            <modal id="notice" *ngIf="createModal" >
-                <div class="modal-header">
-                    <h5 class="modal-title">Create Notice</h5>
-                    <button type="button" class="btn-close" (click)="closeModal()"></button>
+        <div class="modal-body">
+            <form (ngSubmit)="onSubmit()" [formGroup]="createNoticeForm">
+                <div class="form-group pt-3">
+                    <div class="input-field"
+                        [class.error]="createNoticeForm.controls['title'].dirty && createNoticeForm.hasError('required','title')">
+                        <span class="fa fa-user p-2"></span>
+                        <input formControlName="title" type="text" placeholder="Title">
+                    </div>
                 </div>
-                <div class="modal-body">
-                    <form (ngSubmit)="onSubmit()" [formGroup]="createNoticeForm">
-                        <div class="form-group pt-3">
-                            <div class="input-field" [class.error]="createNoticeForm.controls['title'].dirty && createNoticeForm.hasError('required','title')"> 
-                                <span class="fa fa-user p-2"></span> 
-                                <input formControlName="title" type="text" placeholder="Title"> </div>
-                        </div>
-                        <small *ngIf="createNoticeForm.controls['title'].dirty && createNoticeForm.hasError('required','title')" class="text-danger">*Title is required*</small>
-                        
-                        <div class="form-group pt-3">
-                            <div class="input-field" [class.error]="createNoticeForm.controls['description'].dirty && createNoticeForm.hasError('required','description')"> 
-                                <span class="fa fa-user p-2"></span> 
-                                <textarea formControlName="description" rows="6" cols="160" type="text" placeholder="Description"> </textarea>
-                            </div>
-                        </div>
-                        <!-- <div class="form-group pt-3">
+                <small *ngIf="createNoticeForm.controls['title'].dirty && createNoticeForm.hasError('required','title')"
+                    class="text-danger">*Title is required*</small>
+
+                <div class="form-group pt-3">
+                    <div class="input-field"
+                        [class.error]="createNoticeForm.controls['description'].dirty && createNoticeForm.hasError('required','description')">
+                        <span class="fa fa-user p-2"></span>
+                        <textarea formControlName="description" rows="6" cols="160" type="text"
+                            placeholder="Description"> </textarea>
+                    </div>
+                </div>
+                <!-- <div class="form-group pt-3">
                             <quill-editor formControlName="description"></quill-editor>
                         </div> -->
-                        <small *ngIf="createNoticeForm.controls['title'].dirty && createNoticeForm.hasError('required','description')" class="text-danger">*Description is required*</small>
-                        
-                        <div class="form-group pt-3">
-                            <div class="input-field">
-                                <span class="fa fa-user p-2"></span>
-                                <input formControlName="image" type="file" (change)="onFileChange($event)">
-                            </div>
-                        </div>
-                        <small *ngIf="fileError" class="text-danger">{{ fileError }}</small>
+                <small
+                    *ngIf="createNoticeForm.controls['title'].dirty && createNoticeForm.hasError('required','description')"
+                    class="text-danger">*Description is required*</small>
 
-                        <button *ngIf="!submitting" type="submit" class="btn btn-primary btn-block mt-4 w-100">Save</button>
-                        <button type="button" class="btn btn-primary" *ngIf="submitting">
-                            <i class="fas fa-spinner fa-pulse"></i>
-                        </button>
-                    </form>
+                <div class="form-group pt-3">
+                    <div class="input-field">
+                        <span class="fa fa-user p-2"></span>
+                        <input formControlName="image" type="file" (change)="onFileChange($event)">
+                    </div>
                 </div>
-            </modal>
-            
-         
+                <small *ngIf="fileError" class="text-danger">{{ fileError }}</small>
+
+                <button *ngIf="!submitting" type="submit" class="btn btn-primary btn-block mt-4 w-100">Save</button>
+                <button type="button" class="btn btn-primary" *ngIf="submitting">
+                    <i class="fas fa-spinner fa-pulse"></i>
+                </button>
+            </form>
         </div>
- 
+    </modal>
+
+
+</div>

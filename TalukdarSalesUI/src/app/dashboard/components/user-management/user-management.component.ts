@@ -81,7 +81,7 @@ export class UserManagementComponent implements OnInit {
       // userName: ['', Validators.required],
       phoneNumber: ['', Validators.required],
       maxCreditLimit: [null, Validators.required],
-      image: [null, Validators.required]
+      image: [null, Validators.nullValidator]
     });
   }
 
