@@ -17,7 +17,7 @@
             </div>
         </div>
         <div class="table-responsive mt-25">
-            <table class="requisitions-table">
+            <table class="table-one">
                 <thead>
                     <tr>
                         <th scope="col">#</th>
@@ -32,19 +32,19 @@
                 </thead>
                 <tbody>
                     <tr *ngFor="let invoice of invoiceList; let i= index">
-                        <td>{{i+1}}</td>
-                        <td>{{invoice.userName}}</td>
-                        <td>{{invoice.invoiceNumber}}</td>
-                        <td>{{invoice.salesRequisitionNo}}</td>
-                        <td>{{invoice.totalPrice}}</td>
-                        <td>{{invoice.collectionAmount}}</td>
-                        <td>{{invoice.createdDateTime}}</td>
+                        <td><span class="res-head">Id:</span>{{i+1}}</td>
+                        <td><span class="res-head">Invoice For:</span>{{invoice.userName}}</td>
+                        <td><span class="res-head">Invoice Number:</span>{{invoice.invoiceNumber}}</td>
+                        <td><span class="res-head">Requisition Serial:</span>{{invoice.salesRequisitionNo}}</td>
+                        <td><span class="res-head">Total Amount:</span>{{invoice.totalPrice}}</td>
+                        <td><span class="res-head">Collection Amount:</span>{{invoice.collectionAmount}}</td>
+                        <td><span class="res-head">Creation Time:</span>{{invoice.createdDateTime | date:'medium'}}</td>
                         <td>
                     <tr>
-                        <td><a (click)="getCollectionList(invoice.id)">Collection History
+                        <td class="action"><a (click)="getCollectionList(invoice.id)">Collection History
                                 <i class="fa fa-history"></i>
                             </a></td>
-                        <td><a (click)="openCollectionModal(invoice.id)">Collect Amount
+                        <td class="action"><a (click)="openCollectionModal(invoice.id)">Collect Amount
                                 <i class="fa fa-credit-card"></i>
                             </a></td>
                     </tr>

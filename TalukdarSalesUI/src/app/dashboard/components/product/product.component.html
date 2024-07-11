@@ -1,19 +1,67 @@
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Product SetUp</h1>
-    <div class="filter">
-        <label for="user">Product Type</label>
-        <select id="user" [(ngModel)]="selectedType" (change)="onFilterChange()">
-            <option *ngFor="let type of finishedGoodTypes" [value]="type.id">{{ type.name }}</option>
-        </select>
+    <div class="page-header">
+        <div class="page-header__inner">
+            <div class="search-area">
+                <input type="text" class="form-control" placeholder="search..." [(ngModel)]="productName" (input)="onFilterChange()">
+                <button><img src="assets/images/icons/search.svg" alt=""></button>
+            </div>
+            <div class="filter">
+                <label for="user">Product Type</label>
+                <select id="user" [(ngModel)]="selectedType" (change)="onFilterChange()">
+                    <option *ngFor="let type of finishedGoodTypes" [value]="type.id">{{ type.name }}</option>
+                </select>
+            </div>
+            <!-- <nz-form-item>
+                    <nz-select [(ngModel)]="selectedType" (change)="onFilterChange()" nzDropdownClassName="select-dropdown"
+                        nzPlaceHolder="Select Product Type">
+                        <nz-option *ngFor="let type of finishedGoodTypes" [nzValue]="type.id" [nzLabel]="type.name">
+                        </nz-option>
+                    </nz-select>
+            </nz-form-item> -->
+            <button class="main-btn" (click)="openFinishedGoodModal()">Add Product</button>
+        </div>
     </div>
-    <div class="filter">
+    <!-- <div class="filter">
         <label for="name">Product Name</label>
         <input type="text" [(ngModel)]="productName" (input)="onFilterChange()">
-    </div>
-</div>
-<button (click)="openFinishedGoodModal()"><span>Add Product</span></button>
+    </div> -->
+<!-- <button (click)="openFinishedGoodModal()"><span>Add Product</span></button> -->
 
-<div class="table-responsive mt-25">
+<div class="pt-4"></div>
+<table class="table-one">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th></th>
+            <th>Name</th>
+            <th>UOM</th>
+            <th>Unit Price</th>
+            <th>Description</th>
+            <th>Added On</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of products; let i= index">
+            <td><span class="res-head">Id:</span>{{i+1}}</td>
+            <td><span class="res-head">Id:</span><img nz-image nzSrc="{{item.thumb}}" alt="" class="user-thumb"
+                    onerror="this.src = 'assets/images/icons/default-user.jpg'"></td>
+            <td><span class="res-head">Name:</span>{{item.name}}</td>
+            <td><span class="res-head">UOM:</span>{{item.uom}}</td>
+            <td><span class="res-head">Unit Price:</span>{{item.unitPrice}}</td>
+            <td><span class="res-head">Description</span>{{item.description}}</td>
+            <td><span class="res-head">Added On:</span>{{item.createdOn | date: 'medium'}}</td>
+            <td class="action">
+                <button (click)="openEditFinishedGoodModal(item)"><img src="assets/images/icons/edit.svg" alt=""></button>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<div class="pagination-area">
+    <h4>Total: 41</h4>
+    <nz-pagination [nzPageIndex]="1" [nzTotal]="50"></nz-pagination>
+</div>
+
+<!-- <div class="table-responsive mt-25">
     <table class="table table-striped table-sm">
         <thead>
             <tr>
@@ -41,7 +89,7 @@
 
         </tbody>
     </table>
-</div>
+</div> -->
 
 <div>
 

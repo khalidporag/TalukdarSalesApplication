@@ -8,7 +8,34 @@
     </div>
 </div>
 
-<div class="table-responsive mt-25">
+<div class="pt-4"></div>
+<table class="table-one">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Creation Time</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let item of productTypes; let i= index">
+            <td><span class="res-head">Id:</span>{{i+1}}</td>
+            <td><span class="res-head">Name:</span>{{item.name}}</td>
+            <td><span class="res-head">Created On:</span>{{item.createdOn | date: 'medium'}}</td>
+            <!-- <td class="action">
+                <button><img src="assets/images/icons/view.svg" alt=""></button>
+                <button><img src="assets/images/icons/edit.svg" alt=""></button>
+                <button><img src="assets/images/icons/delete.svg" alt=""></button>
+            </td> -->
+        </tr>
+    </tbody>
+</table>
+<div class="pagination-area">
+    <h4>Total: 41</h4>
+    <nz-pagination [nzPageIndex]="1" [nzTotal]="50"></nz-pagination>
+</div>
+
+<!-- <div class="table-responsive mt-25">
     <table class="table table-striped table-sm">
         <thead>
             <tr>
@@ -27,7 +54,7 @@
 
         </tbody>
     </table>
-</div>
+</div> -->
 
 <div>
 
