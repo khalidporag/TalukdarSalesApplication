@@ -64,8 +64,6 @@ export class SidebarAreaComponent {
   expandDropdown(event: any): void {
     let self = event.target;
     let self_parent = self.closest('li');
-
-    // Ensure we are working with the correct element in case of nested elements
     while (self && !self.classList.contains('nav-item__list')) {
       self = self.parentNode;
     }
@@ -85,7 +83,7 @@ export class SidebarAreaComponent {
         this.openDropdown(dropdown);
       }
     }
-    console.log("CLICKED");
+    // console.log("CLICKED");
   }
 
   openDropdown(dropdown: any) {

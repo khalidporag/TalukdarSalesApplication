@@ -1,26 +1,27 @@
-    <div class="page-header">
-        <div class="page-header__inner">
-            <div class="search-area">
-                <input type="text" class="form-control" placeholder="search..." [(ngModel)]="productName" (input)="onFilterChange()">
-                <button><img src="assets/images/icons/search.svg" alt=""></button>
-            </div>
-            <div class="filter">
-                <label for="user">Product Type</label>
-                <select id="user" [(ngModel)]="selectedType" (change)="onFilterChange()">
-                    <option *ngFor="let type of finishedGoodTypes" [value]="type.id">{{ type.name }}</option>
-                </select>
-            </div>
-            <!-- <nz-form-item>
-                    <nz-select [(ngModel)]="selectedType" (change)="onFilterChange()" nzDropdownClassName="select-dropdown"
-                        nzPlaceHolder="Select Product Type">
-                        <nz-option *ngFor="let type of finishedGoodTypes" [nzValue]="type.id" [nzLabel]="type.name">
-                        </nz-option>
-                    </nz-select>
-            </nz-form-item> -->
-            <button class="main-btn" (click)="openFinishedGoodModal()">Add Product</button>
+<div class="page-header">
+    <div class="page-header__inner">
+        <div class="search-area">
+            <input type="text" class="form-control" placeholder="search..." [(ngModel)]="productName"
+                (input)="onFilterChange()">
+            <button><img src="assets/images/icons/search.svg" alt=""></button>
         </div>
+        <!-- <div class="filter">
+            <label for="user">Product Type</label>
+            <select id="user" [(ngModel)]="selectedType" (change)="onFilterChange()">
+                <option *ngFor="let type of finishedGoodTypes" [value]="type.id">{{ type.name }}</option>
+            </select>
+        </div> -->
+        <nz-form-item>
+            <nz-select [(ngModel)]="selectedType" (change)="onFilterChange()" nzDropdownClassName="select-dropdown"
+                nzPlaceHolder="Select Product Type">
+                <nz-option *ngFor="let type of finishedGoodTypes" [nzValue]="type.id" [nzLabel]="type.name">
+                </nz-option>
+            </nz-select>
+        </nz-form-item>
+        <button class="main-btn" (click)="openFinishedGoodModal()">Add Product</button>
     </div>
-    <!-- <div class="filter">
+</div>
+<!-- <div class="filter">
         <label for="name">Product Name</label>
         <input type="text" [(ngModel)]="productName" (input)="onFilterChange()">
     </div> -->
@@ -35,6 +36,7 @@
             <th>Name</th>
             <th>UOM</th>
             <th>Unit Price</th>
+            <th>Status</th>
             <th>Description</th>
             <th>Added On</th>
             <th>Action</th>
@@ -43,15 +45,21 @@
     <tbody>
         <tr *ngFor="let item of products; let i= index">
             <td><span class="res-head">Id:</span>{{i+1}}</td>
-            <td><span class="res-head">Id:</span><img nz-image nzSrc="{{item.thumb}}" alt="" class="user-thumb"
+            <td><span class="res-head">Id:</span><img nz-image
+                    nzSrc="https://localhost:7019/images/products/{{item.logoName}}" alt="" class="user-thumb"
                     onerror="this.src = 'assets/images/icons/default-user.jpg'"></td>
+            <!-- <td><img src="https://localhost:7019/images/products/{{item.logoName}}" alt="" width="50" height="50"></td>         -->
+
+
             <td><span class="res-head">Name:</span>{{item.name}}</td>
             <td><span class="res-head">UOM:</span>{{item.uom}}</td>
             <td><span class="res-head">Unit Price:</span>{{item.unitPrice}}</td>
+            <td><span class="res-head">Status:</span>{{item.isActive == true ? 'Active' : 'InActive'}}</td>
             <td><span class="res-head">Description</span>{{item.description}}</td>
             <td><span class="res-head">Added On:</span>{{item.createdOn | date: 'medium'}}</td>
             <td class="action">
-                <button (click)="openEditFinishedGoodModal(item)"><img src="assets/images/icons/edit.svg" alt=""></button>
+                <button (click)="openEditFinishedGoodModal(item)"><img src="assets/images/icons/edit.svg"
+                        alt=""></button>
             </td>
         </tr>
     </tbody>
@@ -114,7 +122,8 @@
                     <div class="input-field"
                         [class.error]="createFinishedGoodForm.controls['uOM'].dirty && createFinishedGoodForm.hasError('required','uOM')">
                         <span class="fa fa-user p-2"></span> <input formControlName="uOM" type="text"
-                            placeholder="Unit of Measurement"> </div>
+                            placeholder="Unit of Measurement">
+                    </div>
                 </div>
                 <small
                     *ngIf="createFinishedGoodForm.controls['uOM'].dirty && createFinishedGoodForm.hasError('required','uOM')"
@@ -124,7 +133,8 @@
                     <div class="input-field"
                         [class.error]="createFinishedGoodForm.controls['unitPrice'].dirty && createFinishedGoodForm.hasError('required','unitPrice')">
                         <span class="fa fa-user p-2"></span> <input formControlName="unitPrice" type="text"
-                            placeholder="Unit Price"> </div>
+                            placeholder="Unit Price">
+                    </div>
                 </div>
                 <small
                     *ngIf="createFinishedGoodForm.controls['unitPrice'].dirty && createFinishedGoodForm.hasError('required','unitPrice')"
@@ -149,7 +159,8 @@
                     <div class="input-field"
                         [class.error]="createFinishedGoodForm.controls['description'].dirty && createFinishedGoodForm.hasError('required','description')">
                         <span class="fa fa-user p-2"></span> <input formControlName="description" type="text"
-                            placeholder="Description"> </div>
+                            placeholder="Description">
+                    </div>
                 </div>
                 <small
                     *ngIf="createFinishedGoodForm.controls['description'].dirty && createFinishedGoodForm.hasError('required','description')"
@@ -172,7 +183,50 @@
     </modal>
 </div>
 
-<div>
+
+<nz-modal [(nzVisible)]="editModal">
+    <ng-container *nzModalContent>
+        <div class="modal-header">
+            <h2>Edit Product</h2>
+            <button (click)="closeModal()"><img src="assets/images/icons/close.svg" alt=""></button>
+        </div>
+        <div class="modal-body">
+            <form nz-form (ngSubmit)="onSubmit()" [formGroup]="editFinishedGoodForm" class="custom-form">
+                    <nz-form-item>
+                        <nz-form-control>
+                            <nz-select nzDropdownClassName="select-dropdown" formControlName="isActive"
+                                nzPlaceHolder="Select Status">
+                                <nz-option [nzValue]="true" nzLabel="Active"></nz-option>
+                                <nz-option [nzValue]="false" nzLabel="InActive"></nz-option>
+                            </nz-select>
+                        </nz-form-control>
+                    </nz-form-item>
+                    <nz-form-item>
+                        <nz-form-control nzHasFeedback>
+                            <input nz-input formControlName="unitPrice" placeholder="Enter Unit price" />
+                            <div *ngIf="editFinishedGoodForm.get('unitPrice')?.dirty && editFinishedGoodForm.get('unitPrice')?.errors">
+                                Enter unit price plaese
+                            </div>
+                        </nz-form-control>
+                    </nz-form-item>
+                    <nz-form-item>
+                        <nz-form-control nzHasFeedback>
+                            <input nz-input formControlName="description" placeholder="Enter Description " />
+                            <div *ngIf="editFinishedGoodForm.get('description')?.dirty && editFinishedGoodForm.get('description')?.errors">
+                                Enter description plaese
+                            </div>
+                        </nz-form-control>
+                    </nz-form-item>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="cancel-btn" (click)="closeModal()">Cancel</button>
+            <button class="add-btn" (click)="editProduct()" >Edit</button>
+        </div>
+    </ng-container>
+</nz-modal>
+
+<!-- <div>
 
     <modal id="editProduct" *ngIf="editModal">
         <div class="modal-header">
@@ -190,7 +244,6 @@
                             <option value='true'>Active</option>
                             <option value='false'>InActive</option>
                         </select>
-                        <!-- <input formControlName="isActive" type="text" placeholder="Status"> -->
                     </div>
                 </div>
                 <small
@@ -201,7 +254,8 @@
                     <div class="input-field"
                         [class.error]="editFinishedGoodForm.controls['unitPrice'].dirty && editFinishedGoodForm.hasError('required','unitPrice')">
                         <span class="fa fa-user p-2"></span> <input formControlName="unitPrice" type="text"
-                            placeholder="Unit Price"> </div>
+                            placeholder="Unit Price">
+                    </div>
                 </div>
                 <small
                     *ngIf="editFinishedGoodForm.controls['unitPrice'].dirty && editFinishedGoodForm.hasError('required','unitPrice')"
@@ -212,7 +266,8 @@
                     <div class="input-field"
                         [class.error]="editFinishedGoodForm.controls['description'].dirty && editFinishedGoodForm.hasError('required','description')">
                         <span class="fa fa-user p-2"></span> <input formControlName="description" type="text"
-                            placeholder="Description"> </div>
+                            placeholder="Description">
+                    </div>
                 </div>
                 <small
                     *ngIf="editFinishedGoodForm.controls['description'].dirty && editFinishedGoodForm.hasError('required','description')"
@@ -224,4 +279,4 @@
             </form>
         </div>
     </modal>
-</div>
+</div> -->

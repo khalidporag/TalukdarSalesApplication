@@ -1,20 +1,18 @@
-<div class="table-responsive pt-25">
-    <table class="table table-striped table-sm">
-        <thead>
-            <tr>
-                <th scope="col">#</th>
-                <th scope="col">Requisition Date</th>
-                <th scope="col">Product Name</th>
-                <th scope="col">Total Quantity</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr *ngFor="let product of productList; let i= index">
-                <td>{{i+1}}</td>
-                <td>{{product.requisitionDate}}</td>
-                <td>{{product.finishedGoodName}}</td>
-                <td>{{product.totalQuantity}}</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+<table class="table-one mt-25">
+    <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Requisition Date</th>
+            <th scope="col">Product Name</th>
+            <th scope="col">Total Quantity</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let product of productList; let i= index">
+            <td>{{i+1}}</td>
+            <td>{{product.requisitionDate}}</td>
+            <td>{{product.finishedGoodName}}</td>
+            <td>{{product.totalQuantity}}</td>
+        </tr>
+    </tbody>
+</table>

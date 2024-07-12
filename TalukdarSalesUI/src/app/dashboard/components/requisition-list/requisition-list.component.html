@@ -2,74 +2,60 @@
   <div class="page-header__inner">
     <button class="main-btn" (click)="sendSelectedRequisitions()" *ngIf="isShow">Approve Selected</button>
 
-    <div class="filter">
-      <label for="active-status">Active Status</label>
-      <select id="active-status" [(ngModel)]="selectedStatus" (change)="onFilterChange()">
-        <option value='true'>Active</option>
-        <option value='false'>InActive</option>
-      </select>
-    </div>
-    <div class="filter">
-      <label for="user">User</label>
-      <select id="user" [(ngModel)]="selectedUser" (change)="onFilterChange()">
-        <option *ngFor="let user of users" [value]="user.id">{{ user.firstName }}</option>
-      </select>
-    </div>
-    <div class="filter">
+    <nz-select [(ngModel)]="selectedStatus" nzShowSearch nzDropdownClassName="select-dropdown"
+      nzPlaceHolder="Select Status" (ngModelChange)="onFilterChange()">
+      <nz-option [nzValue]="true" nzLabel="Active"></nz-option>
+      <nz-option [nzValue]="false" nzLabel="InActive"></nz-option>
+    </nz-select>
+
+
+    <nz-select [(ngModel)]="selectedUser" nzShowSearch nzDropdownClassName="select-dropdown"
+      nzPlaceHolder="Select User" (ngModelChange)="onFilterChange()">
+      <nz-option [nzValue]="data.id" *ngFor="let data of users" nzLabel={{data.firstName}}></nz-option>
+  </nz-select>
+
+
+    <!-- <div class="filter">
       <label for="requisition-no">Requisition No</label>
       <input type="text" [(ngModel)]="requisitionNo" (input)="onFilterChange()">
+    </div> -->
+
+    <div class="search-area">
+      <input type="text" class="form-control" placeholder="search..." [(ngModel)]="requisitionNo" (input)="onFilterChange()">
+      <button><img src="assets/images/icons/search.svg" alt=""></button>
     </div>
-    <button class="main-btn" (click)="onCreateNew()">Create New</button>
+
+    <button class="add-btn" (click)="onCreateNew()">Create New</button>
+
+    
+          
+      
   </div>
 </div>
 
-  
+<table class="table-one mt-25">
+  <thead>
+    <tr>
+      <th scope="col" *ngIf="isShow">
+        <input type="checkbox" (change)="toggleSelectAll($event)">
+      </th>
+      <th scope="col">Requisition No</th>
+      <th scope="col">Requisition By</th>
+      <th scope="col">Creation Time</th>
+      <th scope="col">Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let requisition of requisitionList; let i= index">
+      <td *ngIf="isShow">
+        <input type="checkbox" [(ngModel)]="requisition.selected" (change)="onCheckboxChange()">
+      </td>
+      <td><span class="res-head">Requisition No:</span>{{requisition.requisitionSerial}}</td>
+      <td><span class="res-head">Requisition By:</span>{{requisition.userName}}</td>
+      <td><span class="res-head">Creation Time:</span>{{requisition.createdDateTime | date:'medium'}}</td>
+      <td class="action"><button [routerLink]="['/requisition-list', requisition.id]"><i
+            class="fa fa-info-circle"></i></button></td>
+    </tr>
 
-  <!-- <table class="table-one">
-        <thead>
-            <tr>
-                <th scope="col">#</th>
-                <th scope="col">Invoice Number</th>
-                <th scope="col">Collection Amount</th>
-                <th scope="col">Payment Method</th>
-                <th scope="col">Collection Time</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr *ngFor="let item of collectionHistory; let i= index">
-                <td><span class="res-head">Id:</span>{{i+1}}</td>
-                <td><span class="res-head">Invoice Number:</span>{{item.invoiceNumber}}</td>
-                <td><span class="res-head">Collection Amount:</span>{{item.collectionAmount}}</td>
-                <td><span class="res-head">Payment Method:</span>{{item.paymentMethod}}</td>
-                <td><span class="res-head">Collection Time:</span>{{item.collectionTime | date: 'medium'}}</td>
-            </tr>
-        </tbody>
-    </table> -->
-
-  <table class="table-one">
-    <thead>
-      <tr>
-        <th scope="col" *ngIf="isShow">
-          <input type="checkbox" (change)="toggleSelectAll($event)">
-        </th>
-        <th scope="col">#</th>
-        <th scope="col">Requisition No</th>
-        <th scope="col">Requisition By</th>
-        <th scope="col">Creation Time</th>
-        <th scope="col">Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let requisition of requisitionList; let i= index">
-        <td *ngIf="isShow">
-          <input type="checkbox" [(ngModel)]="requisition.selected" (change)="onCheckboxChange()">
-        </td>
-        <td><span class="res-head">Id:</span>{{i+1}}</td>
-        <td><span class="res-head">Requisition No:</span>{{requisition.requisitionSerial}}</td>
-        <td><span class="res-head">Requisition By:</span>{{requisition.userName}}</td>
-        <td><span class="res-head">Creation Time:</span>{{requisition.createdDateTime | date:'medium'}}</td>
-        <td class="action"><button [routerLink]="['/requisition-list', requisition.id]">Details</button></td>
-      </tr>
-
-    </tbody>
-  </table>
+  </tbody>
+</table>

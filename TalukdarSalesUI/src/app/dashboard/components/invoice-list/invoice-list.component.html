@@ -1,20 +1,16 @@
 <div class="sales-requisitions">
     <div class="sales-requisitions">
         <div class="filters">
-            <div class="filter">
-                <label for="user-group">User Group</label>
-                <select id="user-group" [(ngModel)]="selectedUserGroup" (change)="onUserGroupChange()">
-                    <option *ngFor="let group of userTypes" [value]="group.id">{{ group.typeName }}</option>
-                </select>
-            </div>
 
-            <div class="filter">
-                <label for="user">User</label>
-                <select id="user" [(ngModel)]="selectedUser" (change)="onFilterChange()">
-                    <option *ngFor="let user of users" [value]="user.id">{{ user.firstName +" "+ user.lastName }}
-                    </option>
-                </select>
-            </div>
+            <nz-select [(ngModel)]="selectedUserGroup" nzShowSearch nzDropdownClassName="select-dropdown"
+                nzPlaceHolder="User Group" (ngModelChange)="onUserGroupChange()">
+                <nz-option [nzValue]="data.id" *ngFor="let data of userTypes" nzLabel={{data.typeName}}></nz-option>
+            </nz-select>
+
+            <nz-select [(ngModel)]="selectedUser" nzShowSearch nzDropdownClassName="select-dropdown"
+                nzPlaceHolder="User" (ngModelChange)="onFilterChange()">
+                <nz-option [nzValue]="data.id" *ngFor="let data of users" nzLabel={{data.firstName}}></nz-option>
+            </nz-select>
         </div>
         <div class="table-responsive mt-25">
             <table class="table-one">
@@ -41,22 +37,56 @@
                         <td><span class="res-head">Creation Time:</span>{{invoice.createdDateTime | date:'medium'}}</td>
                         <td>
                     <tr>
-                        <td class="action"><a (click)="getCollectionList(invoice.id)">Collection History
+                        <td class="action"><a (click)="getCollectionList(invoice.id)">
                                 <i class="fa fa-history"></i>
                             </a></td>
-                        <td class="action"><a (click)="openCollectionModal(invoice.id)">Collect Amount
+                        <td class="action"><a (click)="openCollectionModal(invoice.id)">
                                 <i class="fa fa-credit-card"></i>
                             </a></td>
                     </tr>
-                    <td>
-                        </tr>
-
+                    </td>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <div>
+
+
+
+    <nz-modal [(nzVisible)]="createCollectionModal">
+        <ng-container *nzModalContent>
+            <div class="modal-header">
+                <h2>Collect Amount</h2>
+                <button (click)="closeModal()"><img src="assets/images/icons/close.svg" alt=""></button>
+            </div>
+            <div class="modal-body">
+                <form nz-form (ngSubmit)="onSubmit()" [formGroup]="createCollectionForm" class="custom-form">
+                    <nz-form-item>
+                        <nz-form-control nzHasFeedback>
+                            <input nz-input formControlName="collectionAmount" placeholder="Enter Collection Amount" />
+                            <div *ngIf="createCollectionForm.get('collectionAmount')?.dirty && createCollectionForm.get('collectionAmount')?.errors">
+                                Enter Collection Amount First
+                            </div>
+                        </nz-form-control>
+                    </nz-form-item>
+                    <nz-form-item>
+                        <nz-form-control nzHasFeedback>
+                            <input nz-input formControlName="paymentMethod" placeholder="Enter Payment Method" />
+                            <div *ngIf="createCollectionForm.get('paymentMethod')?.dirty && createCollectionForm.get('paymentMethod')?.errors">
+                                Enter Payment Method
+                            </div>
+                        </nz-form-control>
+                    </nz-form-item>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="cancel-btn" (click)="closeModal()">Cancel</button>
+                <button class="add-btn" (click)="onSubmit()" >Create</button>
+            </div>
+        </ng-container>
+    </nz-modal>
+
+    <!-- <div>
 
         <modal id="collectionModal" *ngIf="createCollectionModal">
             <div class="modal-header">
@@ -86,11 +116,6 @@
                         *ngIf="createCollectionForm.controls['paymentMethod'].dirty && createCollectionForm.hasError('required','paymentMethod')"
                         class="text-danger">*Payment Method is required*</small>
 
-                    <!-- <div class="form-group pt-3">
-                        <div class="input-field" [class.error]="createCollectionForm.controls['unitPrice'].dirty && createCollectionForm.hasError('required','unitPrice')"> <span class="fa fa-user p-2"></span> <input formControlName="unitPrice" type="text" placeholder="Unit Price"> </div>
-                    </div>
-                    <small *ngIf="createCollectionForm.controls['unitPrice'].dirty && createCollectionForm.hasError('required','unitPrice')" class="text-danger">*Unit price is required*</small> -->
-
                     <button *ngIf="!submitting" type="submit" class="btn btn-primary btn-block mt-4 w-100">Save</button>
                     <button type="button" class="btn btn-primary" *ngIf="submitting">
                         <i class="fas fa-spinner fa-pulse"></i>
@@ -98,4 +123,4 @@
                 </form>
             </div>
         </modal>
-    </div>
+    </div> -->

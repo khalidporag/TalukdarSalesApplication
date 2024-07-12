@@ -37,7 +37,7 @@ export class CommonService {
 
   toggleSidebarMobile(): void {
     this.sidebarStateMobile.next(true);
-    console.log("OPEN FROM SERVICE");
+    // console.log("OPEN FROM SERVICE");
   }
 
   toggleBody(): void {

@@ -27,6 +27,41 @@
     }
 }
 
+// Modal Customize
+.ant-modal {
+    width: 600px !important;
+    top: 16px !important;
+}
+
+.ant-modal-wrap {
+    overflow: hidden !important;
+}
+
+.ant-modal-body {
+    max-height: calc(100vh - 25px - 10px) !important;
+    overflow: overlay !important;
+
+    &::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: #edfaff;
+        border-radius: 10px;
+        height: 100px;
+
+        &:hover {
+            background-color: #43cea2;
+        }
+    }
+
+    &::-webkit-scrollbar-track {
+        background: #fff;
+        border-radius: 10px;
+        margin: 2px;
+    }
+}
+
 .ant-modal-close {
     display: none !important;
 }
