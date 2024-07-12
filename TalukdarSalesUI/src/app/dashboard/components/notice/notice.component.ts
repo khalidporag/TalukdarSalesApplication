@@ -24,6 +24,8 @@ export class NoticeComponent implements OnInit {
   submitting: boolean = false;
   bodyText = 'This text can be updated in modal 1';
 
+  baseUrl = "https://localhost:7019/images/notices/"
+
   cardData: any = [
     {
       logo: "https://t3.ftcdn.net/jpg/01/32/67/54/360_F_132675456_2I1T2Qo0g1fd3o5pUpPv59RUrCH5sbWl.jpg",
@@ -132,9 +134,13 @@ export class NoticeComponent implements OnInit {
     }
   }
 
+  imageUrl: any;
   openNoticeDetailsModal(data: any): void {
     this.detailsModalData = data;
     this.noticeDetailsModal = true;
+    // this.imageUrl = this.baseUrl + data.logoName;
+    // this.detailsModalData.logoName = this.imageUrl;
+    // console.log(this.imageUrl);
   }
 
   closeNoticeDetailsModal(): void {
