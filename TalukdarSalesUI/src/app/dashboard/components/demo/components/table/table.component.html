@@ -1,35 +1,42 @@
-<div class="pt-4"></div>
-<table class="table-one">
-    <thead>
-        <tr>
-            <th>Id</th>
-            <th>User</th>
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>User Name</th>
-            <th>Phone</th>
-            <th>Email</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of tableData">
-            <td><span class="res-head">Id:</span>{{item.id}}</td>
-            <td><span class="res-head">Id:</span><img nz-image nzSrc="{{item.thumb}}" alt="" class="user-thumb"
-                    onerror="this.src = 'assets/images/icons/default-user.jpg'"></td>
-            <td><span class="res-head">First Name:</span>{{item.firstname}}</td>
-            <td><span class="res-head">Last Name:</span>{{item.lastname}}</td>
-            <td><span class="res-head">User Name:</span>{{item.username}}</td>
-            <td><span class="res-head">Phone:</span>{{item.phone}}</td>
-            <td><span class="res-head">Email:</span>{{item.email}}</td>
-            <td class="action">
-                <button><img src="assets/images/icons/view.svg" alt=""></button>
-                <button><img src="assets/images/icons/edit.svg" alt=""></button>
-                <button><img src="assets/images/icons/delete.svg" alt=""></button>
-            </td>
-        </tr>
-    </tbody>
-</table>
+<div class="table-responsive">
+    <table class="table-one mt-25">
+        <thead>
+            <tr>
+                <th class="s-col">Id</th>
+                <th class="s-col">User</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>User Name</th>
+                <th>Description</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let item of tableData">
+                <td><span class="res-head">Id:</span>{{item.id}}</td>
+                <td><span class="res-head">Id:</span><img nz-image nzSrc="{{item.thumb}}" alt="" class="user-thumb"
+                        onerror="this.src = 'assets/images/icons/default-user.jpg'"></td>
+                <td><span class="res-head">First Name:</span>{{item.firstname}}</td>
+                <td><span class="res-head">Last Name:</span>{{item.lastname}}</td>
+                <td><span class="res-head">User Name:</span>{{item.username}}</td>
+                <td><span class="res-head">Description:</span>
+                    <p class="td-text-cut">{{item.desc}}</p>
+                </td>
+                <td><span class="res-head">Phone:</span>{{item.phone}}</td>
+                <td><span class="res-head">Email:</span>
+                    {{item.email}}
+                </td>
+                <td class="action">
+                    <button><img src="assets/images/icons/view.svg" alt=""></button>
+                    <button><img src="assets/images/icons/edit.svg" alt=""></button>
+                    <button><img src="assets/images/icons/delete.svg" alt=""></button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
 <div class="pagination-area">
     <h4>Total: 41</h4>
     <nz-pagination [nzPageIndex]="1" [nzTotal]="50"></nz-pagination>

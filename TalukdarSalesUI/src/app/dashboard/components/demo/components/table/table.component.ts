@@ -14,7 +14,8 @@ export class TableComponent {
       lastname: "Paul",
       username: "Joydip97",
       phone: "01712345670",
-      email: "johndoe@gmail.com"
+      email: "johndoe@gmail.com",
+      desc: " Lorem ipsum"
     },
     {
       id: "2",
@@ -23,7 +24,8 @@ export class TableComponent {
       lastname: "Paul",
       username: "Joydip97",
       phone: "01712345670",
-      email: "johndoe@gmail.com"
+      email: "johndoe@gmail.com",
+      desc: " Lorem ipsum, dolor sit amet consectetur adipisicing elit. Esse amet assumenda magnam, nihil voluptatem eligendi iure nobis incidunt. Ipsam repellat minima asperiores, pariatur illo sed suscipit explicabo exercitationem deleniti veniam."
     },
     {
       id: "3",
@@ -32,7 +34,8 @@ export class TableComponent {
       lastname: "Paul",
       username: "Joydip97",
       phone: "01712345670",
-      email: "johndoe@gmail.com"
+      email: "johndoe@gmail.com",
+      desc: " Lorem ipsum, dolor sit amet consectetur adipisicing elit. Esse amet assumenda magnam, nihil voluptatem eligendi iure nobis incidunt. Ipsam repellat minima asperiores, pariatur illo sed suscipit explicabo exercitationem deleniti veniam."
     },
     {
       id: "4",
@@ -41,7 +44,8 @@ export class TableComponent {
       lastname: "Paul",
       username: "Joydip97",
       phone: "01712345670",
-      email: "johndoe@gmail.com"
+      email: "johndoe@gmail.com",
+      desc: " Lorem ipsum, dolor sit amet consectetur adipisicing elit. Esse amet assumenda magnam, nihil voluptatem eligendi iure nobis incidunt. Ipsam repellat minima asperiores, pariatur illo sed suscipit explicabo exercitationem deleniti veniam."
     },
     {
       id: "4",
@@ -50,7 +54,8 @@ export class TableComponent {
       lastname: "Paul",
       username: "Joydip97",
       phone: "01712345670",
-      email: "johndoe@gmail.com"
+      email: "johndoe@gmail.com",
+      desc: " Lorem ipsum, dolor sit amet consectetur adipisicing elit. Esse amet assumenda magnam, nihil voluptatem eligendi iure nobis incidunt. Ipsam repellat minima asperiores, pariatur illo sed suscipit explicabo exercitationem deleniti veniam."
     },
     {
       id: "4",
@@ -59,7 +64,8 @@ export class TableComponent {
       lastname: "Paul",
       username: "Joydip97",
       phone: "01712345670",
-      email: "johndoe@gmail.com"
+      email: "johndoe@gmail.com",
+      desc: " Lorem ipsum, dolor sit amet consectetur adipisicing elit. Esse amet assumenda magnam, nihil voluptatem eligendi iure nobis incidunt. Ipsam repellat minima asperiores, pariatur illo sed suscipit explicabo exercitationem deleniti veniam."
     },
     {
       id: "4",
@@ -68,7 +74,8 @@ export class TableComponent {
       lastname: "Paul",
       username: "Joydip97",
       phone: "01712345670",
-      email: "johndoe@gmail.com"
+      email: "johndoe@gmail.com",
+      desc: " Lorem ipsum, dolor sit amet consectetur adipisicing elit. Esse amet assumenda magnam, nihil voluptatem eligendi iure nobis incidunt. Ipsam repellat minima asperiores, pariatur illo sed suscipit explicabo exercitationem deleniti veniam."
     },
     {
       id: "4",
@@ -77,7 +84,8 @@ export class TableComponent {
       lastname: "Paul",
       username: "Joydip97",
       phone: "01712345670",
-      email: "johndoe@gmail.com"
+      email: "johndoe@gmail.com",
+      desc: " Lorem ipsum, dolor sit amet consectetur adipisicing elit. Esse amet assumenda magnam, nihil voluptatem eligendi iure nobis incidunt. Ipsam repellat minima asperiores, pariatur illo sed suscipit explicabo exercitationem deleniti veniam."
     },
     {
       id: "4",
@@ -86,7 +94,8 @@ export class TableComponent {
       lastname: "Paul",
       username: "Joydip97",
       phone: "01712345670",
-      email: "johndoe@gmail.com"
+      email: "johndoe@gmail.com",
+      desc: " Lorem ipsum, dolor sit amet consectetur adipisicing elit. Esse amet assumenda magnam, nihil voluptatem eligendi iure nobis incidunt. Ipsam repellat minima asperiores, pariatur illo sed suscipit explicabo exercitationem deleniti veniam."
     }
   ]
 }
