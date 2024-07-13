@@ -8,7 +8,10 @@ import { UserStoreService } from 'src/app/services/user-store.service';
   templateUrl: './reports.component.html',
   styleUrls: ['./reports.component.scss']
 })
-export class ReportsComponent implements OnInit{
+export class ReportsComponent implements OnInit {
+  dateFormat = 'yyyy/MM/dd';
+  monthFormat = 'yyyy/MM';
+  quarterFormat = 'yyyy/[Q]Q';
 
   fromDateTopSellers: any;
   toDateTopSellers: any;
@@ -21,29 +24,29 @@ export class ReportsComponent implements OnInit{
   fromDateAccumulatedOrders: any;
   toDateAccumulatedOrders: any;
 
-  public users:any = [];
-  public role!:string;
+  public users: any = [];
+  public role!: string;
 
-  public topFiveSeller:any = [];
-  public topFiveSellingProduct:any = [];
+  public topFiveSeller: any = [];
+  public topFiveSellingProduct: any = [];
 
-  public lessFiveSellingProduct:any = [];
+  public lessFiveSellingProduct: any = [];
 
-  public topFiveSellerWithDueAmount:any = [];
+  public topFiveSellerWithDueAmount: any = [];
 
-  public dailyAccumulatedOrderSummary:any = [];
-
-
+  public dailyAccumulatedOrderSummary: any = [];
 
 
-  public fullName : string = "";
-  constructor(private api : ApiService, private auth: AuthService, private userStore: UserStoreService) { }
+
+
+  public fullName: string = "";
+  constructor(private api: ApiService, private auth: AuthService, private userStore: UserStoreService) { }
 
   ngOnInit() {
     this.api.getUsers()
-    .subscribe(res=>{
-    this.users = res;
-    });
+      .subscribe(res => {
+        this.users = res;
+      });
 
     this.getTopFiveSeller();
     this.getTopFiveSellingProduct();
@@ -74,40 +77,39 @@ export class ReportsComponent implements OnInit{
     }
   }
 
-  getTopFiveSeller(){
+  getTopFiveSeller() {
     this.api.getTopFiveSeller(this.fromDateTopSellers, this.toDateTopSellers)
-    .subscribe(res=>{
-    this.topFiveSeller = res;
-    console.log(this.topFiveSeller);
-    });
+      .subscribe(res => {
+        this.topFiveSeller = res;
+        console.log(this.topFiveSeller);
+      });
   }
 
-  getTopFiveSellingProduct(){
+  getTopFiveSellingProduct() {
     this.api.getTopFiveSellingProduct()
-    .subscribe(res=>{
-    this.topFiveSellingProduct = res;
-    });
+      .subscribe(res => {
+        this.topFiveSellingProduct = res;
+      });
   }
 
-  getLessFiveSellingProduct(){
+  getLessFiveSellingProduct() {
     this.api.getLessFiveSellingProduct()
-    .subscribe(res=>{
-    this.lessFiveSellingProduct = res;
-    });
+      .subscribe(res => {
+        this.lessFiveSellingProduct = res;
+      });
   }
 
-  getTopFiveSellerWithDueAmount(){
+  getTopFiveSellerWithDueAmount() {
     this.api.getTopFiveSellerWithDueAmount()
-    .subscribe(res=>{
-    this.topFiveSellerWithDueAmount = res;
-    });
+      .subscribe(res => {
+        this.topFiveSellerWithDueAmount = res;
+      });
   }
 
-  getDailyAccumulatedOrderSummary()
-  {
+  getDailyAccumulatedOrderSummary() {
     this.api.getDailyAccumulatedOrderSummary()
-    .subscribe(res=>{
-    this.dailyAccumulatedOrderSummary = res;
-    });
+      .subscribe(res => {
+        this.dailyAccumulatedOrderSummary = res;
+      });
   }
 }
