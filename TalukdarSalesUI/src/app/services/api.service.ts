@@ -189,8 +189,14 @@ export class ApiService {
     return this.http.post<any>(`${this.NoticeUrl}createNotice`, obj)
   }
 
-  getAllNotices() {
-    return this.http.get<any>(`${this.NoticeUrl}getAllNotices`);
+  getAllNotices(param1?: boolean) {
+    let params: any = {};
+  
+    if (param1 !== undefined) params.isLanding = param1;
+  
+    const queryString = new URLSearchParams(params).toString();
+
+    return this.http.get<any>(`${this.NoticeUrl}getAllNotices?${queryString}`);
   }
   
 }

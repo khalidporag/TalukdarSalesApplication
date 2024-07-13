@@ -88,7 +88,7 @@ export class NoticeComponent implements OnInit {
     this.createNoticeForm = this.fb.group({
       title: ['', Validators.required],
       description: ['', Validators.required],
-      image: [null, Validators.required]
+      image: [null, Validators.nullValidator]
     });
   }
 

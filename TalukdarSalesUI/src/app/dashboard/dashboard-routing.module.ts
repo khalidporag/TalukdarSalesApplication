@@ -42,6 +42,9 @@ const routes: Routes = [{
     { path: 'notice', component: NoticeComponent },
     { path: 'report', component: ReportsComponent },
     { path: 'demo', component: DemoComponent },
+    { path: 'landing-page', component: LandingPageComponent },
+
+
   ],
 
 }];
