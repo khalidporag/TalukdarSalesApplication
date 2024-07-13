@@ -11,6 +11,7 @@ import { ApiService } from 'src/app/services/api.service';
   styleUrls: ['./time-setting.component.scss']
 })
 export class TimeSettingComponent implements OnInit {
+  time = new Date();
   public timeForm!: FormGroup;
 
   public selectedTime: any;
@@ -18,11 +19,11 @@ export class TimeSettingComponent implements OnInit {
   public selectedToTime: any;
 
 
-  constructor(private fb: FormBuilder, 
-    private http: HttpClient,    
+  constructor(private fb: FormBuilder,
+    private http: HttpClient,
     private toast: NgToastService,
-    private api : ApiService
-  ) {}
+    private api: ApiService
+  ) { }
 
   ngOnInit() {
     // this.timeForm = this.fb.group({
@@ -40,25 +41,25 @@ export class TimeSettingComponent implements OnInit {
     });
   }
 
-  getTimeSetting(){
+  getTimeSetting() {
     this.api.getTimeSetting()
-    .subscribe(res=>{
-    this.selectedTime = res;
-    this.selectedFromTime = res.from;
-    this.selectedToTime = res.to;
-    console.log(this.selectedTime)
-    });
+      .subscribe(res => {
+        this.selectedTime = res;
+        this.selectedFromTime = res.from;
+        this.selectedToTime = res.to;
+        console.log(this.selectedTime)
+      });
   }
 
   onSubmit() {
-      const payload = {
-        from: this.selectedFromTime,
-        to: this.selectedToTime
-      };
-      this.api.updateTimeSetting(payload).subscribe(response => {
-        this.toast.success({detail:"SUCCESS", summary:response.message, duration: 5000});
-        console.log('Time saved successfully', response);
-      });
-    
+    const payload = {
+      from: this.selectedFromTime,
+      to: this.selectedToTime
+    };
+    this.api.updateTimeSetting(payload).subscribe(response => {
+      this.toast.success({ detail: "SUCCESS", summary: response.message, duration: 5000 });
+      console.log('Time saved successfully', response);
+    });
+
   }
 }

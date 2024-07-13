@@ -7,28 +7,29 @@
         <button class="main-btn" (click)="openRoleModal()">Create Product Type</button>
     </div>
 </div>
+
 <div class="table-responsive">
-<table class="table-one mt-25">
-    <thead>
-        <tr>
-            <th class="s-col">#</th>
-            <th>Name</th>
-            <th>Creation Time</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let item of productTypes; let i= index">
-            <td><span class="res-head">Id:</span>{{i+1}}</td>
-            <td><span class="res-head">Name:</span>{{item.name}}</td>
-            <td><span class="res-head">Created On:</span>{{item.createdOn | date: 'medium'}}</td>
-            <!-- <td class="action">
+    <table class="table-one mt-10">
+        <thead>
+            <tr>
+                <th class="s-col">#</th>
+                <th>Name</th>
+                <th>Creation Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let item of productTypes; let i= index">
+                <td><span class="res-head">Id:</span>{{i+1}}</td>
+                <td><span class="res-head">Name:</span>{{item.name}}</td>
+                <td><span class="res-head">Created On:</span>{{item.createdOn | date: 'medium'}}</td>
+                <!-- <td class="action">
                 <button><img src="assets/images/icons/view.svg" alt=""></button>
                 <button><img src="assets/images/icons/edit.svg" alt=""></button>
                 <button><img src="assets/images/icons/delete.svg" alt=""></button>
             </td> -->
-        </tr>
-    </tbody>
-</table>
+            </tr>
+        </tbody>
+    </table>
 </div>
 <div class="pagination-area">
     <h4>Total: 41</h4>
@@ -100,7 +101,8 @@
                 <nz-form-item>
                     <nz-form-control nzHasFeedback>
                         <input nz-input formControlName="name" placeholder="Enter name" />
-                        <div *ngIf="createProductTypeForm.get('name')?.dirty && createProductTypeForm.get('name')?.errors">
+                        <div
+                            *ngIf="createProductTypeForm.get('name')?.dirty && createProductTypeForm.get('name')?.errors">
                             Enter name plaese
                         </div>
                     </nz-form-control>
@@ -109,7 +111,7 @@
         </div>
         <div class="modal-footer">
             <button class="cancel-btn" (click)="closeModal()">Cancel</button>
-            <button class="add-btn" (click)="onSubmit()" >Create</button>
+            <button class="add-btn" (click)="onSubmit()">Create</button>
         </div>
     </ng-container>
 </nz-modal>
