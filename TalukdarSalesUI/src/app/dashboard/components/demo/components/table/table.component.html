@@ -65,7 +65,7 @@
                         </div>
                         <div class="preview-img" *ngIf="imageUrl">
                             <img *ngIf="imageUrl" [src]="imageUrl" alt="Thumbnail preview">
-                            <button *ngIf="imageUrl" (click)="ChangeImage()">Delete</button>
+                            <button *ngIf="imageUrl" (click)="ChangeImage()">Change</button>
                         </div>
                         <div class="preview-img" *ngIf="isEdit && imageUrl == null">
                             <img src="" />
