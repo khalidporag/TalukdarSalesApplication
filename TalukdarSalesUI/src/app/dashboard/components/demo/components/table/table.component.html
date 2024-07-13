@@ -1,4 +1,4 @@
-<button class="main-btn">File Upload</button>
+<button class="main-btn" (click)="openModal()">File Upload</button>
 <div class="table-responsive">
     <table class="table-one mt-25">
         <thead>
@@ -43,3 +43,47 @@
     <h4>Total: 41</h4>
     <nz-pagination [nzPageIndex]="1" [nzTotal]="50"></nz-pagination>
 </div>
+
+<nz-modal [(nzVisible)]="demoModal">
+    <ng-container *nzModalContent>
+        <div class="modal-header">
+            <h2>Create User</h2>
+            <button (click)="closeModal()"><img src="assets/images/icons/close.svg" alt=""></button>
+        </div>
+        <div class="modal-body">
+            <form nz-form class="custom-form">
+
+                <nz-form-item>
+                    <div class="upload-file">
+                        <div class="upload-file-box" [ngClass]="{'d-none': imageUrl}">
+                            <div class="icon">
+                                <img src="assets/images/icons/upload.svg" alt="">
+                            </div>
+                            <p [hidden]="isEdit && imageUrl == null">Upload Thumbnail (PNG/JPG)</p>
+                            <p *ngIf="isEdit && imageUrl == null">Change Thumbnail (PNG/JPG)</p>
+                            <input type="file" formControlName="thumbnail" accept=".jpg,.png,.jpeg">
+                        </div>
+                        <div class="preview-img" *ngIf="imageUrl">
+                            <img *ngIf="imageUrl" [src]="imageUrl" alt="Thumbnail preview">
+                            <button *ngIf="imageUrl" (click)="ChangeImage()">Delete</button>
+                        </div>
+                        <div class="preview-img" *ngIf="isEdit && imageUrl == null">
+                            <img src="" />
+                        </div>
+                    </div>
+                </nz-form-item>
+
+
+                <nz-form-item>
+                    <nz-form-control nzHasFeedback>
+                        <input nz-input formControlName="firstName" placeholder="Enter first name" />
+                    </nz-form-control>
+                </nz-form-item>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="cancel-btn" (click)="closeModal()">Cancel</button>
+            <button class="add-btn" (click)="closeModal()">Create</button>
+        </div>
+    </ng-container>
+</nz-modal>

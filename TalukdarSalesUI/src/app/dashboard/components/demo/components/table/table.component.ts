@@ -6,6 +6,15 @@ import { Component } from '@angular/core';
   styleUrls: ['./table.component.scss']
 })
 export class TableComponent {
+
+  demoModal: boolean = false;
+  isEdit: boolean = false;
+  imageUrl: string = "";
+
+  ChangeImage() {
+
+  }
+
   tableData: any = [
     {
       id: "1",
@@ -98,4 +107,12 @@ export class TableComponent {
       desc: " Lorem ipsum, dolor sit amet consectetur adipisicing elit. Esse amet assumenda magnam, nihil voluptatem eligendi iure nobis incidunt. Ipsam repellat minima asperiores, pariatur illo sed suscipit explicabo exercitationem deleniti veniam."
     }
   ]
+
+  openModal() {
+    this.demoModal = true;
+  }
+
+  closeModal() {
+    this.demoModal = false;
+  }
 }
