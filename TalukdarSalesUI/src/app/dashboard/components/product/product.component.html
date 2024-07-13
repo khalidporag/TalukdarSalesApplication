@@ -5,19 +5,17 @@
                 (input)="onFilterChange()">
             <button><img src="assets/images/icons/search.svg" alt=""></button>
         </div>
-        <!-- <div class="filter">
+        <div class="filter">
             <label for="user">Product Type</label>
             <select id="user" [(ngModel)]="selectedType" (change)="onFilterChange()">
                 <option *ngFor="let type of finishedGoodTypes" [value]="type.id">{{ type.name }}</option>
             </select>
-        </div> -->
-        <nz-form-item>
-            <nz-select [(ngModel)]="selectedType" (change)="onFilterChange()" nzDropdownClassName="select-dropdown"
-                nzPlaceHolder="Select Product Type">
-                <nz-option *ngFor="let type of finishedGoodTypes" [nzValue]="type.id" [nzLabel]="type.name">
-                </nz-option>
-            </nz-select>
-        </nz-form-item>
+        </div>
+        <!-- <nz-select [(ngModel)]="selectedType" (change)="onFilterChange()" nzDropdownClassName="select-dropdown"
+            nzPlaceHolder="Select Product Type">
+            <nz-option *ngFor="let type of finishedGoodTypes" [nzValue]="type.id" [nzLabel]="type.name">
+            </nz-option>
+        </nz-select> -->
         <button class="main-btn" (click)="openFinishedGoodModal()">Add Product</button>
     </div>
 </div>

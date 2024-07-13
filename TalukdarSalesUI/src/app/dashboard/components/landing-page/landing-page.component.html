@@ -1,1 +1,37 @@
-<p>landing-page works!</p>
+<!-- New Code -->
+<div class="notice-card mt-25">
+    <div class="row">
+        <div class="col-lg-4 col-md-6 pb-25" *ngFor="let item of notices">
+            <div class="card-1" (click)="openNoticeDetailsModal(item)">
+                <div class="logo">
+                    <img src="https://localhost:7019/images/notices/{{item.logoName}}" alt="">
+                </div>
+                <div class="content">
+                    <h3>{{item.title}}</h3>
+                    <p class="desc">{{item.desc}}</p>
+                    <div class="time">
+                        <p>Created at: <span>{{item.createdOn | date:'medium'}}</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notice Details -->
+<nz-modal [(nzVisible)]="noticeDetailsModal">
+    <ng-container *nzModalContent>
+        <div class="modal-header">
+            <h2>Details of {{detailsModalData?.title}}</h2>
+            <button (click)="closeNoticeDetailsModal()"><img src="assets/images/icons/close.svg" alt=""></button>
+        </div>
+        <div class="modal-body card-details">
+            <div class="logo">
+                <img src="https://localhost:7019/images/notices/{{detailsModalData?.logoName}}" alt="">
+            </div>
+            <h3>{{detailsModalData?.title}}</h3>
+            <p>{{detailsModalData?.description}}</p>
+        </div>
+    </ng-container>
+</nz-modal>
+<!-- New Code -->

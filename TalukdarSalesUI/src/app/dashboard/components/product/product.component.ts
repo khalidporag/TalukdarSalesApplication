@@ -82,7 +82,7 @@ export class ProductComponent implements OnInit {
       finishedGoodTypeId:[null, Validators.required],
       description:['', Validators.required],
       unitPrice:['', Validators.required],
-      image: [null, Validators.required]
+      image: [null, Validators.nullValidator]
     });
   }
 
@@ -123,7 +123,7 @@ export class ProductComponent implements OnInit {
     const formData = new FormData();
     formData.append('name', this.createFinishedGoodForm.value.name);
     formData.append('uOM', this.createFinishedGoodForm.value.uOM);
-    formData.append('finishedGoodTypeId', this.createFinishedGoodForm.value.finishedGoodTypeId);
+    formData.append('goodTypeId', this.createFinishedGoodForm.value.finishedGoodTypeId);
     formData.append('description', this.createFinishedGoodForm.value.description);
     formData.append('unitPrice', this.createFinishedGoodForm.value.unitPrice);
 
