@@ -53,7 +53,7 @@
 
 
 
-<modal id="notice" *ngIf="createModal">
+<!-- <modal id="notice" *ngIf="createModal">
     <div class="modal-header">
         <h5 class="modal-title">Create Notice</h5>
         <button type="button" class="btn-close" (click)="closeModal()"></button>
@@ -78,19 +78,26 @@
                         placeholder="Description"> </textarea>
                 </div>
             </div>
-            <!-- <div class="form-group pt-3">
-                            <quill-editor formControlName="description"></quill-editor>
-                        </div> -->
             <small
                 *ngIf="createNoticeForm.controls['title'].dirty && createNoticeForm.hasError('required','description')"
                 class="text-danger">*Description is required*</small>
 
-            <div class="form-group pt-3">
-                <div class="input-field">
-                    <span class="fa fa-user p-2"></span>
-                    <input formControlName="image" type="file" (change)="onFileChange($event)">
+            <div class="upload-file">
+                <div class="upload-file-box" [ngClass]="{'d-none': imageUrl}">
+                    <div class="icon">
+                        <img src="assets/images/icons/upload.svg" alt="">
+                    </div>
+                    <p *ngIf="imageUrl == null">Upload Thumbnail (PNG/JPG)</p>
+                    <input type="file" formControlName="image" accept=".jpg,.png,.jpeg"
+                        (change)="onFileChange($event)">
+                </div>
+                <div class="preview-img" *ngIf="imageUrl">
+                    <img [src]="imageUrl" alt="Thumbnail preview">
+                    <button (click)="changeImage()">Change</button>
                 </div>
             </div>
+
+
             <small *ngIf="fileError" class="text-danger">{{ fileError }}</small>
 
             <button *ngIf="!submitting" type="submit" class="btn btn-primary btn-block mt-4 w-100">Save</button>
@@ -99,4 +106,54 @@
             </button>
         </form>
     </div>
-</modal>
+</modal> -->
+
+
+<nz-modal [(nzVisible)]="createModal">
+    <ng-container *nzModalContent>
+        <div class="modal-header">
+            <h2>Create Notice</h2>
+            <button (click)="closeModal()"><img src="assets/images/icons/close.svg" alt=""></button>
+        </div>
+        <div class="modal-body">
+            <form nz-form (ngSubmit)="onSubmit()" [formGroup]="createNoticeForm" class="custom-form">
+                <nz-form-item>
+                    <nz-form-control nzHasFeedback>
+                        <input nz-input formControlName="title" placeholder="Enter Title" />
+                        <div *ngIf="createNoticeForm.get('title')?.dirty && createNoticeForm.get('title')?.errors">
+                            Enter title plaese
+                        </div>
+                    </nz-form-control>
+                </nz-form-item>
+
+                <nz-form-item>
+                    <nz-form-control nzHasFeedback>
+                        <textarea nz-input formControlName="description" placeholder="Enter Description"></textarea>
+                        <div *ngIf="createNoticeForm.get('description')?.dirty && createNoticeForm.get('description')?.errors">
+                            Enter description plaese
+                        </div>
+                    </nz-form-control>
+                </nz-form-item>
+
+                <div class="upload-file">
+                    <div class="upload-file-box" [ngClass]="{'d-none': imageUrl}">
+                        <div class="icon">
+                            <img src="assets/images/icons/upload.svg" alt="">
+                        </div>
+                        <p *ngIf="imageUrl == null">Upload Thumbnail (PNG/JPG)</p>
+                        <input type="file" formControlName="image" accept=".jpg,.png,.jpeg"
+                            (change)="onFileChange($event)">
+                    </div>
+                    <div class="preview-img" *ngIf="imageUrl">
+                        <img [src]="imageUrl" alt="Thumbnail preview">
+                        <button (click)="changeImage()">Change</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="cancel-btn" (click)="closeModal()">Cancel</button>
+            <button class="add-btn" (click)="onSubmit()" >Create</button>
+        </div>
+    </ng-container>
+</nz-modal>

@@ -68,6 +68,10 @@ export class SalesInvoiceComponent implements OnInit {
     this.getFinishGoodTypes();
   }
 
+  getFullName(data: { firstName: string; lastName: string }): string {
+    return `${data.firstName} ${data.lastName}`;
+  }
+
   getUserTypes(){
     this.api.getUserTypes()
     .subscribe(res=>{

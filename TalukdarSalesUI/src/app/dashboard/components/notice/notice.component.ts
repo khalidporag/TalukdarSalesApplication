@@ -24,6 +24,10 @@ export class NoticeComponent implements OnInit {
   submitting: boolean = false;
   bodyText = 'This text can be updated in modal 1';
 
+  // Variable - JD
+  imageUrl: string | null = null;
+  // isEdit: boolean = false;
+
   baseUrl = "https://localhost:7019/images/notices/"
 
   cardData: any = [
@@ -66,15 +70,37 @@ export class NoticeComponent implements OnInit {
     this.getNotices();
   }
 
+  // Old Code Numan
+  // onFileChange(event: any): void {
+  //   const file = event.target.files[0];
+  //   if (file) {
+  //     this.file = file;
+  //     this.fileError = '';
+  //   } else {
+  //     this.fileError = 'Please select an image file.';
+  //   }
+  // }
+
+  // New Code Joydip
   onFileChange(event: any): void {
     const file = event.target.files[0];
     if (file) {
       this.file = file;
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.imageUrl = e.target.result;
+      };
+      reader.readAsDataURL(file);
       this.fileError = '';
     } else {
       this.fileError = 'Please select an image file.';
     }
   }
+
+  changeImage(): void {
+    this.imageUrl = null;
+  }
+  // New Code Joydip
 
   getNotices() {
     this.api.getAllNotices()
@@ -88,7 +114,7 @@ export class NoticeComponent implements OnInit {
     this.createNoticeForm = this.fb.group({
       title: ['', Validators.required],
       description: ['', Validators.required],
-      image: [null, Validators.required]
+      image: [null, Validators.nullValidator]
     });
   }
 
@@ -134,7 +160,7 @@ export class NoticeComponent implements OnInit {
     }
   }
 
-  imageUrl: any;
+  // imageUrl: any;
   openNoticeDetailsModal(data: any): void {
     this.detailsModalData = data;
     this.noticeDetailsModal = true;

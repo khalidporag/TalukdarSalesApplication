@@ -32,6 +32,7 @@ import { ReportsComponent } from './components/reports/reports.component';
 import { DemoComponent } from './components/demo/demo.component';
 import { TableComponent } from './components/demo/components/table/table.component';
 import { CardDesignComponent } from './components/demo/components/card-design/card-design.component';
+import { LandingPageComponent } from './components/landing-page/landing-page.component';
 // import { LandingPageComponent } from './components/landing-page/landing-page.component';
 
 
@@ -62,7 +63,7 @@ import { CardDesignComponent } from './components/demo/components/card-design/ca
     DemoComponent,
     TableComponent,
     CardDesignComponent,
-    // LandingPageComponent
+    LandingPageComponent
   ],
   imports: [
     CommonModule,

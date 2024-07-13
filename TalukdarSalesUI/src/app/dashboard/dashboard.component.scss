@@ -1,11 +1,8 @@
 @use "variables" as *;
 @use "mixins" as *;
 
-h6 {
-    color: red;
-}
-
 .whole-dashboard {
+    height: 100%;
     background-color: #f6fdfd;
 }
 
@@ -37,7 +34,7 @@ h6 {
     &__inner {
         margin-left: 300px;
         transition: 0.3s;
-        margin-top: 80px;
+        margin-top: 100px;
 
         @include breakpoint-max(991px) {
             margin-left: 0;

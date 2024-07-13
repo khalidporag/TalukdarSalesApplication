@@ -7,12 +7,11 @@
         <button class="main-btn" (click)="openRoleModal()">Create Product Type</button>
     </div>
 </div>
-
-<div class="pt-4"></div>
-<table class="table-one">
+<div class="table-responsive">
+<table class="table-one mt-25">
     <thead>
         <tr>
-            <th>#</th>
+            <th class="s-col">#</th>
             <th>Name</th>
             <th>Creation Time</th>
         </tr>
@@ -30,6 +29,7 @@
         </tr>
     </tbody>
 </table>
+</div>
 <div class="pagination-area">
     <h4>Total: 41</h4>
     <nz-pagination [nzPageIndex]="1" [nzTotal]="50"></nz-pagination>

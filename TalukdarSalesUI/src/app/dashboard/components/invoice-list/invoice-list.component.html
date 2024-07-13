@@ -8,15 +8,15 @@
             </nz-select>
 
             <nz-select [(ngModel)]="selectedUser" nzShowSearch nzDropdownClassName="select-dropdown"
-                nzPlaceHolder="User" (ngModelChange)="onFilterChange()">
-                <nz-option [nzValue]="data.id" *ngFor="let data of users" nzLabel={{data.firstName}}></nz-option>
+                nzPlaceHolder="Select User's Name" (ngModelChange)="onFilterChange()">
+                <nz-option [nzValue]="data.id" *ngFor="let data of users" nzLabel="{{data.firstName + ' ' + data.lastName}}"></nz-option>
             </nz-select>
         </div>
         <div class="table-responsive mt-25">
             <table class="table-one">
                 <thead>
                     <tr>
-                        <th scope="col">#</th>
+                        <th class="s-col" scope="col">#</th>
                         <th scope="col">Invoice For</th>
                         <th scope="col">Invoice Number</th>
                         <th scope="col">Requisition Serial</th>

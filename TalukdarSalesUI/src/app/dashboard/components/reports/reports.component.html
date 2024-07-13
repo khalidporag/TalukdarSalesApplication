@@ -1,164 +1,157 @@
-<div class="container">
-  <div class="row">
-    <!-- First and Second Lists -->
-    <div class="col">
-      <div class="list-container">
-        <h3>Top 5 Sellers</h3>
-        <div class="date-picker">
-          <label for="fromDateTopSellers">From:</label>
-          <input type="date" id="fromDateTopSellers" name="fromDateTopSellers" [(ngModel)]="fromDateTopSellers">
+<!-- New Code -->
 
-          <label for="toDateTopSellers">To:</label>
-          <input type="date" id="toDateTopSellers" name="toDateTopSellers" [(ngModel)]="toDateTopSellers">
-        </div>
-        <div class="table-responsive mt-25">
-          <table class="table table-striped table-sm">
-            <thead>
-              <tr>
-                <th scope="col">#</th>
-                <th scope="col">Name</th>
-                <th scope="col">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let seller of topFiveSeller; let i = index">
-                <td>{{ i + 1 }}</td>
-                <td>{{ seller.userName }}</td>
-                <td>{{ seller.totalAmount }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="list-container">
-        <h3>Top 5 Selling Products</h3>
-        <div class="date-picker">
-          <label for="fromDateTopProducts">From:</label>
-          <input type="date" id="fromDateTopProducts" name="fromDateTopProducts" [(ngModel)]="fromDateTopProducts">
-
-          <label for="toDateTopProducts">To:</label>
-          <input type="date" id="toDateTopProducts" name="toDateTopProducts" [(ngModel)]="toDateTopProducts">
-        </div>
-        <div class="table-responsive mt-25">
-          <table class="table table-striped table-sm">
-            <thead>
-              <tr>
-                <th scope="col">#</th>
-                <th scope="col">Product</th>
-                <th scope="col">Sales</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let product of topFiveSellingProduct; let i = index">
-                <td>{{ i + 1 }}</td>
-                <td>{{ product.finishGoodName }}</td>
-                <td>{{ product.quantity }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+<div class="row" style="justify-content: center;">
+  <div class="col-md-6 pb-25">
+    <div class="page-header">
+      <div class="page-header__inner">
+        <h3>Top Five Sellers</h3>
+        <nz-range-picker [nzFormat]="dateFormat" [(ngModel)]="topFiveSellerDateRange" (ngModelChange)="onDateRangeChangeForTopFiveSeller($event)"></nz-range-picker>
       </div>
     </div>
-
-    <!-- Third and Fourth Lists -->
-    <div class="col">
-      <div class="list-container">
-        <h3>Less 5 Selling Products</h3>
-        <div class="date-picker">
-          <label for="fromDateLessProducts">From:</label>
-          <input type="date" id="fromDateLessProducts" name="fromDateLessProducts" [(ngModel)]="fromDateLessProducts"
-            change="getTopFiveSeller()">
-          <label for="toDateLessProducts">To:</label>
-          <input type="date" id="toDateLessProducts" name="toDateLessProducts" [(ngModel)]="toDateLessProducts"
-            change="getTopFiveSeller()">
-        </div>
-        <div class="table-responsive mt-25">
-          <table class="table table-striped table-sm">
-            <thead>
-              <tr>
-                <th scope="col">#</th>
-                <th scope="col">Product</th>
-                <th scope="col">Sales</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let product of lessFiveSellingProduct; let i = index">
-                <td>{{ i + 1 }}</td>
-                <td>{{ product.finishGoodName }}</td>
-                <td>{{ product.quantity }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="list-container">
-        <h3>Top 5 Sellers with Due Amount</h3>
-        <div class="date-picker">
-          <label for="fromDateSellersDue">From:</label>
-          <input type="date" id="fromDateSellersDue" name="fromDateSellersDue" [(ngModel)]="fromDateSellersDue">
-
-          <label for="toDateSellersDue">To:</label>
-          <input type="date" id="toDateSellersDue" name="toDateSellersDue" [(ngModel)]="toDateSellersDue">
-        </div>
-        <div class="table-responsive mt-25">
-          <table class="table table-striped table-sm">
-            <thead>
-              <tr>
-                <th scope="col">#</th>
-                <th scope="col">Name</th>
-                <th scope="col">Due Amount</th>
-                <th scope="col">Phone Number</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let seller of topFiveSellerWithDueAmount; let i = index">
-                <td>{{ i + 1 }}</td>
-                <td>{{ seller.firstName + " " + seller.lastName }}</td>
-                <td>{{ seller.dueAmount }}</td>
-                <td>{{ seller.phoneNumber }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+    <div class="table-responsive">
+      <table class="table-one mt-25">
+        <thead>
+          <tr>
+            <th class="s-col">#</th>
+            <th class="s-col"></th>
+            <th>Name</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let seller of topFiveSeller; let i = index">
+            <td><span class="res-head">Id:</span>{{i+1}}</td>
+            <td><span class="res-head"></span><img nz-image
+              nzSrc="https://localhost:7019/images/users/{{seller.imageName}}" alt="" class="user-thumb"
+              onerror="this.src = 'assets/images/icons/default-user.jpg'"></td>
+            <td>{{seller.userName}}</td>
+            <td><span class="res-head">Amount:</span>{{seller.totalAmount}}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
-
-  <!-- New row for the fifth list -->
-  <div class="row">
-    <div class="col">
-      <div class="list-container">
-        <h3>Day Accumulated order Summary</h3>
-        <div class="date-picker">
-          <label for="fromDateAccumulatedOrders">From:</label>
-          <input type="date" id="fromDateAccumulatedOrders" name="fromDateAccumulatedOrders"
-            [(ngModel)]="fromDateAccumulatedOrders">
-
-          <label for="toDateAccumulatedOrders">To:</label>
-          <input type="date" id="toDateAccumulatedOrders" name="toDateAccumulatedOrders"
-            [(ngModel)]="toDateAccumulatedOrders">
-        </div>
-        <div class="table-responsive mt-25">
-          <table class="table table-striped table-sm">
-            <thead>
-              <tr>
-                <th scope="col">#</th>
-                <th scope="col">Order Date</th>
-                <th scope="col">Product Name</th>
-                <th scope="col">Total Quantity</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let product of dailyAccumulatedOrderSummary; let i = index">
-                <td>{{ i + 1 }}</td>
-                <td>{{ product.requisitionDate }}</td>
-                <td>{{ product.finishedGoodName }}</td>
-                <td>{{ product.totalQuantity }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+  <div class="col-md-6 pb-25">
+    <div class="page-header">
+      <div class="page-header__inner">
+        <h3>Less Five Selleing Products</h3>
+        <nz-range-picker [nzFormat]="dateFormat" [(ngModel)]="lessFiveSellingProductDateRange" (ngModelChange)="onDateRangeChangeForLessFiveSellingProduct($event)"></nz-range-picker>
       </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table-one mt-25">
+        <thead>
+          <tr>
+            <th class="s-col">#</th>
+            <th class="s-col"></th>
+            <th>Products</th>
+            <th>Sales</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let product of lessFiveSellingProduct; let i = index">
+            <td><span class="res-head">Id:</span>{{i+1}}</td>
+            <td><span class="res-head"></span><img nz-image
+              nzSrc="https://localhost:7019/images/products/{{product.logoName}}" alt="" class="user-thumb"
+              onerror="this.src = 'assets/images/icons/default-user.jpg'"></td>
+            <td><span class="res-head">Products: </span>{{product.finishGoodName}}</td>
+            <td><span class="res-head">Amount:</span>{{product.quantity}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="col-md-6 pb-25">
+    <div class="page-header">
+      <div class="page-header__inner">
+        <h3>Top Five Selleing Products</h3>
+        <nz-range-picker [nzFormat]="dateFormat" [(ngModel)]="topFiveSellingProductDateRange" (ngModelChange)="onDateRangeChangeForTopFiveSellingProduct($event)"></nz-range-picker>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table-one mt-25">
+        <thead>
+          <tr>
+            <th class="s-col">#</th>
+            <th class="s-col"></th>
+            <th>Products</th>
+            <th>Sales</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let product of topFiveSellingProduct; let i = index">
+            <td><span class="res-head">Id:</span>{{ i+1 }}</td>
+            <td><span class="res-head">Id:</span><img nz-image
+              nzSrc="https://localhost:7019/images/products/{{product.logoName}}" alt="" class="user-thumb"
+              onerror="this.src = 'assets/images/icons/default-user.jpg'"></td>
+            <td><span class="res-head">Products</span>{{ product.finishGoodName}}</td>
+            <td><span class="res-head">Sales:</span>{{ product.quantity}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="col-md-6 pb-25">
+    <div class="page-header">
+      <div class="page-header__inner">
+        <h3>Top Five Sellers With Due Amount</h3>
+        <nz-range-picker [nzFormat]="dateFormat" [(ngModel)]="topFiveSellerWithDueAmountDateRange" (ngModelChange)="onDateRangeChangeForTopFiveSellerWithDueAmount($event)"></nz-range-picker>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table-one mt-25">
+        <thead>
+          <tr>
+            <th class="s-col">#</th>
+            <th class="s-col"></th>
+            <th>Name</th>
+            <th>Due Amount</th>
+            <th>Phone</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let seller of topFiveSellerWithDueAmount; let i = index">
+            <td><span class="res-head">Id:</span>{{ i+1 }}</td>
+            <td><span class="res-head">Id:</span><img nz-image
+              nzSrc="https://localhost:7019/images/users/{{seller.imageName}}" alt="" class="user-thumb"
+              onerror="this.src = 'assets/images/icons/default-user.jpg'"></td>
+            <td><span class="res-head">Name: </span>{{seller.firstName + " " + seller.lastName}}</td>
+            <td><span class="res-head">Due Amount:</span>{{seller.dueAmount}}</td>
+            <td><span class="res-head">Phone:</span>{{seller.phoneNumber}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="col-md-12 pb-25">
+    <div class="page-header">
+      <div class="page-header__inner">
+        <h3>Day Accumulated Order Summary</h3>
+        <nz-range-picker [nzFormat]="dateFormat" [(ngModel)]="dailyAccumulatedOrderSummaryDateRange" (ngModelChange)="onDateRangeChangeForDailyAccumulatedOrderSummaryt($event)"></nz-range-picker>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table-one mt-25">
+        <thead>
+          <tr>
+            <th class="s-col">#</th>
+            <th>Order Date</th>
+            <th>Product Name</th>
+            <th>Total Quantity</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let product of dailyAccumulatedOrderSummary; let i = index">
+            <td><span class="res-head">Id:</span>{{i+1}}</td>
+            <td><span class="res-head">Order Date:</span>{{ product.requisitionDate | date:'medium' }}</td>
+            <td><span class="res-head">Product Name:</span>{{ product.finishedGoodName }}</td>
+            <td><span class="res-head">Total Quantity:</span>{{ product.totalQuantity }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
+
+
+<!-- New Code -->

@@ -31,6 +31,10 @@ export class ProductComponent implements OnInit {
   submitting: boolean = false;
   bodyText = 'This text can be updated in modal 1';
   selectedProductType: any;
+
+  imageUrl: string | null = null;
+
+
   constructor(
     private api : ApiService,
     private modalService1: NzModalService,
@@ -45,14 +49,33 @@ export class ProductComponent implements OnInit {
     this.getFinishGoodTypes();
   }
 
+  // onFileChange(event: any): void {
+  //   const file = event.target.files[0];
+  //   if (file) {
+  //     this.file = file;
+  //     this.fileError = '';
+  //   } else {
+  //     this.fileError = 'Please select an image file.';
+  //   }
+  // }
+
   onFileChange(event: any): void {
     const file = event.target.files[0];
     if (file) {
       this.file = file;
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.imageUrl = e.target.result;
+      };
+      reader.readAsDataURL(file);
       this.fileError = '';
     } else {
       this.fileError = 'Please select an image file.';
     }
+  }
+
+  changeImage(): void {
+    this.imageUrl = null;
   }
 
   getFinishedGoods(){
@@ -65,6 +88,7 @@ export class ProductComponent implements OnInit {
 
   onFilterChange() {
     this.getFinishedGoods();
+    this.getFinishGoodTypes();
   }
 
   getFinishGoodTypes(){
@@ -82,7 +106,7 @@ export class ProductComponent implements OnInit {
       finishedGoodTypeId:[null, Validators.required],
       description:['', Validators.required],
       unitPrice:['', Validators.required],
-      image: [null, Validators.required]
+      image: [null, Validators.nullValidator]
     });
   }
 
@@ -99,6 +123,7 @@ export class ProductComponent implements OnInit {
     this.createModal = true;
     this.submitting = false;
     this.getFinishGoodTypes();
+    console.log(this.finishedGoodTypes);
     this.createInit();
   }
 
@@ -123,7 +148,7 @@ export class ProductComponent implements OnInit {
     const formData = new FormData();
     formData.append('name', this.createFinishedGoodForm.value.name);
     formData.append('uOM', this.createFinishedGoodForm.value.uOM);
-    formData.append('finishedGoodTypeId', this.createFinishedGoodForm.value.finishedGoodTypeId);
+    formData.append('goodTypeId', this.createFinishedGoodForm.value.finishedGoodTypeId);
     formData.append('description', this.createFinishedGoodForm.value.description);
     formData.append('unitPrice', this.createFinishedGoodForm.value.unitPrice);
 

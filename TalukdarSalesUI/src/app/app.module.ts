@@ -34,6 +34,11 @@ import { AuthModule } from './auth/auth.module';
 // import { SidebarAreaComponent } from './sidebar-area/sidebar-area.component';
 // import { HeaderComponent } from './header/header.component';
 
+import en from '@angular/common/locales/en';
+import { NZ_I18N, en_US } from 'ng-zorro-antd/i18n';
+import { registerLocaleData } from '@angular/common';
+
+registerLocaleData(en);
 
 @NgModule({
   declarations: [
@@ -75,11 +80,14 @@ import { AuthModule } from './auth/auth.module';
     // BrowserAnimationsModule,
     // QuillModule.forRoot()
   ],
-  providers: [{
-    provide: HTTP_INTERCEPTORS,
-    useClass: TokenInterceptor,
-    multi: true
-  }],
+  providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: TokenInterceptor,
+      multi: true,
+    },
+    { provide: NZ_I18N, useValue: en_US }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

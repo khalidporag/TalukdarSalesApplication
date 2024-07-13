@@ -187,6 +187,7 @@ namespace TalukdarSalesAPI.Controllers
         [HttpGet("getProductWiseDailyRequisition")]
         public ActionResult<ProductWiseRequisitionDto> GetProductWiseDailyRequisition()
         {
+            var currentDateTime = DateTime.Now.Date;
             var requisitionList = _salesRequisitionDetailRepository.GetAll().Where(n => n.CreatedDateTime.Date == DateTime.Now.Date).ToList();
             var finishedGoodList = _finishedGoodsRepository.GetAll().ToDictionary(n => n.Id);
             var dailyFinishedGoodsQuantities = requisitionList
@@ -254,10 +255,16 @@ namespace TalukdarSalesAPI.Controllers
         }
 
         [HttpGet("getDailyAccumulatedOrderSummary")]
-        public ActionResult<ProductWiseRequisitionDto> GetDailyAccumulatedOrderSummary()
+        public ActionResult<ProductWiseRequisitionDto> GetDailyAccumulatedOrderSummary(DateTime? from, DateTime? to)
         {
             var oneMonthAgo = DateTime.Now.AddMonths(-1);
-            var requisitionList = _salesRequisitionDetailRepository.GetAll().Where(n => n.CreatedDateTime.Date >= oneMonthAgo.Date).ToList();
+            var requisitionList = _salesRequisitionDetailRepository.GetAll().ToList();
+
+            if (from != null && to != null)
+                requisitionList = requisitionList.Where(n => n.CreatedOn >= from && n.CreatedOn <= to).ToList();
+            else
+                requisitionList = requisitionList.Where(s => s.CreatedOn >= oneMonthAgo).ToList();
+
             var finishedGoodList = _finishedGoodsRepository.GetAll().ToDictionary(n => n.Id);
             var dailyFinishedGoodsQuantities = requisitionList
            .GroupBy(r => new { Date = r.CreatedDateTime.Date, r.FinishedGoodId })
