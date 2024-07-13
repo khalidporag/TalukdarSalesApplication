@@ -1,9 +1,9 @@
 <div class="page-header">
   <div class="page-header__inner">
-    <div class="search-area">
+    <!-- <div class="search-area">
       <input type="text" class="form-control" placeholder="search...">
       <button><img src="assets/images/icons/search.svg" alt=""></button>
-    </div>
+    </div> -->
     <button class="main-btn" (click)="openRoleModal()">Create Role</button>
   </div>
 </div>
@@ -29,9 +29,10 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
       <tr *ngFor="let role of roles; let i= index">
         <td><span class="res-head">Id:</span>{{i+1}}</td>
         <td><span class="res-head">Name:</span>{{role.name}}</td>
-        <td>{{role.createdOn}}</td>
-        <td class="action"><button (click)="openAddModuleModal(role.id)"><span>Add Module</span></button>
-        </td>
+        <td>{{role.createdOn | date: 'medium'}}</td>
+        <td class="action"><a (click)="openAddModuleModal(role.id)">
+          <i class="fa fa-plus-circle"></i>
+      </a></td>
       </tr>
 
     </tbody>

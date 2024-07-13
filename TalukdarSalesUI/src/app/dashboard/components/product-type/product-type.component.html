@@ -56,7 +56,7 @@
     </table>
 </div> -->
 
-<div>
+<!-- <div>
 
     <modal id="productTypeModal" *ngIf="createModal">
         <div class="modal-header">
@@ -85,4 +85,31 @@
     </modal>
 
 
-</div>
+</div> -->
+
+
+
+<nz-modal [(nzVisible)]="createModal">
+    <ng-container *nzModalContent>
+        <div class="modal-header">
+            <h2>Create Product Type</h2>
+            <button (click)="closeModal()"><img src="assets/images/icons/close.svg" alt=""></button>
+        </div>
+        <div class="modal-body">
+            <form nz-form (ngSubmit)="onSubmit()" [formGroup]="createProductTypeForm" class="custom-form">
+                <nz-form-item>
+                    <nz-form-control nzHasFeedback>
+                        <input nz-input formControlName="name" placeholder="Enter name" />
+                        <div *ngIf="createProductTypeForm.get('name')?.dirty && createProductTypeForm.get('name')?.errors">
+                            Enter name plaese
+                        </div>
+                    </nz-form-control>
+                </nz-form-item>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="cancel-btn" (click)="closeModal()">Cancel</button>
+            <button class="add-btn" (click)="onSubmit()" >Create</button>
+        </div>
+    </ng-container>
+</nz-modal>
