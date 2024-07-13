@@ -62,7 +62,7 @@ namespace TalukdarSalesAPI.Controllers
         [HttpGet("getAllNotices")]
         public ActionResult<Notice> GetAllNotices(bool? isLanding)
         {
-            var result = (isLanding != null && isLanding == true) ? _noticeRepository.GetAll().OrderByDescending(n => n.CreatedOn).Take(5) : _noticeRepository.GetAll().OrderByDescending(n => n.CreatedOn);
+            var result = (isLanding != null && isLanding == true) ? _noticeRepository.GetAll().OrderByDescending(n => n.CreatedOn).Take(6) : _noticeRepository.GetAll().OrderByDescending(n => n.CreatedOn);
             return Ok(result);
         }
     }

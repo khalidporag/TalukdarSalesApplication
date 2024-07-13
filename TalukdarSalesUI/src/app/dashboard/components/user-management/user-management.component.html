@@ -8,8 +8,8 @@
     </div>
 </div>
 
-<div class="table-responsive mt-25">
-    <table class="table-one">
+<div class="table-responsive">
+    <table class="table-one  mt-25">
         <thead>
             <tr>
                 <th scope="col"></th>
@@ -21,11 +21,14 @@
         </thead>
         <tbody>
             <tr *ngFor="let user of users; let i= index">
-                <img src="https://localhost:7019/images/users/{{user.imageName}}" alt="" width="50" height="50">
-                <td>{{user.firstName + " " + user.lastName}}</td>
-                <td>{{user.username}}</td>
-                <td>{{user.phoneNumber}}</td>
-                <td>{{user.maxCreditLimit}}</td>
+                <td><span class="res-head">Id:</span><img nz-image
+                    nzSrc="https://localhost:7019/images/users/{{user.imageName}}" alt="" class="user-thumb"
+                    onerror="this.src = 'assets/images/icons/default-user.jpg'"></td>
+                <!-- <img src="https://localhost:7019/images/users/{{user.imageName}}" alt="" width="50" height="50"> -->
+                <td><span class="res-head">Name:</span>{{user.firstName + " " + user.lastName}}</td>
+                <td><span class="res-head">Username:</span>{{user.username}}</td>
+                <td><span class="res-head">Phone Number:</span>{{user.phoneNumber}}</td>
+                <td><span class="res-head">Max Credit Limit:</span>{{user.maxCreditLimit}}</td>
             </tr>
 
         </tbody>
@@ -184,6 +187,22 @@
                         </div>
                     </nz-form-control>
                 </nz-form-item>
+
+                <div class="upload-file">
+                    <div class="upload-file-box" [ngClass]="{'d-none': imageUrl}">
+                        <div class="icon">
+                            <img src="assets/images/icons/upload.svg" alt="">
+                        </div>
+                        <p *ngIf="imageUrl == null">Upload Thumbnail (PNG/JPG)</p>
+                        <input type="file" formControlName="image" accept=".jpg,.png,.jpeg"
+                            (change)="onFileChange($event)">
+                    </div>
+                    <div class="preview-img" *ngIf="imageUrl">
+                        <img [src]="imageUrl" alt="Thumbnail preview">
+                        <button (click)="changeImage()">Change</button>
+                    </div>
+                </div>
+
             </form>
         </div>
         <div class="modal-footer">

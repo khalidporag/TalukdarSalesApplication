@@ -10,8 +10,8 @@
 
 
     <nz-select [(ngModel)]="selectedUser" nzShowSearch nzDropdownClassName="select-dropdown"
-      nzPlaceHolder="Select User" (ngModelChange)="onFilterChange()">
-      <nz-option [nzValue]="data.id" *ngFor="let data of users" nzLabel={{data.firstName}}></nz-option>
+      nzPlaceHolder="Select User's Name" (ngModelChange)="onFilterChange()">
+      <nz-option [nzValue]="data.id" *ngFor="let data of users" nzLabel="{{data.firstName + ' ' + data.lastName}}"></nz-option>
   </nz-select>
 
 
@@ -25,7 +25,7 @@
       <button><img src="assets/images/icons/search.svg" alt=""></button>
     </div>
 
-    <button class="add-btn" (click)="onCreateNew()">Create New</button>
+    <button class="main-btn" (click)="onCreateNew()">Create New</button>
 
     
           
@@ -36,7 +36,7 @@
 <table class="table-one mt-25">
   <thead>
     <tr>
-      <th scope="col" *ngIf="isShow">
+      <th class="s-col" scope="col" *ngIf="isShow">
         <input type="checkbox" (change)="toggleSelectAll($event)">
       </th>
       <th scope="col">Requisition No</th>
