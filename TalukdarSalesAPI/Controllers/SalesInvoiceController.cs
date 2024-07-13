@@ -363,6 +363,7 @@ namespace TalukdarSalesAPI.Controllers
             {
                 UserId = g.Key,
                 UserName = userList.ContainsKey(g.Key)? userList[g.Key].FirstName + " " + userList[g.Key].LastName : "",
+                ImageName = userList.ContainsKey(g.Key) ? userList[g.Key].ImageName : " ",
                 TotalAmount = g.Sum(s => s.TotalPrice)
             })
             .OrderByDescending(g => g.TotalAmount)
@@ -390,6 +391,7 @@ namespace TalukdarSalesAPI.Controllers
             {
                 FinishedGoodId = g.Key,
                 FinishGoodName = productList.ContainsKey(g.Key) ? productList[g.Key].Name : "",
+                LogoName = productList.ContainsKey(g.Key) ? productList[g.Key].LogoName : "",
                 Quantity = g.Sum(s => s.Quantity)
             })
             .OrderByDescending(g => g.Quantity)
@@ -417,6 +419,7 @@ namespace TalukdarSalesAPI.Controllers
             {
                 FinishedGoodId = g.Key,
                 FinishGoodName = productList.ContainsKey(g.Key) ? productList[g.Key].Name : "",
+                LogoName = productList.ContainsKey(g.Key) ? productList[g.Key].LogoName : "",
                 Quantity = g.Sum(s => s.Quantity)
             })
             .OrderBy(g => g.Quantity)

@@ -1,8 +1,7 @@
 <table class="table-one mt-25">
     <thead>
         <tr>
-            <th scope="col">#</th>
-            <th scope="col">Requisition Date</th>
+            <th class="s-col" scope="col">#</th>
             <th scope="col">Product Name</th>
             <th scope="col">Total Quantity</th>
         </tr>
@@ -10,7 +9,6 @@
     <tbody>
         <tr *ngFor="let product of productList; let i= index">
             <td>{{i+1}}</td>
-            <td>{{product.requisitionDate}}</td>
             <td>{{product.finishedGoodName}}</td>
             <td>{{product.totalQuantity}}</td>
         </tr>

@@ -147,43 +147,81 @@ export class ApiService {
     return this.http.get<any>(`${this.SalesInvoiceUrl}getCollectionHistory?${queryString}`);
   }
   
-  getTopFiveSeller(fromDate?: string, toDate?: string): Observable<any[]> {
+  getTopFiveSeller(fromDate?: Date, toDate?: Date): Observable<any[]> {
     let params = new HttpParams();
     if (fromDate) {
-      params = params.set('from', fromDate);
+      params = params.set('from', fromDate.toISOString().split('T')[0]);
     }
     if (toDate) {
-      params = params.set('to', toDate);
+      params = params.set('to', toDate.toISOString().split('T')[0]);
     }
-    // return this.http.get<any[]>('your-api-url/top-sellers', { params });
     return this.http.get<any>(`${this.SalesInvoiceUrl}getTopFiveSeller`, {params});
 
   }
 
-  // getTopFiveSeller()
+  getTopFiveSellingProduct(fromDate?: Date, toDate?: Date): Observable<any[]> {
+    let params = new HttpParams();
+    if (fromDate) {
+      params = params.set('from', fromDate.toISOString().split('T')[0]);
+    }
+    if (toDate) {
+      params = params.set('to', toDate.toISOString().split('T')[0]);
+    }
+    return this.http.get<any>(`${this.SalesInvoiceUrl}getTopFiveSellingProduct`, {params});
+  }
+
+  // getTopFiveSellingProduct()
   // {
-  //   return this.http.get<any>(`${this.SalesInvoiceUrl}getTopFiveSeller`);
+  //   return this.http.get<any>(`${this.SalesInvoiceUrl}getTopFiveSellingProduct`);
   // }
 
-  getTopFiveSellingProduct()
-  {
-    return this.http.get<any>(`${this.SalesInvoiceUrl}getTopFiveSellingProduct`);
+  getLessFiveSellingProduct(fromDate?: Date, toDate?: Date): Observable<any[]> {
+    let params = new HttpParams();
+    if (fromDate) {
+      params = params.set('from', fromDate.toISOString().split('T')[0]);
+    }
+    if (toDate) {
+      params = params.set('to', toDate.toISOString().split('T')[0]);
+    }
+    return this.http.get<any>(`${this.SalesInvoiceUrl}getLessFiveSellingProduct`, {params});
   }
 
-  getLessFiveSellingProduct()
-  {
-    return this.http.get<any>(`${this.SalesInvoiceUrl}getLessFiveSellingProduct`);
+  // getLessFiveSellingProduct()
+  // {
+  //   return this.http.get<any>(`${this.SalesInvoiceUrl}getLessFiveSellingProduct`);
+  // }
+
+  getTopFiveSellerWithDueAmount(fromDate?: Date, toDate?: Date): Observable<any[]> {
+    let params = new HttpParams();
+    if (fromDate) {
+      params = params.set('from', fromDate.toISOString().split('T')[0]);
+    }
+    if (toDate) {
+      params = params.set('to', toDate.toISOString().split('T')[0]);
+    }
+    return this.http.get<any>(`${this.SalesInvoiceUrl}getTopFiveSellerWithDueAmount`, {params});
   }
 
-  getTopFiveSellerWithDueAmount()
-  {
-    return this.http.get<any>(`${this.SalesInvoiceUrl}getTopFiveSellerWithDueAmount`);
+  // getTopFiveSellerWithDueAmount()
+  // {
+  //   return this.http.get<any>(`${this.SalesInvoiceUrl}getTopFiveSellerWithDueAmount`);
+  // }
+
+  getDailyAccumulatedOrderSummary(fromDate?: Date, toDate?: Date): Observable<any[]> {
+    let params = new HttpParams();
+    if (fromDate) {
+      params = params.set('from', fromDate.toISOString().split('T')[0]);
+    }
+    if (toDate) {
+      params = params.set('to', toDate.toISOString().split('T')[0]);
+    }
+    return this.http.get<any>(`${this.SalesInvoiceUrl}getDailyAccumulatedSalesSummary`, {params});
   }
 
-  getDailyAccumulatedOrderSummary()
-  {
-    return this.http.get<any>(`${this.SalesRequisitionUrl}getDailyAccumulatedOrderSummary`);
-  }
+  // getDailyAccumulatedOrderSummary()
+  // {
+  //   return this.http.get<any>(`${this.SalesRequisitionUrl}getDailyAccumulatedOrderSummary`);
+  // }
 
   createNotice(obj: any) {
     return this.http.post<any>(`${this.NoticeUrl}createNotice`, obj)

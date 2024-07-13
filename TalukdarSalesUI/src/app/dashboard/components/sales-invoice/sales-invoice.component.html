@@ -1,12 +1,12 @@
 <div class="header">
     <nz-select [(ngModel)]="selectedUserGroup" nzShowSearch nzDropdownClassName="select-dropdown"
-        nzPlaceHolder="User Group" (ngModelChange)="onUserGroupChange()">
+        nzPlaceHolder="Select User Group" (ngModelChange)="onUserGroupChange()">
         <nz-option [nzValue]="data.id" *ngFor="let data of userTypes" nzLabel={{data.typeName}}></nz-option>
     </nz-select>
 
     <nz-select [(ngModel)]="selectedUser" nzShowSearch nzDropdownClassName="select-dropdown"
-        nzPlaceHolder="User" (ngModelChange)="onUserChange()">
-        <nz-option [nzValue]="data.id" *ngFor="let data of users" nzLabel={{data.firstName}}></nz-option>
+        nzPlaceHolder="Select User's Name" (ngModelChange)="onUserChange()">
+        <nz-option [nzValue]="data.id" *ngFor="let data of users" nzLabel="{{ data.firstName + ' ' + data.lastName }}"></nz-option>
     </nz-select>
 
     <nz-select [(ngModel)]="selectedRequisition" nzShowSearch nzDropdownClassName="select-dropdown"

@@ -18,7 +18,7 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
   <table class="table-one">
     <thead>
       <tr>
-        <th scope="col">#</th>
+        <th class="s-col" scope="col">#</th>
         <th scope="col">Role</th>
         <th scope="col">Creation Time</th>
         <th scope="col">Action</th>
@@ -39,35 +39,35 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
   </table>
 </div>
 
-
+<nz-modal [(nzVisible)]="createModal">
+  <ng-container *nzModalContent>
+      <div class="modal-header">
+          <h2>Create Role</h2>
+          <button (click)="closeModal()"><img src="assets/images/icons/close.svg" alt=""></button>
+      </div>
+      <div class="modal-body">
+          <form nz-form (ngSubmit)="onSubmit()" [formGroup]="createRoleForm" class="custom-form">
+              <nz-form-item>
+                  <nz-form-control nzHasFeedback>
+                      <input nz-input formControlName="name" placeholder="Enter name" />
+                      <div *ngIf="createRoleForm.get('name')?.dirty && createRoleForm.get('name')?.errors">
+                          Enter name plaese
+                      </div>
+                  </nz-form-control>
+              </nz-form-item>
+          </form>
+      </div>
+      <div class="modal-footer">
+          <button class="cancel-btn" (click)="closeModal()">Cancel</button>
+          <button class="add-btn" (click)="onSubmit()" >Create</button>
+      </div>
+  </ng-container>
+</nz-modal>
 
 <div>
   <!-- Create Modal-->
 
-  <modal *ngIf="createModal">
-    <div class="modal-header">
-      <h5 class="modal-title">Create Role</h5>
-      <button type="button" class="btn-close" (click)="closeModal()"></button>
-    </div>
-    <div class="modal-body">
-      <form (ngSubmit)="onSubmit()" [formGroup]="createRoleForm">
-        <div class="form-group pt-3">
-          <div class="input-field"
-            [class.error]="createRoleForm.controls['name'].dirty && createRoleForm.hasError('required','name')">
-            <span class="fa fa-user p-2"></span>
-            <input formControlName="name" type="text" placeholder="Name">
-          </div>
-        </div>
-        <small *ngIf="createRoleForm.controls['name'].dirty && createRoleForm.hasError('required','name')"
-          class="text-danger">*Name is required*</small>
-
-        <button *ngIf="!submitting" type="submit" class="btn btn-primary btn-block mt-4 w-100">Save</button>
-        <button type="button" class="btn btn-primary" *ngIf="submitting">
-          <i class="fas fa-spinner fa-pulse"></i>
-        </button>
-      </form>
-    </div>
-  </modal>
+  
 
   <!-- Add Module To Role Modal -->
   <modal id="addModuleToRole" *ngIf="addModuleToRoleModal">
@@ -97,3 +97,5 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
 
 
 </div>
+
+

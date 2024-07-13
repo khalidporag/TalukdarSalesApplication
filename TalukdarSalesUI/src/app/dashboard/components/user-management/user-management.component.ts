@@ -17,7 +17,7 @@ export class UserManagementComponent implements OnInit {
   fileError: string = '';
   selectedUserType: any;
   selectedRole: any;
-
+  imageUrl: any;
   public roles: any = [];
   public users: any = [];
   public userTypes: any = [];
@@ -40,14 +40,33 @@ export class UserManagementComponent implements OnInit {
     this.getRoles();
   }
 
+  // onFileChange(event: any): void {
+  //   const file = event.target.files[0];
+  //   if (file) {
+  //     this.file = file;
+  //     this.fileError = '';
+  //   } else {
+  //     this.fileError = 'Please select an image file.';
+  //   }
+  // }
+
   onFileChange(event: any): void {
     const file = event.target.files[0];
     if (file) {
       this.file = file;
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.imageUrl = e.target.result;
+      };
+      reader.readAsDataURL(file);
       this.fileError = '';
     } else {
       this.fileError = 'Please select an image file.';
     }
+  }
+
+  changeImage(): void {
+    this.imageUrl = null;
   }
 
   getRoles() {
@@ -105,8 +124,8 @@ export class UserManagementComponent implements OnInit {
       const formData = new FormData();
       formData.append('firstName', this.createUserForm.value.firstName);
       formData.append('lastName', this.createUserForm.value.lastName);
-      formData.append('roleId', this.selectedRole);
-      formData.append('userTypeId', this.selectedUserType);
+      formData.append('roleId', this.createUserForm.value.roleId);
+      formData.append('userTypeId', this.createUserForm.value.userTypeId);
       // formData.append('userName', this.createUserForm.value.userName);
       formData.append('phoneNumber', this.createUserForm.value.phoneNumber);
       formData.append('maxCreditLimit', this.createUserForm.value.maxCreditLimit);

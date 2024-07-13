@@ -9,6 +9,17 @@ import { UserStoreService } from 'src/app/services/user-store.service';
   styleUrls: ['./reports.component.scss']
 })
 export class ReportsComponent implements OnInit {
+
+  topFiveSellerDateRange: Date[] = [];
+  topFiveSellingProductDateRange: Date[] = [];
+  lessFiveSellingProductDateRange: Date[] = [];
+
+  topFiveSellerWithDueAmountDateRange: Date[] = [];
+
+  dailyAccumulatedOrderSummaryDateRange: Date[] = [];
+
+
+
   dateFormat = 'yyyy/MM/dd';
   monthFormat = 'yyyy/MM';
   quarterFormat = 'yyyy/[Q]Q';
@@ -55,59 +66,63 @@ export class ReportsComponent implements OnInit {
     this.getDailyAccumulatedOrderSummary();
   }
 
-  onDateChange(listType: string) {
-    switch (listType) {
-      case 'topSellers':
-        this.getTopFiveSeller();
-        break;
-      case 'topProducts':
-        this.getTopFiveSellingProduct();
-        break;
-      case 'lessProducts':
-        this.getLessFiveSellingProduct();
-        break;
-      case 'sellersDue':
-        this.getTopFiveSellerWithDueAmount();
-        break;
-      case 'accumulatedOrders':
-        this.getDailyAccumulatedOrderSummary();
-        break;
-      default:
-        break;
-    }
+
+  onDateRangeChangeForTopFiveSeller(result: Date[]): void {
+    this.topFiveSellerDateRange = result;
+    this.getTopFiveSeller();
   }
 
   getTopFiveSeller() {
-    this.api.getTopFiveSeller(this.fromDateTopSellers, this.toDateTopSellers)
+    this.api.getTopFiveSeller(this.topFiveSellerDateRange[0], this.topFiveSellerDateRange[1])
       .subscribe(res => {
         this.topFiveSeller = res;
-        console.log(this.topFiveSeller);
       });
   }
 
+
+  onDateRangeChangeForTopFiveSellingProduct(result: Date[]): void {
+    this.topFiveSellingProductDateRange = result;
+    this.getTopFiveSellingProduct();
+  }
+
   getTopFiveSellingProduct() {
-    this.api.getTopFiveSellingProduct()
+    this.api.getTopFiveSellingProduct(this.topFiveSellingProductDateRange[0], this.topFiveSellingProductDateRange[1])
       .subscribe(res => {
         this.topFiveSellingProduct = res;
       });
   }
 
+  onDateRangeChangeForLessFiveSellingProduct(result: Date[]): void {
+    this.lessFiveSellingProductDateRange = result;
+    this.getLessFiveSellingProduct();
+  }
+
   getLessFiveSellingProduct() {
-    this.api.getLessFiveSellingProduct()
+    this.api.getLessFiveSellingProduct(this.lessFiveSellingProductDateRange[0], this.lessFiveSellingProductDateRange[1])
       .subscribe(res => {
         this.lessFiveSellingProduct = res;
       });
   }
 
+  onDateRangeChangeForTopFiveSellerWithDueAmount(result: Date[]): void {
+    this.topFiveSellerWithDueAmountDateRange = result;
+    this.getTopFiveSellerWithDueAmount();
+  }
+
   getTopFiveSellerWithDueAmount() {
-    this.api.getTopFiveSellerWithDueAmount()
+    this.api.getTopFiveSellerWithDueAmount(this.topFiveSellerWithDueAmountDateRange[0], this.topFiveSellerWithDueAmountDateRange[1])
       .subscribe(res => {
         this.topFiveSellerWithDueAmount = res;
       });
   }
 
+  onDateRangeChangeForDailyAccumulatedOrderSummaryt(result: Date[]): void {
+    this.dailyAccumulatedOrderSummaryDateRange = result;
+    this.getDailyAccumulatedOrderSummary();
+  }
+
   getDailyAccumulatedOrderSummary() {
-    this.api.getDailyAccumulatedOrderSummary()
+    this.api.getDailyAccumulatedOrderSummary(this.dailyAccumulatedOrderSummaryDateRange[0], this.dailyAccumulatedOrderSummaryDateRange[1])
       .subscribe(res => {
         this.dailyAccumulatedOrderSummary = res;
       });

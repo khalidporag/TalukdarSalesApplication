@@ -85,6 +85,7 @@ export class NoticeComponent implements OnInit {
   onFileChange(event: any): void {
     const file = event.target.files[0];
     if (file) {
+      this.file = file;
       const reader = new FileReader();
       reader.onload = (e: any) => {
         this.imageUrl = e.target.result;
