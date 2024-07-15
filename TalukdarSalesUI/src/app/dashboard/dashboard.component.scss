@@ -10,6 +10,7 @@
     padding: 30px;
     position: relative;
     overflow-x: hidden;
+    background-color: #f6fdfd;
 
     @include breakpoint-max (991px) {
         padding: 15px;

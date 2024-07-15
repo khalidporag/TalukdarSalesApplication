@@ -8,6 +8,39 @@
     </div>
 </div>
 
+<!-- User Card -->
+<div class="user-card mt-25">
+    <div class="row">
+        <div class="col-xl-3 col-lg-4 col-md-6 mb-25" *ngFor="let item of userData">
+            <div class="user-card__each">
+                <div class="thumb">
+                    <img src="{{item.thumb}}" alt="User Profile" onerror="this.src = 'assets/images/no-user.jpeg'">
+                </div>
+                <div class="info">
+                    <h3>{{item.fname}} {{item.lname}}</h3>
+                    <p>Role: {{item.userType}}</p>
+                </div>
+                <div class="data">
+                    <ul>
+                        <li>
+                            <h4>{{item.maxCredit}}</h4>
+                            <p>Max Credit</p>
+                        </li>
+                        <li>
+                            <h4>{{item.dueAmount}}</h4>
+                            <p>Due Amount</p>
+                        </li>
+                    </ul>
+                </div>
+                <div class="btn-area">
+                    <button class="main-btn">View Profile</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- User Card -->
+
 <div class="table-responsive">
     <table class="table-one  mt-25">
         <thead>
@@ -22,8 +55,8 @@
         <tbody>
             <tr *ngFor="let user of users; let i= index">
                 <td><span class="res-head">Id:</span><img nz-image
-                    nzSrc="https://localhost:7019/images/users/{{user.imageName}}" alt="" class="user-thumb"
-                    onerror="this.src = 'assets/images/icons/default-user.jpg'"></td>
+                        nzSrc="https://localhost:7019/images/users/{{user.imageName}}" alt="" class="user-thumb"
+                        onerror="this.src = 'assets/images/icons/default-user.jpg'"></td>
                 <!-- <img src="https://localhost:7019/images/users/{{user.imageName}}" alt="" width="50" height="50"> -->
                 <td><span class="res-head">Name:</span>{{user.firstName + " " + user.lastName}}</td>
                 <td><span class="res-head">Username:</span>{{user.username}}</td>
@@ -173,7 +206,8 @@
                 <nz-form-item>
                     <nz-form-control nzHasFeedback>
                         <input nz-input formControlName="phoneNumber" placeholder="Enter Phone Number" />
-                        <div *ngIf="createUserForm.get('phoneNumber')?.dirty && createUserForm.get('phoneNumber')?.errors">
+                        <div
+                            *ngIf="createUserForm.get('phoneNumber')?.dirty && createUserForm.get('phoneNumber')?.errors">
                             Phone Number is Required
                         </div>
                     </nz-form-control>
@@ -181,8 +215,10 @@
 
                 <nz-form-item>
                     <nz-form-control nzHasFeedback>
-                        <input nz-input type="number" formControlName="maxCreditLimit" placeholder="Enter Max CreditLimit" />
-                        <div *ngIf="createUserForm.get('maxCreditLimit')?.dirty && createUserForm.get('maxCreditLimit')?.errors">
+                        <input nz-input type="number" formControlName="maxCreditLimit"
+                            placeholder="Enter Max CreditLimit" />
+                        <div
+                            *ngIf="createUserForm.get('maxCreditLimit')?.dirty && createUserForm.get('maxCreditLimit')?.errors">
                             Max CreditLimit is Required
                         </div>
                     </nz-form-control>
@@ -207,7 +243,7 @@
         </div>
         <div class="modal-footer">
             <button class="cancel-btn" (click)="closeModal()">Cancel</button>
-            <button class="add-btn" (click)="onSubmit()" >Create</button>
+            <button class="add-btn" (click)="onSubmit()">Create</button>
         </div>
     </ng-container>
 </nz-modal>

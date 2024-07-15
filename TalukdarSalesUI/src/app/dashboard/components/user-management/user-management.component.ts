@@ -26,6 +26,59 @@ export class UserManagementComponent implements OnInit {
   submitting: boolean = false;
   bodyText = 'This text can be updated in modal 1';
 
+  userData: any = [
+    {
+      thumb: "",
+      fname: "Nancy",
+      lname: "Martino",
+      phone: "+8801712345678",
+      username: "nanchy9978",
+      maxCredit: "10",
+      dueAmount: "1500",
+      userType: "Admin"
+    },
+    {
+      thumb: "https://westernfinance.org/wp-content/uploads/speaker-3-v2.jpg",
+      fname: "Nancy",
+      lname: "Martino",
+      phone: "+8801712345678",
+      username: "nanchy9978",
+      maxCredit: "10",
+      dueAmount: "1500",
+      userType: "Admin"
+    },
+    {
+      thumb: "",
+      fname: "Nancy",
+      lname: "Martino",
+      phone: "+8801712345678",
+      username: "nanchy9978",
+      maxCredit: "10",
+      dueAmount: "1500",
+      userType: "Admin"
+    },
+    {
+      thumb: "https://images.pexels.com/photos/1486974/pexels-photo-1486974.jpeg",
+      fname: "Nancy",
+      lname: "Martino",
+      phone: "+8801712345678",
+      username: "nanchy9978",
+      maxCredit: "10",
+      dueAmount: "1500",
+      userType: "Admin"
+    },
+    {
+      thumb: "https://images.pexels.com/photos/1486974/pexels-photo-1486974.jpeg",
+      fname: "Nancy",
+      lname: "Martino",
+      phone: "+8801712345678",
+      username: "nanchy9978",
+      maxCredit: "10",
+      dueAmount: "1500",
+      userType: "Admin"
+    }
+  ]
+
   constructor(
     private api: ApiService,
     private modalService1: NzModalService,
