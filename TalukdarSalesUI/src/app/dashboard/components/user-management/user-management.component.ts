@@ -6,6 +6,7 @@ import ValidateForm from 'src/app/helpers/validationform';
 import { ApiService } from 'src/app/services/api.service';
 import { AuthService } from 'src/app/services/auth.service';
 import { ModalService } from 'src/app/services/modal.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-user-management',
@@ -13,6 +14,12 @@ import { ModalService } from 'src/app/services/modal.service';
   styleUrls: ['./user-management.component.scss']
 })
 export class UserManagementComponent implements OnInit {
+  baseUrl = environment.apiBaseUrl;
+
+  nameSearch: string = '';
+  selectedUser: any;
+
+
   file: File | null = null;
   fileError: string = '';
   selectedUserType: any;
@@ -22,7 +29,9 @@ export class UserManagementComponent implements OnInit {
   public users: any = [];
   public userTypes: any = [];
   public createUserForm!: FormGroup;
+  public updateUserForm!: FormGroup;
   createModal: boolean = false;
+  updateModal: boolean = false;
   submitting: boolean = false;
   bodyText = 'This text can be updated in modal 1';
 
@@ -90,6 +99,7 @@ export class UserManagementComponent implements OnInit {
 
   ngOnInit(): void {
     this.getUsers();
+    this.getUserTypes();
     this.getRoles();
   }
 
@@ -130,7 +140,7 @@ export class UserManagementComponent implements OnInit {
   }
 
   getUsers() {
-    this.api.getUsers()
+    this.api.getUsers(this.selectedUserType, this.nameSearch)
       .subscribe(res => {
         this.users = res;
       });
@@ -157,6 +167,15 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
+  private editUserInit(): void {
+    this.updateUserForm = this.fb.group({
+      firstName: [this.selectedUser.firstName || '', Validators.required],
+      lastName: [this.selectedUser.lastName || '', Validators.required],
+      maxCreditLimit: [this.selectedUser.maxCreditLimit || null, Validators.required],
+      // image: [null, Validators.nullValidator]
+    });
+  }
+
   openUserModal() {
     // this.modalService.open('modal-1');
     this.createModal = true;
@@ -165,8 +184,17 @@ export class UserManagementComponent implements OnInit {
     this.createUserInit();
   }
 
+  openUserEditModal(item: any) {
+    // this.modalService.open('modal-1');
+    this.updateModal = true;
+    this.selectedUser = item;
+    this.submitting = false;
+    this.editUserInit();
+  }
+
   closeModal() {
     this.createModal = false;
+    this.updateModal = false;
     this.submitting = false;
   }
 
@@ -191,6 +219,39 @@ export class UserManagementComponent implements OnInit {
       this.auth.signUp(formData).subscribe({
         next: (res) => {
           this.createUserForm.reset();
+          this.toast.success({ detail: "SUCCESS", summary: res.message, duration: 5000 });
+          this.closeModal();
+          this.getUsers();
+        },
+        error: (err) => {
+          this.toast.error({ detail: "ERROR", summary: "Something when wrong!", duration: 5000 });
+          console.log(err);
+          this.closeModal();
+        },
+      });
+    } else {
+      ValidateForm.validateAllFormFields(this.createUserForm);
+    }
+  }
+
+  updateUser() {
+    if (this.updateUserForm.valid) {
+      this.submitting = true;
+
+      const formData = new FormData();
+      formData.append('id', this.selectedUser.id);
+      formData.append('firstName', this.updateUserForm.value.firstName);
+      formData.append('lastName', this.updateUserForm.value.lastName);
+      formData.append('maxCreditLimit', this.updateUserForm.value.maxCreditLimit);
+
+      // Append the image file to the FormData object if it exists
+      // if (this.file) {
+      //   formData.append('image', this.file, this.file.name);
+      // }
+
+      this.api.updateUser(formData).subscribe({
+        next: (res) => {
+          this.updateUserForm.reset();
           this.toast.success({ detail: "SUCCESS", summary: res.message, duration: 5000 });
           this.closeModal();
           this.getUsers();

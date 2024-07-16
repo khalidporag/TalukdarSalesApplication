@@ -142,6 +142,27 @@ namespace TalukdarSalesAPI.Controllers
             });
         }
 
+        [HttpPost("updateUser")]
+        public async Task<IActionResult> UpdateUserAsync([FromForm] UpdateUserDto input)
+        {
+            if (input == null)
+                return BadRequest();
+
+            var result = _userRepository.GetAll().Where(n => n.Id == input.Id).FirstOrDefault();
+            if (result == null)
+                return BadRequest();
+            result.FirstName = input.FirstName;
+            result.LastName = input.LastName;
+            result.MaxCreditLimit = input.MaxCreditLimit;
+            _userRepository.Update(result);
+            _userRepository.Commit();
+            return Ok(new
+            {
+                Status = 200,
+                Message = "User Updated!"
+            });
+        }
+
         private bool CheckUsernameExistAsync(string? username)
            => _userRepository.FindBy(x => x.Username == username).Any();
 
@@ -223,11 +244,40 @@ namespace TalukdarSalesAPI.Controllers
         }
 
         [HttpGet]
-        public ActionResult<User> GetAllUsers(int? userTypeId)
+        public ActionResult<User> GetAllUsers(int? userTypeId, string name)
         {
+            var userList = _userRepository.GetAll().OrderByDescending(n => n.CreatedOn).ToList();
             if (userTypeId != null)
-                return Ok(_userRepository.GetAll().Where(n => n.UserTypeId == userTypeId).ToList());
-            return Ok(_userRepository.GetAll());
+                userList = userList.Where(n => n.UserTypeId == userTypeId).ToList();
+            if (name != null)
+                userList = userList.Where(n => n.FirstName.ToLower().Contains(name.ToLower()) || n.LastName.ToLower().Contains(name.ToLower())).ToList();
+            var userTypeList = _userTypeRepository.GetAll().ToDictionary(n => n.Id);
+            var result = userList.AsEnumerable().Select(n => new UserDto
+            {
+                Id = n.Id,
+                CreatedOn = n.CreatedOn,
+                DeletedOn = n.DeletedOn,
+                SequencialUserId = n.SequencialUserId,
+                UserTypeId = n.UserTypeId,
+                UserTypeName = userTypeList.ContainsKey(n.UserTypeId) ? userTypeList[n.UserTypeId].TypeName : "",
+                FirstName = n.FirstName,
+                LastName = n.LastName,
+                ImageName = n.ImageName,
+                PhoneNumber = n.PhoneNumber,
+                DueAmount = n.DueAmount,
+                Username = n.Username,
+                MaxCreditDays = n.MaxCreditDays,
+                MaxCreditLimit = n.MaxCreditLimit,
+                Address = n.Address,
+                ContactPersonName = n.ContactPersonName,
+                ContactPersonPhone = n.ContactPersonPhone,
+                Password = n.Password,
+                IsPayRollUser = n.IsPayRollUser,
+                Token = n.Token,
+                RefreshToken = n.RefreshToken,
+                RefreshTokenExpiryTime = n.RefreshTokenExpiryTime
+            }).ToList();
+            return Ok(result);
         }
 
         [HttpPost("refresh")]

@@ -38,6 +38,8 @@ const routes: Routes = [
   // { path: 'productionwise-requisition', component: ProductwiseRequisitionComponent },
   // { path: 'time-setting', component: TimeSettingComponent },
   // { path: 'notice', component: NoticeComponent },
+  // { path: 'login', component: LoginComponent },
+  // { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
   { path: 'auth', loadChildren: () => import('./auth/auth.module').then(m => m.AuthModule) },
   { path: 'dashboard', loadChildren: () => import('./dashboard/dashboard.module').then(m => m.DashboardModule) },
@@ -45,7 +47,6 @@ const routes: Routes = [
 
 
 ];
-
 @NgModule({
   imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule]
