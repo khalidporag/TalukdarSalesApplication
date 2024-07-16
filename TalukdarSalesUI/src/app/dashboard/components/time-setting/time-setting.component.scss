@@ -1,50 +1,99 @@
-.time-setting-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    max-width: 400px;
-    margin: 0 auto;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+// .time-setting-container {
+//     display: flex;
+//     flex-direction: column;
+//     align-items: center;
+//     padding: 20px;
+//     background-color: #f9f9f9;
+//     border: 1px solid #ddd;
+//     border-radius: 8px;
+//     max-width: 400px;
+//     margin: 0 auto;
+//     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+// }
+
+// .time-input-group {
+//     display: flex;
+//     flex-direction: column;
+//     margin-bottom: 15px;
+//     width: 100%;
+// }
+
+// .time-label {
+//     margin-bottom: 5px;
+//     font-weight: bold;
+//     font-size: 14px;
+//     color: #333;
+// }
+
+// .time-input {
+//     padding: 8px;
+//     font-size: 14px;
+//     border: 1px solid #ccc;
+//     border-radius: 4px;
+//     width: 100%;
+//     box-sizing: border-box;
+// }
+
+// .submit-button {
+//     padding: 10px 20px;
+//     font-size: 14px;
+//     color: #fff;
+//     background-color: #007bff;
+//     border: none;
+//     border-radius: 4px;
+//     cursor: pointer;
+//     transition: background-color 0.3s ease;
+// }
+
+// .submit-button:hover {
+//     background-color: #0056b3;
+// }
+
+.page-header {
+    &__inner {
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+
+        h3 {
+            font-size: 1.8em;
+            margin-bottom: 30px;
+            background: linear-gradient(329deg, #307a62 0%, #185a9d 100%);
+            -webkit-background-clip: text;
+            color: transparent;
+            font-weight: 700;
+            text-transform: capitalize;
+            text-align: center;
+        }
+    }
 }
 
-.time-input-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 15px;
-    width: 100%;
-}
+.time-setting {
+    background-image: linear-gradient(to right, #b5e0e0, #a0c8c8);
+    padding: 30px;
+    border-radius: 10px;
 
-.time-label {
-    margin-bottom: 5px;
-    font-weight: bold;
-    font-size: 14px;
-    color: #333;
-}
+    &__inner {
 
-.time-input {
-    padding: 8px;
-    font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    width: 100%;
-    box-sizing: border-box;
-}
+        .each-data {
+            width: 100%;
+            margin-bottom: 15px;
 
-.submit-button {
-    padding: 10px 20px;
-    font-size: 14px;
-    color: #fff;
-    background-color: #007bff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
+            .ant-picker {
+                width: 100% !important;
+                border: 2px solid #8abcbc !important;
+            }
+        }
 
-.submit-button:hover {
-    background-color: #0056b3;
+    }
+
+    .main-btn {
+        width: 100%;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-left: auto;
+        margin-right: auto;
+        display: flex;
+        padding: 14px;
+    }
 }

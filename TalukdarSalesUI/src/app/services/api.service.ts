@@ -1,37 +1,47 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+
+
 
 @Injectable({
   providedIn: 'root',
 })
 export class ApiService {
-  private baseUrl: string = 'https://localhost:7019/api/User/';
-  private roleUrl: string = 'https://localhost:7019/api/Role/';
-  private finishedGoodUrl: string = 'https://localhost:7019/api/FinishedGood/';
-  private SalesRequisitionUrl: string = 'https://localhost:7019/api/SalesRequisition/';
-  private SalesInvoiceUrl: string = 'https://localhost:7019/api/SalesInvoice/';
-  private NoticeUrl: string = 'https://localhost:7019/api/Notice/';
-
-
+  private userUrl: string = `${environment.apiBaseUrl}/api/User/`;
+  private roleUrl: string = `${environment.apiBaseUrl}/api/Role/`;
+  private finishedGoodUrl: string = `${environment.apiBaseUrl}/api/FinishedGood/`;
+  private SalesRequisitionUrl: string = `${environment.apiBaseUrl}/api/SalesRequisition/`;
+  private SalesInvoiceUrl: string = `${environment.apiBaseUrl}/api/SalesInvoice/`;
+  private NoticeUrl: string = `${environment.apiBaseUrl}/api/Notice/`;
 
 
   constructor(private http: HttpClient) {}
 
-  getUsers() {
-    return this.http.get<any>(this.baseUrl);
+  updateUser(userObj: any) {
+    return this.http.post<any>(`${this.userUrl}updateUser`, userObj)
+  }
+
+  getUsers(param1?: number, param3?: string) {
+    let params: any = {};
+    if (param1 !== undefined) params.userTypeId = param1;
+    if (param3 !== undefined && param3 !== null) params.name = param3;
+
+    const queryString = new URLSearchParams(params).toString();
+    return this.http.get<any>(`${this.userUrl}?${queryString}`);
   }
 
   getUsersByType(userTypeId: number) {
-    return this.http.get<any>(`${this.baseUrl}?userTypeId=${userTypeId}`);
+    return this.http.get<any>(`${this.userUrl}?userTypeId=${userTypeId}`);
   }
 
   getUserTypes() {
-    return this.http.get<any>(`${this.baseUrl}getAllUserTypes`);
+    return this.http.get<any>(`${this.userUrl}getAllUserTypes`);
   }
 
   userType(loginObj : any){
-    return this.http.post<any>(`${this.baseUrl}userType`,loginObj)
+    return this.http.post<any>(`${this.userUrl}userType`,loginObj)
   }
 
   createRole(obj: any) {

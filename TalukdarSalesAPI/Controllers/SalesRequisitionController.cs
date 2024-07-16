@@ -224,6 +224,8 @@ namespace TalukdarSalesAPI.Controllers
         {
             if (timeSettingObj == null)
                 return BadRequest();
+            if (timeSettingObj != null && (timeSettingObj.From == null && timeSettingObj.To == null ))
+                return BadRequest();
             var timeSetting = _timeSettingRepository.GetAll().OrderByDescending(n => n.CreatedOn).FirstOrDefault();
             if (timeSetting == null)
             {

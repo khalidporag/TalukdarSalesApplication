@@ -221,7 +221,7 @@
                         </div>
                     </div>
                 </li> -->
-                <li class="nav-item nav dropdown-item" (click)="openSidebarFromMini()">
+                <li class="nav-item dropdown-item" (click)="openSidebarFromMini()">
                     <div class="nav-item__list" (click)="expandDropdown($event)">
                         <div class="left-icon">
                             <img src="assets/images/icons/settings.svg" alt="">
@@ -232,8 +232,7 @@
                         </div>
                     </div>
                     <ul class="dropdown-area"
-                        [ngClass]="{'show': isActive('/product-type') || isActive('/product') || isActive('/time-setting')}">
-                        <!-- <li class="mobile-title">Settings</li> -->
+                        [ngClass]="{'show': isActive('/product-type') || isActive('/product')|| isActive('/time-setting')}">
                         <li class="nav-item" (click)="goToPage('/product-type')"
                             [ngClass]="{'active': isActive('/product-type')}">
                             <div class="nav-item__list">
@@ -252,6 +251,7 @@
                                 <span>Time Setting</span>
                             </div>
                         </li>
+
                     </ul>
                 </li>
             </ul>

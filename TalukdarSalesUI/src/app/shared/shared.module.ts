@@ -33,6 +33,7 @@ import { NzPipesModule } from 'ng-zorro-antd/pipes';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NzImageModule } from 'ng-zorro-antd/image';
 import { NzSelectModule } from 'ng-zorro-antd/select';
+import { NzTimePickerModule } from 'ng-zorro-antd/time-picker';
 
 @NgModule({
   declarations: [
@@ -72,7 +73,8 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
     NzTransButtonModule,
     NzWaveModule,
     NzPipesModule,
-    NzSelectModule
+    NzSelectModule,
+    NzTimePickerModule
   ],
   exports: [
     NzImageModule,
@@ -109,6 +111,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
     FormsModule,
     ReactiveFormsModule,
     NzSelectModule,
+    NzTimePickerModule
   ],
   providers: [],
 })

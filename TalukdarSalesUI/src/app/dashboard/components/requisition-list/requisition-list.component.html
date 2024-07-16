@@ -1,39 +1,41 @@
-<div class="page-header">
+<div class="page-header page-header-1">
   <div class="page-header__inner">
-    <button class="main-btn" (click)="sendSelectedRequisitions()" *ngIf="isShow">Approve Selected</button>
-
-    <nz-select [(ngModel)]="selectedStatus" nzShowSearch nzDropdownClassName="select-dropdown"
-      nzPlaceHolder="Select Status" (ngModelChange)="onFilterChange()">
-      <nz-option [nzValue]="true" nzLabel="Active"></nz-option>
-      <nz-option [nzValue]="false" nzLabel="InActive"></nz-option>
-    </nz-select>
-
-
-    <nz-select [(ngModel)]="selectedUser" nzShowSearch nzDropdownClassName="select-dropdown"
-      nzPlaceHolder="Select User's Name" (ngModelChange)="onFilterChange()">
-      <nz-option [nzValue]="data.id" *ngFor="let data of users" nzLabel="{{data.firstName + ' ' + data.lastName}}"></nz-option>
-  </nz-select>
-
-
+    <div class="search-area">
+      <input type="text" class="form-control" placeholder="search..." [(ngModel)]="requisitionNo"
+        (input)="onFilterChange()">
+      <button><img src="assets/images/icons/search.svg" alt=""></button>
+    </div>
     <!-- <div class="filter">
       <label for="requisition-no">Requisition No</label>
       <input type="text" [(ngModel)]="requisitionNo" (input)="onFilterChange()">
     </div> -->
-
-    <div class="search-area">
-      <input type="text" class="form-control" placeholder="search..." [(ngModel)]="requisitionNo" (input)="onFilterChange()">
-      <button><img src="assets/images/icons/search.svg" alt=""></button>
+    <div class="button-flex">
+      <button class="main-btn" (click)="sendSelectedRequisitions()" *ngIf="isShow">Approve Selected</button>
+      <button class="main-btn" (click)="onCreateNew()">Create New</button>
     </div>
-
-    <button class="main-btn" (click)="onCreateNew()">Create New</button>
-
-    
-          
-      
   </div>
 </div>
 
-<table class="table-one mt-25">
+<div class="page-header page-header-2">
+  <div class="page-header__inner">
+    <div class="each-data">
+      <nz-select [(ngModel)]="selectedStatus" nzShowSearch nzDropdownClassName="select-dropdown"
+        nzPlaceHolder="Select Status" (ngModelChange)="onFilterChange()">
+        <nz-option [nzValue]="true" nzLabel="Active"></nz-option>
+        <nz-option [nzValue]="false" nzLabel="InActive"></nz-option>
+      </nz-select>
+    </div>
+    <div class="each-data">
+      <nz-select [(ngModel)]="selectedUser" nzShowSearch nzDropdownClassName="select-dropdown"
+        nzPlaceHolder="Select User's Name" (ngModelChange)="onFilterChange()">
+        <nz-option [nzValue]="data.id" *ngFor="let data of users"
+          nzLabel="{{data.firstName + ' ' + data.lastName}}"></nz-option>
+      </nz-select>
+    </div>
+  </div>
+</div>
+
+<table class="table-one mt-10">
   <thead>
     <tr>
       <th class="s-col" scope="col" *ngIf="isShow">

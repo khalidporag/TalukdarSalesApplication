@@ -185,15 +185,44 @@ nz-form-item-feedback-icon.ant-input-suffix {
 }
 
 .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
-    height: 50px !important;
+    height: 44px !important;
     padding: 8px 10px !important;
 }
 
-// .ant-picker {
-//     min-width: 300px !important;
-//     padding: 10px !important;
-//     border-radius: 5px !important;
-// }
+.ant-select {
+    width: 200px;
+}
+
+.ant-select:not(.ant-select-customize-input) .ant-select-selector {
+    border: 1px solid #b5e0e0 !important;
+    border-radius: 5px !important;
+}
+
+.ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
+    border-color: #23b6a3 !important;
+    box-shadow: none !important;
+}
+
+.ant-select-single.ant-select-show-arrow .ant-select-selection-search {
+    align-items: center !important;
+    display: flex !important;
+}
+
+.ant-select-arrow .anticon>svg {
+    font-size: 16px !important;
+    fill: #7fb8b8 !important;
+}
+
+.ant-picker {
+    border: 1px solid #b4e0e0 !important;
+    border-radius: 5px !important;
+    padding: 10px 20px !important;
+}
+
+.anticon,
+.anticon svg {
+    font-size: 20px !important;
+}
 
 select {
     appearance: none;

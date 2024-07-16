@@ -1,64 +1,20 @@
-.container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 16px;
+@use "variables" as *;
+@use "mixins" as *;
+
+.page-header {
+  &__inner {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+
+    .each-data {
+      margin-right: 15px;
+      margin-bottom: 15px;
+
+      &:last-child {
+        margin-right: 0;
+      }
+    }
+
+    @include breakpoint-max (767px) {}
   }
-  
-  .header {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    max-width: 800px;
-    margin-bottom: 16px;
-  }
-  
-  .header .form-group {
-    flex: 1;
-    margin: 0 8px;
-  }
-  
-  // .form-group label {
-  //   display: block;
-  //   margin-bottom: 4px;
-  // }
-  
-//   .table-container {
-//     width: 100%;
-//     max-width: 800px;
-//     margin-bottom: 16px;
-//   }
-  
-//   table {
-//     width: 100%;
-//     border-collapse: collapse;
-//   }
-  
-//   th, td {
-//     border: 1px solid #ddd;
-//     padding: 8px;
-//   }
-  
-//   th {
-//     background-color: #f4f4f4;
-//   }
-  
-  // .submit-button {
-  //   display: flex;
-  //   justify-content: center;
-  //   width: 100%;
-  //   max-width: 800px;
-  // }
-  
-  // button {
-  //   padding: 8px 16px;
-  //   background-color: #4CAF50;
-  //   color: white;
-  //   border: none;
-  //   cursor: pointer;
-  // }
-  
-  // button:hover {
-  //   background-color: #45a049;
-  // }
-  
+}

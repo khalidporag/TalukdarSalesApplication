@@ -1,22 +1,27 @@
-<div class="header">
-
-  <nz-select [(ngModel)]="selectedUserGroup" nzShowSearch nzDropdownClassName="select-dropdown" nzPlaceHolder="Select User Type"
-    (ngModelChange)="onUserGroupChange()">
-    <nz-option [nzValue]="data.id" *ngFor="let data of userTypes" nzLabel={{data.typeName}}></nz-option>
-  </nz-select>
-
-  <nz-select [(ngModel)]="selectedUser" nzShowSearch nzDropdownClassName="select-dropdown"
-      nzPlaceHolder="Select User" (ngModelChange)="onUserGroupChange()">
-      <nz-option [nzValue]="data.id" *ngFor="let data of users" nzLabel={{data.firstName}}></nz-option>
-  </nz-select>
-
-  <nz-select [(ngModel)]="selectedProductType" nzShowSearch nzDropdownClassName="select-dropdown"
-      nzPlaceHolder="Select Product Type" (ngModelChange)="onProductTypeChange()">
-      <nz-option [nzValue]="data.id" *ngFor="let data of finishedGoodTypes" nzLabel={{data.name}}></nz-option>
-  </nz-select>
+<div class="page-header">
+  <div class="page-header__inner">
+    <div class="each-data">
+      <nz-select [(ngModel)]="selectedUserGroup" nzShowSearch nzDropdownClassName="select-dropdown"
+        nzPlaceHolder="Select User Type" (ngModelChange)="onUserGroupChange()">
+        <nz-option [nzValue]="data.id" *ngFor="let data of userTypes" nzLabel={{data.typeName}}></nz-option>
+      </nz-select>
+    </div>
+    <div class="each-data">
+      <nz-select [(ngModel)]="selectedUser" nzShowSearch nzDropdownClassName="select-dropdown"
+        nzPlaceHolder="Select User" (ngModelChange)="onUserGroupChange()">
+        <nz-option [nzValue]="data.id" *ngFor="let data of users" nzLabel={{data.firstName}}></nz-option>
+      </nz-select>
+    </div>
+    <div class="each-data">
+      <nz-select [(ngModel)]="selectedProductType" nzShowSearch nzDropdownClassName="select-dropdown"
+        nzPlaceHolder="Select Product Type" (ngModelChange)="onProductTypeChange()">
+        <nz-option [nzValue]="data.id" *ngFor="let data of finishedGoodTypes" nzLabel={{data.name}}></nz-option>
+      </nz-select>
+    </div>
+  </div>
 </div>
 
-<table class="table-one mt-25">
+<table class="table-one mt-10">
   <thead>
     <tr>
       <th>Product Name</th>

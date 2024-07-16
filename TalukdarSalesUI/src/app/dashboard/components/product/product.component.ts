@@ -6,6 +6,7 @@ import ValidateForm from 'src/app/helpers/validationform';
 import { ApiService } from 'src/app/services/api.service';
 import { AuthService } from 'src/app/services/auth.service';
 import { ModalService } from 'src/app/services/modal.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-product',
@@ -14,6 +15,8 @@ import { ModalService } from 'src/app/services/modal.service';
 })
 export class ProductComponent implements OnInit {
 
+  baseUrl = environment.apiBaseUrl;
+  
   file: File | null = null;
   fileError: string = '';
 

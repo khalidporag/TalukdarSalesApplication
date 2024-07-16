@@ -4,11 +4,21 @@
         <select id="invoiceNumber" [(ngModel)]="selectedInvoice" (change)="getCollectionList()">
             <option *ngFor="let invoice of invoiceList" [value]="invoice.id">{{ invoice.invoiceNumber }}</option>
         </select> -->
-        <nz-select [(ngModel)]="selectedInvoice" nzShowSearch nzDropdownClassName="select-dropdown" nzPlaceHolder="Select Invoice Number"
-            (ngModelChange)="getCollectionList()">
-            <nz-option [nzValue]="data.id" *ngFor="let data of invoiceList"
-                nzLabel={{data.invoiceNumber}}></nz-option>
-        </nz-select>
+        <!-- <nz-select [(ngModel)]="selectedInvoice" nzShowSearch nzDropdownClassName="select-dropdown"
+            nzPlaceHolder="Select Invoice Number" (ngModelChange)="getCollectionList()">
+            <nz-option [nzValue]="data.id" *ngFor="let data of invoiceList" nzLabel={{data.invoiceNumber}}></nz-option>
+        </nz-select> -->
+    </div>
+</div>
+<div class="page-header">
+    <div class="page-header__inner">
+        <div class="each-data">
+            <nz-select [(ngModel)]="selectedInvoice" nzShowSearch nzDropdownClassName="select-dropdown"
+                nzPlaceHolder="Select Invoice Number" (ngModelChange)="getCollectionList()">
+                <nz-option [nzValue]="data.id" *ngFor="let data of invoiceList"
+                    nzLabel={{data.invoiceNumber}}></nz-option>
+            </nz-select>
+        </div>
     </div>
 </div>
 

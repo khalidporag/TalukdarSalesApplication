@@ -1,21 +1,28 @@
-<div class="header">
-    <nz-select [(ngModel)]="selectedUserGroup" nzShowSearch nzDropdownClassName="select-dropdown"
-        nzPlaceHolder="Select User Group" (ngModelChange)="onUserGroupChange()">
-        <nz-option [nzValue]="data.id" *ngFor="let data of userTypes" nzLabel={{data.typeName}}></nz-option>
-    </nz-select>
-
-    <nz-select [(ngModel)]="selectedUser" nzShowSearch nzDropdownClassName="select-dropdown"
-        nzPlaceHolder="Select User's Name" (ngModelChange)="onUserChange()">
-        <nz-option [nzValue]="data.id" *ngFor="let data of users" nzLabel="{{ data.firstName + ' ' + data.lastName }}"></nz-option>
-    </nz-select>
-
-    <nz-select [(ngModel)]="selectedRequisition" nzShowSearch nzDropdownClassName="select-dropdown"
-        nzPlaceHolder="Sales Requisition" (ngModelChange)="onRequisitionSelection()">
-        <nz-option [nzValue]="data.id" *ngFor="let data of salesRequisition" nzLabel={{data.requisitionSerial}}></nz-option>
-    </nz-select>
-
-    
+<div class="page-header">
+    <div class="page-header__inner">
+        <div class="each-data">
+            <nz-select [(ngModel)]="selectedUserGroup" nzShowSearch nzDropdownClassName="select-dropdown"
+                nzPlaceHolder="Select User Group" (ngModelChange)="onUserGroupChange()">
+                <nz-option [nzValue]="data.id" *ngFor="let data of userTypes" nzLabel={{data.typeName}}></nz-option>
+            </nz-select>
+        </div>
+        <div class="each-data">
+            <nz-select [(ngModel)]="selectedUser" nzShowSearch nzDropdownClassName="select-dropdown"
+                nzPlaceHolder="Select User's Name" (ngModelChange)="onUserChange()">
+                <nz-option [nzValue]="data.id" *ngFor="let data of users"
+                    nzLabel="{{ data.firstName + ' ' + data.lastName }}"></nz-option>
+            </nz-select>
+        </div>
+        <div class="each-data">
+            <nz-select [(ngModel)]="selectedRequisition" nzShowSearch nzDropdownClassName="select-dropdown"
+                nzPlaceHolder="Sales Requisition" (ngModelChange)="onRequisitionSelection()">
+                <nz-option [nzValue]="data.id" *ngFor="let data of salesRequisition"
+                    nzLabel={{data.requisitionSerial}}></nz-option>
+            </nz-select>
+        </div>
+    </div>
 </div>
+
 <table class="table-one mt-25">
     <thead>
         <tr>

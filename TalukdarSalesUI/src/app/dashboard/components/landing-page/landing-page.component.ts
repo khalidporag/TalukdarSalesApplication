@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { ApiService } from 'src/app/services/api.service';
 import { ModalService } from 'src/app/services/modal.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-landing-page',
@@ -15,7 +16,7 @@ export class LandingPageComponent implements OnInit {
   public notices: any = [];
   bodyText = 'This text can be updated in modal 1';
 
-  baseUrl = "https://localhost:7019/images/notices/"
+  baseUrl = environment.apiBaseUrl;
 
 
   constructor(

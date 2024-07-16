@@ -6,6 +6,7 @@ import ValidateForm from 'src/app/helpers/validationform';
 import { ApiService } from 'src/app/services/api.service';
 import { AuthService } from 'src/app/services/auth.service';
 import { ModalService } from 'src/app/services/modal.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-notice',
@@ -23,12 +24,12 @@ export class NoticeComponent implements OnInit {
   createModal: boolean = false;
   submitting: boolean = false;
   bodyText = 'This text can be updated in modal 1';
-
+  baseUrl = environment.apiBaseUrl;
   // Variable - JD
   imageUrl: string | null = null;
   // isEdit: boolean = false;
 
-  baseUrl = "https://localhost:7019/images/notices/"
+  noticeUrl = "https://localhost:7019/images/notices/"
 
   cardData: any = [
     {
@@ -164,7 +165,7 @@ export class NoticeComponent implements OnInit {
   openNoticeDetailsModal(data: any): void {
     this.detailsModalData = data;
     this.noticeDetailsModal = true;
-    // this.imageUrl = this.baseUrl + data.logoName;
+    // this.imageUrl = this.noticeUrl + data.logoName;
     // this.detailsModalData.logoName = this.imageUrl;
     // console.log(this.imageUrl);
   }
