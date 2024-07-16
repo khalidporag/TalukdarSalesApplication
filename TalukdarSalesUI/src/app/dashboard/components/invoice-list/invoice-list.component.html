@@ -39,16 +39,15 @@
                     <td><span class="res-head">Total Amount:</span>{{invoice.totalPrice}}</td>
                     <td><span class="res-head">Collection Amount:</span>{{invoice.collectionAmount}}</td>
                     <td><span class="res-head">Creation Time:</span>{{invoice.createdDateTime | date:'medium'}}</td>
-                    <td>
-                <tr>
-                    <td class="action"><a (click)="getCollectionList(invoice.id)">
-                            <i class="fa fa-history"></i>
-                        </a></td>
-                    <td class="action"><a (click)="openCollectionModal(invoice.id)">
+                    <td class="action">
+                        <button (click)="openCollectionModal(invoice.id)">
                             <i class="fa fa-credit-card"></i>
-                        </a></td>
-                </tr>
-                </td>
+                        </button> 
+                        <button (click)="getCollectionList(invoice.id)">
+                            <i class="fa fa-history"></i>
+                        </button>
+                    </td>
+                    
             </tbody>
         </table>
     </div>
@@ -87,7 +86,7 @@
         </div>
         <div class="modal-footer">
             <button class="cancel-btn" (click)="closeModal()">Cancel</button>
-            <button class="add-btn" (click)="onSubmit()">Create</button>
+            <button class="add-btn" (click)="onSubmit()">Collect</button>
         </div>
     </ng-container>
 </nz-modal>

@@ -38,7 +38,6 @@
         </div>
         <div class="modal-body card-details">
             <div class="logo">
-                <!-- <div class="image" style="background-image: url('https://localhost:7019/images/notices/{{detailsModalData?.logoName}}'); background-size: cover; background-position: center;"></div> -->
                 <img src="{{baseUrl}}/images/notices/{{detailsModalData?.logoName}}" alt="">
             </div>
             <h3>{{detailsModalData?.title}}</h3>
@@ -46,67 +45,7 @@
         </div>
     </ng-container>
 </nz-modal>
-<!-- New Code -->
 
-<!-- =======================================================
-======================================================= -->
-
-
-
-<!-- <modal id="notice" *ngIf="createModal">
-    <div class="modal-header">
-        <h5 class="modal-title">Create Notice</h5>
-        <button type="button" class="btn-close" (click)="closeModal()"></button>
-    </div>
-    <div class="modal-body">
-        <form (ngSubmit)="onSubmit()" [formGroup]="createNoticeForm">
-            <div class="form-group pt-3">
-                <div class="input-field"
-                    [class.error]="createNoticeForm.controls['title'].dirty && createNoticeForm.hasError('required','title')">
-                    <span class="fa fa-user p-2"></span>
-                    <input formControlName="title" type="text" placeholder="Title">
-                </div>
-            </div>
-            <small *ngIf="createNoticeForm.controls['title'].dirty && createNoticeForm.hasError('required','title')"
-                class="text-danger">*Title is required*</small>
-
-            <div class="form-group pt-3">
-                <div class="input-field"
-                    [class.error]="createNoticeForm.controls['description'].dirty && createNoticeForm.hasError('required','description')">
-                    <span class="fa fa-user p-2"></span>
-                    <textarea formControlName="description" rows="6" cols="160" type="text"
-                        placeholder="Description"> </textarea>
-                </div>
-            </div>
-            <small
-                *ngIf="createNoticeForm.controls['title'].dirty && createNoticeForm.hasError('required','description')"
-                class="text-danger">*Description is required*</small>
-
-            <div class="upload-file">
-                <div class="upload-file-box" [ngClass]="{'d-none': imageUrl}">
-                    <div class="icon">
-                        <img src="assets/images/icons/upload.svg" alt="">
-                    </div>
-                    <p *ngIf="imageUrl == null">Upload Thumbnail (PNG/JPG)</p>
-                    <input type="file" formControlName="image" accept=".jpg,.png,.jpeg"
-                        (change)="onFileChange($event)">
-                </div>
-                <div class="preview-img" *ngIf="imageUrl">
-                    <img [src]="imageUrl" alt="Thumbnail preview">
-                    <button (click)="changeImage()">Change</button>
-                </div>
-            </div>
-
-
-            <small *ngIf="fileError" class="text-danger">{{ fileError }}</small>
-
-            <button *ngIf="!submitting" type="submit" class="btn btn-primary btn-block mt-4 w-100">Save</button>
-            <button type="button" class="btn btn-primary" *ngIf="submitting">
-                <i class="fas fa-spinner fa-pulse"></i>
-            </button>
-        </form>
-    </div>
-</modal> -->
 
 
 <nz-modal [(nzVisible)]="createModal">

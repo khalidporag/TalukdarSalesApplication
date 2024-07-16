@@ -20,6 +20,8 @@ export class ProductTypeComponent implements OnInit {
   submitting: boolean = false;
   bodyText = 'This text can be updated in modal 1';
 
+  nameSearch: string = '';
+
   constructor(
     private api : ApiService,
     private modalService1: NzModalService,
@@ -34,7 +36,7 @@ export class ProductTypeComponent implements OnInit {
   }
 
   getProductTypes(){
-    this.api.getFinishGoodTypes()
+    this.api.getFinishGoodTypes(this.nameSearch)
     .subscribe(res=>{
     this.productTypes = res;
     });
@@ -54,8 +56,7 @@ export class ProductTypeComponent implements OnInit {
     });
   }
 
-  openRoleModal() {
-    // this.modalService.open('modal-1');
+  openTypeModal() {
     this.createModal = true;
     this.submitting = false;
     this.getUserTypes();

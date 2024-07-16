@@ -44,11 +44,9 @@
         <tbody>
             <tr *ngFor="let item of products; let i= index">
                 <td><span class="res-head">Id:</span>{{i+1}}</td>
-                <td><span class="res-head">Id:</span><img nz-image
+                <td><span class="res-head"></span><img nz-image
                         nzSrc="{{baseUrl}}/images/products/{{item.logoName}}" alt="" class="user-thumb"
                         onerror="this.src = 'assets/images/icons/default-user.jpg'"></td>
-                <!-- <td><img src="https://localhost:7019/images/products/{{item.logoName}}" alt="" width="50" height="50"></td>         -->
-
 
                 <td><span class="res-head">Name:</span>{{item.name}}</td>
                 <td><span class="res-head">UOM:</span>{{item.uom}}</td>
@@ -158,89 +156,6 @@
         </div>
     </ng-container>
 </nz-modal>
-
-
-<!-- <modal id="addProduct" *ngIf="createModal">
-    <div class="modal-header">
-        <h5 class="modal-title">Add Product</h5>
-        <button type="button" class="btn-close" (click)="closeModal()"></button>
-    </div>
-    <div class="modal-body">
-        <form (ngSubmit)="onSubmit()" [formGroup]="createFinishedGoodForm">
-            <div class="form-group pt-3">
-                <div class="input-field"
-                    [class.error]="createFinishedGoodForm.controls['name'].dirty && createFinishedGoodForm.hasError('required','name')">
-                    <span class="fa fa-user p-2"></span>
-                    <input formControlName="name" type="text" placeholder="Name">
-                </div>
-            </div>
-            <small
-                *ngIf="createFinishedGoodForm.controls['name'].dirty && createFinishedGoodForm.hasError('required','name')"
-                class="text-danger">*Name is required*</small>
-            <div class="form-group pt-3">
-                <div class="input-field"
-                    [class.error]="createFinishedGoodForm.controls['uOM'].dirty && createFinishedGoodForm.hasError('required','uOM')">
-                    <span class="fa fa-user p-2"></span> <input formControlName="uOM" type="text"
-                        placeholder="Unit of Measurement">
-                </div>
-            </div>
-            <small
-                *ngIf="createFinishedGoodForm.controls['uOM'].dirty && createFinishedGoodForm.hasError('required','uOM')"
-                class="text-danger">*UOM is required*</small>
-
-            <div class="form-group pt-3">
-                <div class="input-field"
-                    [class.error]="createFinishedGoodForm.controls['unitPrice'].dirty && createFinishedGoodForm.hasError('required','unitPrice')">
-                    <span class="fa fa-user p-2"></span> <input formControlName="unitPrice" type="text"
-                        placeholder="Unit Price">
-                </div>
-            </div>
-            <small
-                *ngIf="createFinishedGoodForm.controls['unitPrice'].dirty && createFinishedGoodForm.hasError('required','unitPrice')"
-                class="text-danger">*Unit price is required*</small>
-
-            <div class="form-group pt-3">
-                <div class="input-field"
-                    [class.error]="createFinishedGoodForm.controls['finishedGoodTypeId'].dirty && createFinishedGoodForm.controls['finishedGoodTypeId'].hasError('required')">
-                    <span class="fa fa-user p-2"></span>
-                    <select formControlName="finishedGoodTypeId" class="form-control">
-                        <option value=null disabled>Select Product Type</option>
-                        <option *ngFor="let type of finishedGoodTypes" [(ngModel)]="selectedProductType"
-                            [value]="type.id">{{ type.name }}</option>
-                    </select>
-                </div>
-            </div>
-            <small
-                *ngIf="createFinishedGoodForm.controls['finishedGoodTypeId'].dirty && createFinishedGoodForm.controls['finishedGoodTypeId'].hasError('required')"
-                class="text-danger">*Product Type is required*</small>
-
-            <div class="form-group pt-3">
-                <div class="input-field"
-                    [class.error]="createFinishedGoodForm.controls['description'].dirty && createFinishedGoodForm.hasError('required','description')">
-                    <span class="fa fa-user p-2"></span> <input formControlName="description" type="text"
-                        placeholder="Description">
-                </div>
-            </div>
-            <small
-                *ngIf="createFinishedGoodForm.controls['description'].dirty && createFinishedGoodForm.hasError('required','description')"
-                class="text-danger">*Description is required*</small>
-
-            <div class="form-group pt-3">
-                <div class="input-field">
-                    <span class="fa fa-user p-2"></span>
-                    <input formControlName="image" type="file" (change)="onFileChange($event)">
-                </div>
-            </div>
-            <small *ngIf="fileError" class="text-danger">{{ fileError }}</small>
-
-            <button *ngIf="!submitting" type="submit" class="btn btn-primary btn-block mt-4 w-100">Save</button>
-            <button type="button" class="btn btn-primary" *ngIf="submitting">
-                <i class="fas fa-spinner fa-pulse"></i>
-            </button>
-        </form>
-    </div>
-</modal> -->
-
 
 <nz-modal [(nzVisible)]="editModal">
     <ng-container *nzModalContent>

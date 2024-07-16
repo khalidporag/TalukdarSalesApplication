@@ -4,7 +4,7 @@
             <input type="text" class="form-control" placeholder="Search user by Name..." [(ngModel)]="nameSearch"
               (input)="getUsers()">
             <button><img src="assets/images/icons/search.svg" alt=""></button>
-          </div>
+        </div>
         <div class="each-data">
             <nz-select [(ngModel)]="selectedUserType" nzShowSearch nzDropdownClassName="select-dropdown"
                 nzPlaceHolder="User Group" (ngModelChange)="getUsers()">
