@@ -90,8 +90,11 @@ export class ApiService {
     return this.http.post<any>(`${this.finishedGoodUrl}FinishGoodType`, obj)
   }
 
-  getFinishGoodTypes() {
-    return this.http.get<any>(`${this.finishedGoodUrl}getAllFinishGoodTypes`);
+  getFinishGoodTypes(param3?: string) {
+    let params: any = {};
+    if (param3 !== undefined && param3 !== null) params.name = param3;
+    const queryString = new URLSearchParams(params).toString();
+    return this.http.get<any>(`${this.finishedGoodUrl}getAllFinishGoodTypes?${queryString}`);
   }
 
   createSalesRequisitionWithDetails(obj: any) {

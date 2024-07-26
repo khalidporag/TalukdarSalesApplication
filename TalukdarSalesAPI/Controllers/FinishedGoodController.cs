@@ -36,9 +36,12 @@ namespace TalukdarSalesAPI.Controllers
         }
 
         [HttpGet("getAllFinishGoodTypes")]
-        public ActionResult<FinishGoodType> GetAllFinishGoodTypes()
+        public ActionResult<FinishGoodType> GetAllFinishGoodTypes(string name)
         {
-            return Ok(_finishedGoodTypeRepository.GetAll());
+            var result = _finishedGoodTypeRepository.GetAll().ToList();
+            if (name != null)
+                result = _finishedGoodTypeRepository.GetAll().Where(n => n.Name.ToLower().Contains(name.ToLower())).ToList();
+            return Ok(result);
         }
 
         [HttpPost("createFinishedGood")]

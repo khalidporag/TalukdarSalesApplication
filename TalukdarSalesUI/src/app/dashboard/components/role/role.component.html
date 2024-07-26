@@ -64,12 +64,7 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
   </ng-container>
 </nz-modal>
 
-<div>
-  <!-- Create Modal-->
-
-  
-
-  <!-- Add Module To Role Modal -->
+<!-- <div>
   <modal id="addModuleToRole" *ngIf="addModuleToRoleModal">
     <div class="modal-header">
       <h5 class="modal-title">Add Module To Role</h5>
@@ -94,8 +89,30 @@ class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-cente
       </div>
     </div>
   </modal>
+</div> -->
 
-
-</div>
+<nz-modal [(nzVisible)]="addModuleToRoleModal">
+  <ng-container *nzModalContent>
+      <div class="modal-header">
+          <h2>Add Module To Role</h2>
+          <button (click)="closeModal()"><img src="assets/images/icons/close.svg" alt=""></button>
+      </div>
+      <div class="modal-body">
+        <div class="checkbox-container">
+          <div *ngFor="let item of applicationModules">
+            <label>
+              <input type="checkbox" [(ngModel)]="item.checked">
+              {{ item.name }}
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+          <button class="cancel-btn" (click)="closeModal()">Cancel</button>
+          <button *ngIf="!submitting" type="button" (click)="assignModuleToRole()"
+          class="add-btn">Save</button>
+      </div>
+  </ng-container>
+</nz-modal>
 
 
