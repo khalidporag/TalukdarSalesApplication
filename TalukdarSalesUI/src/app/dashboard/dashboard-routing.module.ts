@@ -18,31 +18,32 @@ import { NoticeComponent } from './components/notice/notice.component';
 import { LandingPageComponent } from './components/landing-page/landing-page.component';
 import { ReportsComponent } from './components/reports/reports.component';
 import { DemoComponent } from './components/demo/demo.component';
+import { AuthGuard } from '../guards/auth.guard';
 
 const routes: Routes = [{
-  path: '', component: DashboardComponent,
+  path: '', component: DashboardComponent, canActivate: [AuthGuard],
 
   children: [
     // { path: '', redirectTo: 'login', pathMatch: 'full' },
-    { path: '', component: LandingPageComponent },
-    { path: 'user-management', component: UserManagementComponent },
-    { path: 'role', component: RoleComponent },
-    { path: 'product', component: ProductComponent },
-    { path: 'product-type', component: ProductTypeComponent },
-    { path: 'module-setup', component: ModuleSetupComponent },
-    { path: 'sales-requisition', component: SalesRequisitionComponent },
-    { path: 'requisition-list', component: RequisitionListComponent },
-    { path: 'sales-invoice', component: SalesInvoiceComponent },
-    { path: 'invoice-list', component: InvoiceListComponent },
-    { path: 'collection-history/:id', component: CollectionHistoryComponent },
-    { path: 'collection-history', component: CollectionHistoryComponent },
-    { path: 'requisition-list/:id', component: RequisitionDetailsComponent },
-    { path: 'productionwise-requisition', component: ProductwiseRequisitionComponent },
-    { path: 'time-setting', component: TimeSettingComponent },
-    { path: 'notice', component: NoticeComponent },
-    { path: 'report', component: ReportsComponent },
-    { path: 'demo', component: DemoComponent },
-    { path: 'landing-page', component: LandingPageComponent },
+    { path: '', component: LandingPageComponent,canActivate: [AuthGuard] },
+    { path: 'user-management', component: UserManagementComponent,canActivate: [AuthGuard] },
+    { path: 'role', component: RoleComponent,canActivate: [AuthGuard] },
+    { path: 'product', component: ProductComponent,canActivate: [AuthGuard] },
+    { path: 'product-type', component: ProductTypeComponent,canActivate: [AuthGuard] },
+    { path: 'module-setup', component: ModuleSetupComponent,canActivate: [AuthGuard] },
+    { path: 'sales-requisition', component: SalesRequisitionComponent,canActivate: [AuthGuard] },
+    { path: 'requisition-list', component: RequisitionListComponent,canActivate: [AuthGuard] },
+    { path: 'sales-invoice', component: SalesInvoiceComponent,canActivate: [AuthGuard] },
+    { path: 'invoice-list', component: InvoiceListComponent,canActivate: [AuthGuard] },
+    { path: 'collection-history/:id', component: CollectionHistoryComponent,canActivate: [AuthGuard] },
+    { path: 'collection-history', component: CollectionHistoryComponent,canActivate: [AuthGuard] },
+    { path: 'requisition-list/:id', component: RequisitionDetailsComponent,canActivate: [AuthGuard] },
+    { path: 'productionwise-requisition', component: ProductwiseRequisitionComponent,canActivate: [AuthGuard] },
+    { path: 'time-setting', component: TimeSettingComponent,canActivate: [AuthGuard] },
+    { path: 'notice', component: NoticeComponent,canActivate: [AuthGuard] },
+    { path: 'report', component: ReportsComponent,canActivate: [AuthGuard] },
+    { path: 'demo', component: DemoComponent,canActivate: [AuthGuard] },
+    { path: 'landing-page', component: LandingPageComponent,canActivate: [AuthGuard] },
 
 
   ],
