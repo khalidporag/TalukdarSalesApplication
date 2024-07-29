@@ -15,11 +15,13 @@ using System;
 using TalukdarSalesAPI.Context;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Cors;
 
 namespace TalukdarSalesAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [EnableCors("MyPolicy")]
     public class UserController : ControllerBase
     {
         private readonly IUserRepository _userRepository;

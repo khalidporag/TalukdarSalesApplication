@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Net.Http.Headers;
 using Project.Run.Repositories;
 using System.Text;
 using TalukdarSalesAPI.Context;
@@ -18,10 +19,15 @@ builder.Services.AddSwaggerGen();
 // Add services to the container.
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("MyPolicy", builder => builder.WithOrigins("http://localhost:4200", "https://localhost:4200")
-        .AllowAnyMethod()
+    options.AddPolicy("MyPolicy",
+        //builder => builder.WithOrigins("http://localhost:4200", "https://localhost:4200")
+        builder => builder.WithOrigins("http://localhost:8001/")
+        .SetIsOriginAllowed(host => true)
         .AllowAnyHeader()
-        .AllowCredentials());
+        .AllowAnyMethod()
+        .AllowCredentials()
+        //.WithHeaders(HeaderNames.ContentType,"Access-Control-Allow-Origin")
+        );
 });
 builder.Services.AddDbContext<ApplicationDbContext>(option =>
 {
@@ -65,11 +71,15 @@ builder.Services.AddAuthentication(x =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+//if (app.Environment.IsDevelopment())
+//{
+//    app.UseSwagger();
+//    app.UseSwaggerUI();
+//}
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
 
 app.UseHttpsRedirection();
 app.UseStaticFiles(); // This line enables serving static files
