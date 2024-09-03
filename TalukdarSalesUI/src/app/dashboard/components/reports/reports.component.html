@@ -22,7 +22,7 @@
           <tr *ngFor="let seller of topFiveSeller; let i = index">
             <td><span class="res-head">Id:</span>{{i+1}}</td>
             <td><span class="res-head"></span><img nz-image
-              nzSrc="https://localhost:7019/images/users/{{seller.imageName}}" alt="" class="user-thumb"
+              nzSrc="{{baseUrl}}/images/users/{{seller.imageName}}" alt="" class="user-thumb"
               onerror="this.src = 'assets/images/icons/default-user.jpg'"></td>
             <td>{{seller.userName}}</td>
             <td><span class="res-head">Amount:</span>{{seller.totalAmount}}</td>
@@ -52,7 +52,7 @@
           <tr *ngFor="let product of lessFiveSellingProduct; let i = index">
             <td><span class="res-head">Id:</span>{{i+1}}</td>
             <td><span class="res-head"></span><img nz-image
-              nzSrc="https://localhost:7019/images/products/{{product.logoName}}" alt="" class="user-thumb"
+              nzSrc="{{baseUrl}}/images/products/{{product.logoName}}" alt="" class="user-thumb"
               onerror="this.src = 'assets/images/icons/default-user.jpg'"></td>
             <td><span class="res-head">Products: </span>{{product.finishGoodName}}</td>
             <td><span class="res-head">Amount:</span>{{product.quantity}}</td>
@@ -81,8 +81,8 @@
         <tbody>
           <tr *ngFor="let product of topFiveSellingProduct; let i = index">
             <td><span class="res-head">Id:</span>{{ i+1 }}</td>
-            <td><span class="res-head">Id:</span><img nz-image
-              nzSrc="https://localhost:7019/images/products/{{product.logoName}}" alt="" class="user-thumb"
+            <td><span class="res-head"></span><img nz-image
+              nzSrc="{{baseUrl}}/images/products/{{product.logoName}}" alt="" class="user-thumb"
               onerror="this.src = 'assets/images/icons/default-user.jpg'"></td>
             <td><span class="res-head">Products</span>{{ product.finishGoodName}}</td>
             <td><span class="res-head">Sales:</span>{{ product.quantity}}</td>
@@ -113,7 +113,7 @@
           <tr *ngFor="let seller of topFiveSellerWithDueAmount; let i = index">
             <td><span class="res-head">Id:</span>{{ i+1 }}</td>
             <td><span class="res-head">Id:</span><img nz-image
-              nzSrc="https://localhost:7019/images/users/{{seller.imageName}}" alt="" class="user-thumb"
+              nzSrc="{{baseUrl}}/images/users/{{seller.imageName}}" alt="" class="user-thumb"
               onerror="this.src = 'assets/images/icons/default-user.jpg'"></td>
             <td><span class="res-head">Name: </span>{{seller.firstName + " " + seller.lastName}}</td>
             <td><span class="res-head">Due Amount:</span>{{seller.dueAmount}}</td>

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ApiService } from 'src/app/services/api.service';
 import { AuthService } from 'src/app/services/auth.service';
 import { UserStoreService } from 'src/app/services/user-store.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-reports',
@@ -9,6 +10,8 @@ import { UserStoreService } from 'src/app/services/user-store.service';
   styleUrls: ['./reports.component.scss']
 })
 export class ReportsComponent implements OnInit {
+
+  baseUrl = environment.apiBaseUrl;
 
   topFiveSellerDateRange: Date[] = [];
   topFiveSellingProductDateRange: Date[] = [];
