@@ -58,7 +58,7 @@ namespace TalukdarSalesAPI.Controllers
         }
 
         [HttpGet("getCollectionHistory")]
-        public ActionResult<CollectionLedgerDto> GetCollectionHistory(int? userId, int? salesInvoiceId)
+        public ActionResult<CollectionLedgerDto> GetCollectionHistory(int? userId, int? salesInvoiceId, DateTime? from, DateTime? to)
         {
             var invoiceList = _salesInvoiceRepository.GetAll().ToDictionary(n => n.Id);
             var allCollection = _collectionLedgerRepository.GetAll();
@@ -69,6 +69,11 @@ namespace TalukdarSalesAPI.Controllers
             if (salesInvoiceId != null)
             {
                 allCollection = allCollection.Where(n => n.SalesInvoiceId == salesInvoiceId);
+            }
+            if(from != null && to != null)
+            {
+                to = to.Value.AddDays(1).AddSeconds(-1);
+                allCollection = allCollection.Where(n => n.CreatedOn >= from && n.CreatedOn <= to);
             }
             var collectionHistory = allCollection.AsEnumerable().Select(s => new CollectionLedgerDto
             {
@@ -294,13 +299,18 @@ namespace TalukdarSalesAPI.Controllers
         }
 
         [HttpGet("getSalesInvoiceList")]
-        public ActionResult<SalesInvoice> GetSalesInvoiceList(int? userId)
+        public ActionResult<SalesInvoice> GetSalesInvoiceList(int? userId, DateTime? from, DateTime? to)
         {
             var userList = _userRepository.GetAll().ToDictionary(n => n.Id);
             var requisitionList = _salesRequisitioinRepository.GetAll().ToDictionary(n => n.Id);
             var invoiceList = _salesInvoiceRepository.GetAll();
             if (userId != null)
                 invoiceList = invoiceList.Where(n => n.UserId == userId);
+            if(from != null && to != null)
+            {
+                to = to.Value.AddDays(1).AddSeconds(-1);
+                invoiceList = invoiceList.Where(n => n.CreatedDateTime >= from && n.CreatedDateTime <= to);
+            }
 
             var result = invoiceList.AsEnumerable().Select(s => new SalesInvoiceDto
             {
@@ -353,7 +363,7 @@ namespace TalukdarSalesAPI.Controllers
             var oneMonthAgo = DateTime.Now.AddMonths(-1);
 
             if (from != null && to != null)
-                result = result.Where(n => n.CreatedOn >= from && n.CreatedOn <= to);
+                result = result.Where(n => n.CreatedOn >= from && n.CreatedOn <= to.Value.AddDays(1).AddSeconds(-1));
             else
                 result = result.Where(s => s.CreatedOn >= oneMonthAgo);
 
@@ -381,7 +391,7 @@ namespace TalukdarSalesAPI.Controllers
             var oneMonthAgo = DateTime.Now.AddMonths(-1);
 
             if (from != null && to != null)
-                result = result.Where(n => n.CreatedOn >= from && n.CreatedOn <= to);
+                result = result.Where(n => n.CreatedOn >= from && n.CreatedOn <= to.Value.AddDays(1).AddSeconds(-1));
             else
                 result = result.Where(s => s.CreatedOn >= oneMonthAgo);
 
@@ -409,7 +419,7 @@ namespace TalukdarSalesAPI.Controllers
             var oneMonthAgo = DateTime.Now.AddMonths(-1);
 
             if (from != null && to != null)
-                result = result.Where(n => n.CreatedOn >= from && n.CreatedOn <= to);
+                result = result.Where(n => n.CreatedOn >= from && n.CreatedOn <= to.Value.AddDays(1).AddSeconds(-1));
             else
                 result = result.Where(s => s.CreatedOn >= oneMonthAgo);
 
@@ -432,10 +442,10 @@ namespace TalukdarSalesAPI.Controllers
         [HttpGet("getTopFiveSellerWithDueAmount")]
         public ActionResult<User> GetTopFiveSellerWithDueAmount(DateTime? from, DateTime? to)
         {
-            var oneMonthAgo = DateTime.Now.AddMonths(-2);
+            var oneMonthAgo = DateTime.Now.AddMonths(-1);
             var result = _userRepository.GetAll();
             if (from != null && to != null)
-                result = result.Where(n => n.CreatedOn >= from && n.CreatedOn <= to);
+                result = result.Where(n => n.CreatedOn >= from && n.CreatedOn <= to.Value.AddDays(1).AddSeconds(-1));
             else
                 result = result.Where(s => s.CreatedOn >= oneMonthAgo);
 
@@ -454,7 +464,7 @@ namespace TalukdarSalesAPI.Controllers
             var invoiceList = _salesInvoiceDetailsRepository.GetAll().ToList();
 
             if (from != null && to != null)
-                invoiceList = invoiceList.Where(n => n.CreatedOn >= from && n.CreatedOn <= to).ToList();
+                invoiceList = invoiceList.Where(n => n.CreatedOn >= from && n.CreatedOn <= to.Value.AddDays(1).AddSeconds(-1)).ToList();
             else
                 invoiceList = invoiceList.Where(s => s.CreatedOn >= oneMonthAgo).ToList();
 

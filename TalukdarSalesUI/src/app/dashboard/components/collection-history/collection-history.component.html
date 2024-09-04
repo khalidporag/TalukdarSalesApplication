@@ -19,6 +19,13 @@
                     nzLabel={{data.invoiceNumber}}></nz-option>
             </nz-select>
         </div>
+        <div class="each-data">
+            <nz-range-picker [nzFormat]="dateFormat" [(ngModel)]="collectionHistoryDateRange"
+                (ngModelChange)="onDateRangeChangeForCollection($event)"></nz-range-picker>
+        </div>
+        <div class="each-data">
+            <button class="main-btn" (click)="reset()">Reset</button>
+        </div>
     </div>
 </div>
 

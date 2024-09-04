@@ -101,16 +101,40 @@ export class ApiService {
     return this.http.post<any>(`${this.SalesRequisitionUrl}createSalesRequisitionWithDetail`, obj)
   }
 
-  getSalesRequisitionList(param1?: boolean, param2?: number, param3?: string) {
-    let params: any = {};
+  // getSalesRequisitionList(param1?: boolean, param2?: number, param3?: string) {
+  //   let params: any = {};
   
-    if (param1 !== undefined) params.isActive = param1;
-    if (param2 !== undefined) params.userId = param2;
-    if (param3 !== undefined && param3 !== null) params.requisitionNo = param3;
+  //   if (param1 !== undefined) params.isActive = param1;
+  //   if (param2 !== undefined) params.userId = param2;
+  //   if (param3 !== undefined && param3 !== null) params.requisitionNo = param3;
   
-    const queryString = new URLSearchParams(params).toString();
+  //   const queryString = new URLSearchParams(params).toString();
   
-    return this.http.get<any>(`${this.SalesRequisitionUrl}getSalesRequisitionList?${queryString}`);
+  //   return this.http.get<any>(`${this.SalesRequisitionUrl}getSalesRequisitionList?${queryString}`);
+  // }
+
+  getSalesRequisitionList(param1?: boolean, param2?: number, param3?: string, fromDate?: Date, toDate?: Date): Observable<any[]> {
+    let params = new HttpParams();
+    
+    if (param1 !== undefined || param1 != null) {
+      params =params.set('isActive', param1?.toString());
+    }
+    if (param2 !== undefined || param2 != null) {
+      params =params.set('userId', param2?.toString());
+    }
+    if (param3 !== undefined || param3 != null) {
+      params =params.set('requisitionNo', param3?.toString());
+    }
+    
+    if (fromDate) {
+      params = params.set('from', fromDate.toISOString().split('T')[0]);
+    }
+    
+    if (toDate) {
+      params = params.set('to', toDate.toISOString().split('T')[0]);
+    }
+    
+    return this.http.get<any[]>(`${this.SalesRequisitionUrl}getSalesRequisitionList`, { params });
   }
 
   getSalesRequisitionDetailsList(param1?: number) {
@@ -145,19 +169,59 @@ export class ApiService {
     return this.http.post<any>(`${this.SalesInvoiceUrl}collectInvoiceAmount`, obj)
   }
 
-  getSalesInvoiceList(param1?: number) {
-    let params: any = {};
-    if (param1 !== undefined) params.userId = param1;
-    const queryString = new URLSearchParams(params).toString();
-    return this.http.get<any>(`${this.SalesInvoiceUrl}getSalesInvoiceList?${queryString}`);
+  // getSalesInvoiceList(param1?: number) {
+  //   let params: any = {};
+  //   if (param1 !== undefined) params.userId = param1;
+  //   const queryString = new URLSearchParams(params).toString();
+  //   return this.http.get<any>(`${this.SalesInvoiceUrl}getSalesInvoiceList?${queryString}`);
+  // }
+
+  getSalesInvoiceList(param1?: number, fromDate?: Date, toDate?: Date): Observable<any[]> {
+    let params = new HttpParams();
+    
+    if (param1 !== undefined || param1 != null) {
+      params = params.set('userId', param1?.toString());
+    }
+    
+    if (fromDate) {
+      params = params.set('from', fromDate.toISOString().split('T')[0]);
+    }
+    
+    if (toDate) {
+      params = params.set('to', toDate.toISOString().split('T')[0]);
+    }
+    
+    return this.http.get<any[]>(`${this.SalesInvoiceUrl}getSalesInvoiceList`, { params });
   }
 
-  getCollectionHistory(param1?: number, param2?: number) {
-    let params: any = {};
-    if (param1 !== undefined) params.userId = param1;
-    if (param2 !== undefined) params.salesInvoiceId = param2;
-    const queryString = new URLSearchParams(params).toString();
-    return this.http.get<any>(`${this.SalesInvoiceUrl}getCollectionHistory?${queryString}`);
+  // getCollectionHistory(param1?: number, param2?: number) {
+  //   let params: any = {};
+  //   if (param1 !== undefined) params.userId = param1;
+  //   if (param2 !== undefined) params.salesInvoiceId = param2;
+  //   const queryString = new URLSearchParams(params).toString();
+  //   return this.http.get<any>(`${this.SalesInvoiceUrl}getCollectionHistory?${queryString}`);
+  // }
+
+  getCollectionHistory(fromDate?: Date, toDate?: Date, param1?: number, param2?: number): Observable<any[]> {
+    let params = new HttpParams();
+    
+    if (param1 !== undefined || param1 != null) {
+      params = params.set('userId', param1?.toString());
+    }
+
+    if (param2 !== undefined || param2 != null) {
+      params = params.set('salesInvoiceId', param2?.toString());
+    }
+    
+    if (fromDate) {
+      params = params.set('from', fromDate.toISOString().split('T')[0]);
+    }
+    
+    if (toDate) {
+      params = params.set('to', toDate.toISOString().split('T')[0]);
+    }
+    
+    return this.http.get<any[]>(`${this.SalesInvoiceUrl}getCollectionHistory`, { params });
   }
   
   getTopFiveSeller(fromDate?: Date, toDate?: Date): Observable<any[]> {

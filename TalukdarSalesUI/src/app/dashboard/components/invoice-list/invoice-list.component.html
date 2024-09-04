@@ -13,6 +13,13 @@
                     nzLabel="{{data.firstName + ' ' + data.lastName}}"></nz-option>
             </nz-select>
         </div>
+        <div class="each-data">
+            <nz-range-picker [nzFormat]="dateFormat" [(ngModel)]="invoiceListDateRange"
+                (ngModelChange)="onDateRangeChangeForInvoiceList($event)"></nz-range-picker>
+        </div>
+        <div class="each-data">
+            <button class="main-btn" (click)="reset()">Reset</button>
+        </div>
     </div>
 </div>
 <div class="table-responsive">
@@ -42,12 +49,12 @@
                     <td class="action">
                         <button (click)="openCollectionModal(invoice.id)">
                             <i class="fa fa-credit-card"></i>
-                        </button> 
+                        </button>
                         <button (click)="getCollectionList(invoice.id)">
                             <i class="fa fa-history"></i>
                         </button>
                     </td>
-                    
+
             </tbody>
         </table>
     </div>
