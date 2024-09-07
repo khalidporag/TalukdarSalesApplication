@@ -38,7 +38,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr *ngFor="let invoice of invoiceList; let i= index">
+                <tr *ngFor="let invoice of invoiceList.salesInvoiceInfo; let i= index">
                     <td><span class="res-head">Id:</span>{{i+1}}</td>
                     <td><span class="res-head">Invoice For:</span>{{invoice.userName}}</td>
                     <td><span class="res-head">Invoice Number:</span>{{invoice.invoiceNumber}}</td>
@@ -54,7 +54,13 @@
                             <i class="fa fa-history"></i>
                         </button>
                     </td>
-
+                </tr>
+                <tr>
+                    <td></td><td></td><td></td><td></td>
+                    <td>Total of Total Amount : {{ invoiceList.totalOfTotalPrice }}</td>
+                    <td>Total Collection : {{ invoiceList.totalCollectionAmount }}</td>
+                    <td></td>
+                </tr>
             </tbody>
         </table>
     </div>

@@ -85,7 +85,18 @@ namespace TalukdarSalesAPI.Controllers
                 CollectionTime = s.CreatedOn,
                 UserId = s.UserId
             }).ToList();
-            return Ok(collectionHistory);
+
+            var totalCollectionAmount = collectionHistory
+                .Where(n => n.CollectionAmount > 0)
+                .Sum(n => n.CollectionAmount);
+
+            var result = new CollectionHistoryDto
+            {
+                CollectionLedgerInfo = collectionHistory,
+                TotalCollectionHistory = (double)totalCollectionAmount
+            };
+
+            return Ok(result);
         }
 
         [HttpPost("createBulkInvoiceWithDetails")]
@@ -312,7 +323,7 @@ namespace TalukdarSalesAPI.Controllers
                 invoiceList = invoiceList.Where(n => n.CreatedDateTime >= from && n.CreatedDateTime <= to);
             }
 
-            var result = invoiceList.AsEnumerable().Select(s => new SalesInvoiceDto
+            var info = invoiceList.AsEnumerable().Select(s => new SalesInvoiceDto
             {
                 Id = s.Id,
                 InvoiceNumber = s.InvoiceSerialNo,
@@ -324,6 +335,21 @@ namespace TalukdarSalesAPI.Controllers
                 CollectionAmount = s.CollectionAmount,
                 CreatedDateTime = s.CreatedDateTime,
             }).ToList();
+
+            var _totalCollectionAmount = info
+                .Where(n => n.CollectionAmount > 0)
+                .Sum(n => n.CollectionAmount);
+
+            var _totalOfTotalPrice = info
+                .Where(n => n.TotalPrice > 0)
+                .Sum(n => n.TotalPrice);
+
+            var result = new SalesInvoiceInfoDto
+            {
+                SalesInvoiceInfo = info,
+                TotalCollectionAmount = _totalCollectionAmount,
+                TotalOfTotalPrice = _totalOfTotalPrice
+            };
 
             return Ok(result);
         }

@@ -16,4 +16,11 @@
         public double? CollectionAmount { get; set; }
         public List<SalesInvoiceDetailsDto> SalesInvoiceDetails { get; set; }
     }
+
+    public class SalesInvoiceInfoDto
+    {
+        public List<SalesInvoiceDto> SalesInvoiceInfo { get; set; }
+        public double? TotalOfTotalPrice { get; set; }
+        public double? TotalCollectionAmount { get; set; }
+    }
 }
