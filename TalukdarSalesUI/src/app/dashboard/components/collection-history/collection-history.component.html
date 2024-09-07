@@ -40,12 +40,15 @@
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let item of collectionHistory; let i= index">
+        <tr *ngFor="let item of collectionHistory.collectionLedgerInfo; let i= index">
             <td><span class="res-head">Id:</span>{{i+1}}</td>
             <td><span class="res-head">Invoice Number:</span>{{item.invoiceNumber}}</td>
             <td><span class="res-head">Collection Amount:</span>{{item.collectionAmount}}</td>
             <td><span class="res-head">Payment Method:</span>{{item.paymentMethod}}</td>
             <td><span class="res-head">Collection Time:</span>{{item.collectionTime | date: 'medium'}}</td>
+        </tr>
+        <tr>
+            <td></td><td></td><td>Total Collection : {{collectionHistory.totalCollectionHistory}}</td><td></td>
         </tr>
     </tbody>
 </table>
