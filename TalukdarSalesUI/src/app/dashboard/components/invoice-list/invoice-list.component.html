@@ -53,6 +53,11 @@
                         <button (click)="getCollectionList(invoice.id)">
                             <i class="fa fa-history"></i>
                         </button>
+                        <button (click)="showPdf(invoice.id)">
+                            <i class="fa fa-file"></i>
+                        </button>
+                        <div id="pdfLink"></div>
+
                     </td>
                 </tr>
                 <tr>
