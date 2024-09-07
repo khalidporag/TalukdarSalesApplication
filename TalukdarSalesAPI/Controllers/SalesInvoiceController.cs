@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using iTextSharp.text;
+using iTextSharp.text.pdf;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Project.Run.Repositories;
 using TalukdarSalesAPI.Interfaces;
@@ -249,7 +251,75 @@ namespace TalukdarSalesAPI.Controllers
                 _salesRequisitioinRepository.Update(requisition);
                 _salesRequisitioinRepository.Commit();
             }
-            
+
+            //Pdf
+
+            var finishGoodList = _finishGoodRepository.GetAll().ToDictionary(n => n.Id);
+
+            using (var memoryStream = new MemoryStream())
+            {
+                Document document = new Document();
+                PdfWriter.GetInstance(document, memoryStream).CloseStream = false;
+                document.Open();
+
+                document.Add(new Paragraph("Sales Invoice"));
+                document.Add(new Paragraph("Invoice No: " + createSalesInvoice.InvoiceSerialNo));
+                document.Add(new Paragraph("Date: " + createSalesInvoice.CreatedDateTime.ToString("yyyy-MM-dd")));
+                //document.Add(new Paragraph("User ID: " + createSalesInvoice.UserId));
+                document.Add(new Paragraph("Total Price: BDT " + createSalesInvoice.TotalPrice.ToString("F2")));
+                document.Add(new Paragraph("Total Quantity: " + createSalesInvoice.Quantity.ToString("F2")));
+                //document.Add(new Paragraph("Sales Requisition ID: " + createSalesInvoice.SalesRequisitionId));
+                document.Add(new Paragraph("\nInvoice Details:"));
+
+                PdfPTable table = new PdfPTable(4); // 4 columns
+                table.AddCell("Finished Goods");
+                table.AddCell("Quantity");
+                table.AddCell("Price");
+                table.AddCell("Total");
+                int i = 1;
+                foreach (var details in invoiceDetailsList)
+                {
+                    
+                    string fontPath = Path.Combine("wwwroot", "ttf", "kalpurus.ttf");
+                    //var fontPath = Path.Combine("wwwroot", "ttf", "font");
+                    //var baseFont = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+
+                    // Create a Font object
+                    //var font = new Font(baseFont, 12, Font.NORMAL);
+
+                    var goodName = finishGoodList.ContainsKey(details.FinishedGoodsId) ? finishGoodList[details.FinishedGoodsId].Name : "";
+
+                    // Add content to the table with the specified font
+                    //table.AddCell(new Phrase(goodName, font));
+                    //table.AddCell(new Phrase(details.Quantity.ToString("F2"), font));
+                    //table.AddCell(new Phrase(details.Price.ToString("F2"), font));
+                    //table.AddCell(new Phrase((details.Quantity * details.Price).ToString("F2"), font));
+
+                    table.AddCell(i+ ". " + goodName);
+                    table.AddCell(details.Quantity.ToString("F2"));
+                    table.AddCell(details.Price.ToString("F2"));
+                    table.AddCell((details.Quantity * details.Price).ToString("F2"));
+                    i = i + 1;
+                }
+
+                document.Add(table);
+                document.Close();
+
+                memoryStream.Position = 0;
+
+                var directoryPath = Path.Combine("wwwroot", "pdf", "invoices");
+                var filePath = Path.Combine(directoryPath, "Invoice_" + createSalesInvoice.Id + ".pdf");
+
+                if (!Directory.Exists(directoryPath))
+                {
+                    Directory.CreateDirectory(directoryPath);
+                }
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+                {
+                    memoryStream.CopyTo(fileStream);
+                }
+            }
 
             return Ok(new
             {

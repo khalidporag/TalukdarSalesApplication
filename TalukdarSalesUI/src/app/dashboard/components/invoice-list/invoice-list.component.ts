@@ -22,7 +22,6 @@ export class InvoiceListComponent implements OnInit {
   monthFormat = 'yyyy/MM';
   quarterFormat = 'yyyy/[Q]Q';
 
-
   selectedUserGroup: any;
   selectedStatus: any;
   selectedUser: any;
@@ -67,6 +66,11 @@ export class InvoiceListComponent implements OnInit {
       this.invoiceList = res;
       console.log(this.invoiceList);
     });
+  }
+
+  showPdf(invoiceNumber: string){
+    let pdfUrl = `http://localhost:8002/pdf/invoices/Invoice_${invoiceNumber}.pdf`;
+    window.open(pdfUrl, '_blank');
   }
   
 
