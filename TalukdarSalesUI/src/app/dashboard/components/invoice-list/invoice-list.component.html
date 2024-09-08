@@ -13,6 +13,13 @@
                     nzLabel="{{data.firstName + ' ' + data.lastName}}"></nz-option>
             </nz-select>
         </div>
+        <div class="each-data">
+            <nz-range-picker [nzFormat]="dateFormat" [(ngModel)]="invoiceListDateRange"
+                (ngModelChange)="onDateRangeChangeForInvoiceList($event)"></nz-range-picker>
+        </div>
+        <div class="each-data">
+            <button class="main-btn" (click)="reset()">Reset</button>
+        </div>
     </div>
 </div>
 <div class="table-responsive">
@@ -31,7 +38,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr *ngFor="let invoice of invoiceList; let i= index">
+                <tr *ngFor="let invoice of invoiceList.salesInvoiceInfo; let i= index">
                     <td><span class="res-head">Id:</span>{{i+1}}</td>
                     <td><span class="res-head">Invoice For:</span>{{invoice.userName}}</td>
                     <td><span class="res-head">Invoice Number:</span>{{invoice.invoiceNumber}}</td>
@@ -42,12 +49,23 @@
                     <td class="action">
                         <button (click)="openCollectionModal(invoice.id)">
                             <i class="fa fa-credit-card"></i>
-                        </button> 
+                        </button>
                         <button (click)="getCollectionList(invoice.id)">
                             <i class="fa fa-history"></i>
                         </button>
+                        <button (click)="showPdf(invoice.id)">
+                            <i class="fa fa-file"></i>
+                        </button>
+                        <div id="pdfLink"></div>
+
                     </td>
-                    
+                </tr>
+                <tr>
+                    <td></td><td></td><td></td><td></td>
+                    <td>Total of Total Amount : {{ invoiceList.totalOfTotalPrice }}</td>
+                    <td>Total Collection : {{ invoiceList.totalCollectionAmount }}</td>
+                    <td></td>
+                </tr>
             </tbody>
         </table>
     </div>

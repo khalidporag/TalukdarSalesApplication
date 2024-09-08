@@ -15,6 +15,7 @@ import { ModalService } from 'src/app/services/modal.service';
 })
 export class RequisitionListComponent implements OnInit {
 
+  selectedUserGroup: any;
   selectedStatus: any = true;
   selectedUser: any;
   requisitionNo: string = '';
@@ -33,6 +34,12 @@ export class RequisitionListComponent implements OnInit {
   bodyText = 'This text can be updated in modal 1';
   selectAll: boolean = false;
 
+  requisitionListDateRange: Date[] = [];
+
+  dateFormat = 'yyyy/MM/dd';
+  monthFormat = 'yyyy/MM';
+  quarterFormat = 'yyyy/[Q]Q';
+
 
   constructor(
     private api : ApiService,
@@ -45,9 +52,15 @@ export class RequisitionListComponent implements OnInit {
   ){}
 
   ngOnInit(): void {
+    this.getUserTypes();
     this.getProductTypes();
     this.getRequisitionList();
     this.getUsers();
+  }
+
+  onDateRangeChangeForRequisitionList(result: Date[]): void {
+    this.requisitionListDateRange = result;
+    this.getRequisitionList();
   }
 
   toggleSelectAll(event: any) {
@@ -78,7 +91,7 @@ export class RequisitionListComponent implements OnInit {
   }
 
   getRequisitionList() {
-    this.api.getSalesRequisitionList(this.selectedStatus, this.selectedUser, this.requisitionNo)
+    this.api.getSalesRequisitionList(this.selectedStatus, this.selectedUser, this.requisitionNo,  this.requisitionListDateRange[0], this.requisitionListDateRange[1])
     .subscribe(res => {
       this.requisitionList = res;
       console.log(this.requisitionList);
@@ -93,6 +106,13 @@ export class RequisitionListComponent implements OnInit {
     });
   }
 
+  onUserGroupChange() {
+    this.api.getUsersByType(this.selectedUserGroup)
+    .subscribe(res=>{
+    this.users = res;
+    });
+  }
+  
   onFilterChange() {
     this.getRequisitionList();
     this.isShow = (this.selectedStatus == true || this.selectedStatus == "true" )? true : false;
@@ -122,5 +142,9 @@ export class RequisitionListComponent implements OnInit {
 
   onCreateNew(): void {
     this.router.navigate(['/sales-requisition']);
+  }
+  reset()
+  {
+    window.location.reload();
   }
 }

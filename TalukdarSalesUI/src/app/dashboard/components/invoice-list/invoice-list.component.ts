@@ -16,6 +16,11 @@ import { ModalService } from 'src/app/services/modal.service';
 export class InvoiceListComponent implements OnInit {
 
   public collectionHistory:any = [];
+  invoiceListDateRange: Date[] = [];
+
+  dateFormat = 'yyyy/MM/dd';
+  monthFormat = 'yyyy/MM';
+  quarterFormat = 'yyyy/[Q]Q';
 
   selectedUserGroup: any;
   selectedStatus: any;
@@ -42,19 +47,32 @@ export class InvoiceListComponent implements OnInit {
   ){}
 
   ngOnInit(): void {
+    const today = new Date(); // Get today's date
+    this.invoiceListDateRange = [today, today]; 
     this.getProductTypes();
     this.getInvoiceList();
     this.getUsers();
     this.getUserTypes();
   }
 
+  onDateRangeChangeForInvoiceList(result: Date[]): void {
+    this.invoiceListDateRange = result;
+    this.getInvoiceList();
+  }
+
   getInvoiceList() {
-    this.api.getSalesInvoiceList(this.selectedUser)
+    this.api.getSalesInvoiceList(this.selectedUser, this.invoiceListDateRange[0], this.invoiceListDateRange[1])
     .subscribe(res => {
       this.invoiceList = res;
       console.log(this.invoiceList);
     });
   }
+
+  showPdf(invoiceNumber: string){
+    let pdfUrl = `http://localhost:8002/pdf/invoices/Invoice_${invoiceNumber}.pdf`;
+    window.open(pdfUrl, '_blank');
+  }
+  
 
   onFilterChange() {
     this.getInvoiceList();
@@ -140,5 +158,13 @@ export class InvoiceListComponent implements OnInit {
     } else {
       ValidateForm.validateAllFormFields(this.createCollectionForm);
     }
+  }
+
+  reset()
+  {
+    // this.invoiceListDateRange = [];
+    // this.selectedUser = null;
+    // this.getInvoiceList();
+    window.location.reload();
   }
 }

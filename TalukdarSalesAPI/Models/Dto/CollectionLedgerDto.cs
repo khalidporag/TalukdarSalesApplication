@@ -10,4 +10,10 @@
         public string PaymentMethod { get; set; }
         public DateTime? CollectionTime { get; set; }
     }
+
+    public class CollectionHistoryDto
+    {
+        public List<CollectionLedgerDto> CollectionLedgerInfo { get; set; }
+        public double TotalCollectionHistory { get; set; }
+    }
 }

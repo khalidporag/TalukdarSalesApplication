@@ -26,11 +26,24 @@
       </nz-select>
     </div>
     <div class="each-data">
+      <nz-select [(ngModel)]="selectedUserGroup" nzShowSearch nzDropdownClassName="select-dropdown"
+        nzPlaceHolder="User Group" (ngModelChange)="onUserGroupChange()">
+        <nz-option [nzValue]="data.id" *ngFor="let data of userTypes" nzLabel={{data.typeName}}></nz-option>
+      </nz-select>
+    </div>
+    <div class="each-data">
       <nz-select [(ngModel)]="selectedUser" nzShowSearch nzDropdownClassName="select-dropdown"
         nzPlaceHolder="Select User's Name" (ngModelChange)="onFilterChange()">
         <nz-option [nzValue]="data.id" *ngFor="let data of users"
           nzLabel="{{data.firstName + ' ' + data.lastName}}"></nz-option>
       </nz-select>
+    </div>
+    <div class="each-data">
+      <nz-range-picker [nzFormat]="dateFormat" [(ngModel)]="requisitionListDateRange"
+        (ngModelChange)="onDateRangeChangeForRequisitionList($event)"></nz-range-picker>
+    </div>
+    <div class="each-data">
+      <button class="main-btn" (click)="reset()">Reset</button>
     </div>
   </div>
 </div>

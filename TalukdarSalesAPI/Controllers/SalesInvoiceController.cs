@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using iTextSharp.text;
+using iTextSharp.text.pdf;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Project.Run.Repositories;
 using TalukdarSalesAPI.Interfaces;
@@ -58,7 +60,7 @@ namespace TalukdarSalesAPI.Controllers
         }
 
         [HttpGet("getCollectionHistory")]
-        public ActionResult<CollectionLedgerDto> GetCollectionHistory(int? userId, int? salesInvoiceId)
+        public ActionResult<CollectionLedgerDto> GetCollectionHistory(int? userId, int? salesInvoiceId, DateTime? from, DateTime? to)
         {
             var invoiceList = _salesInvoiceRepository.GetAll().ToDictionary(n => n.Id);
             var allCollection = _collectionLedgerRepository.GetAll();
@@ -70,6 +72,11 @@ namespace TalukdarSalesAPI.Controllers
             {
                 allCollection = allCollection.Where(n => n.SalesInvoiceId == salesInvoiceId);
             }
+            if(from != null && to != null)
+            {
+                to = to.Value.AddDays(1).AddSeconds(-1);
+                allCollection = allCollection.Where(n => n.CreatedOn >= from && n.CreatedOn <= to);
+            }
             var collectionHistory = allCollection.AsEnumerable().Select(s => new CollectionLedgerDto
             {
                 Id = s.Id,
@@ -80,7 +87,18 @@ namespace TalukdarSalesAPI.Controllers
                 CollectionTime = s.CreatedOn,
                 UserId = s.UserId
             }).ToList();
-            return Ok(collectionHistory);
+
+            var totalCollectionAmount = collectionHistory
+                .Where(n => n.CollectionAmount > 0)
+                .Sum(n => n.CollectionAmount);
+
+            var result = new CollectionHistoryDto
+            {
+                CollectionLedgerInfo = collectionHistory,
+                TotalCollectionHistory = (double)totalCollectionAmount
+            };
+
+            return Ok(result);
         }
 
         [HttpPost("createBulkInvoiceWithDetails")]
@@ -233,7 +251,75 @@ namespace TalukdarSalesAPI.Controllers
                 _salesRequisitioinRepository.Update(requisition);
                 _salesRequisitioinRepository.Commit();
             }
-            
+
+            //Pdf
+
+            var finishGoodList = _finishGoodRepository.GetAll().ToDictionary(n => n.Id);
+
+            using (var memoryStream = new MemoryStream())
+            {
+                Document document = new Document();
+                PdfWriter.GetInstance(document, memoryStream).CloseStream = false;
+                document.Open();
+
+                document.Add(new Paragraph("Sales Invoice"));
+                document.Add(new Paragraph("Invoice No: " + createSalesInvoice.InvoiceSerialNo));
+                document.Add(new Paragraph("Date: " + createSalesInvoice.CreatedDateTime.ToString("yyyy-MM-dd")));
+                //document.Add(new Paragraph("User ID: " + createSalesInvoice.UserId));
+                document.Add(new Paragraph("Total Price: BDT " + createSalesInvoice.TotalPrice.ToString("F2")));
+                document.Add(new Paragraph("Total Quantity: " + createSalesInvoice.Quantity.ToString("F2")));
+                //document.Add(new Paragraph("Sales Requisition ID: " + createSalesInvoice.SalesRequisitionId));
+                document.Add(new Paragraph("\nInvoice Details:"));
+
+                PdfPTable table = new PdfPTable(4); // 4 columns
+                table.AddCell("Finished Goods");
+                table.AddCell("Quantity");
+                table.AddCell("Price");
+                table.AddCell("Total");
+                int i = 1;
+                foreach (var details in invoiceDetailsList)
+                {
+                    
+                    string fontPath = Path.Combine("wwwroot", "ttf", "kalpurus.ttf");
+                    //var fontPath = Path.Combine("wwwroot", "ttf", "font");
+                    //var baseFont = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+
+                    // Create a Font object
+                    //var font = new Font(baseFont, 12, Font.NORMAL);
+
+                    var goodName = finishGoodList.ContainsKey(details.FinishedGoodsId) ? finishGoodList[details.FinishedGoodsId].Name : "";
+
+                    // Add content to the table with the specified font
+                    //table.AddCell(new Phrase(goodName, font));
+                    //table.AddCell(new Phrase(details.Quantity.ToString("F2"), font));
+                    //table.AddCell(new Phrase(details.Price.ToString("F2"), font));
+                    //table.AddCell(new Phrase((details.Quantity * details.Price).ToString("F2"), font));
+
+                    table.AddCell(i+ ". " + goodName);
+                    table.AddCell(details.Quantity.ToString("F2"));
+                    table.AddCell(details.Price.ToString("F2"));
+                    table.AddCell((details.Quantity * details.Price).ToString("F2"));
+                    i = i + 1;
+                }
+
+                document.Add(table);
+                document.Close();
+
+                memoryStream.Position = 0;
+
+                var directoryPath = Path.Combine("wwwroot", "pdf", "invoices");
+                var filePath = Path.Combine(directoryPath, "Invoice_" + createSalesInvoice.Id + ".pdf");
+
+                if (!Directory.Exists(directoryPath))
+                {
+                    Directory.CreateDirectory(directoryPath);
+                }
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+                {
+                    memoryStream.CopyTo(fileStream);
+                }
+            }
 
             return Ok(new
             {
@@ -294,15 +380,20 @@ namespace TalukdarSalesAPI.Controllers
         }
 
         [HttpGet("getSalesInvoiceList")]
-        public ActionResult<SalesInvoice> GetSalesInvoiceList(int? userId)
+        public ActionResult<SalesInvoice> GetSalesInvoiceList(int? userId, DateTime? from, DateTime? to)
         {
             var userList = _userRepository.GetAll().ToDictionary(n => n.Id);
             var requisitionList = _salesRequisitioinRepository.GetAll().ToDictionary(n => n.Id);
             var invoiceList = _salesInvoiceRepository.GetAll();
             if (userId != null)
                 invoiceList = invoiceList.Where(n => n.UserId == userId);
+            if(from != null && to != null)
+            {
+                to = to.Value.AddDays(1).AddSeconds(-1);
+                invoiceList = invoiceList.Where(n => n.CreatedDateTime >= from && n.CreatedDateTime <= to);
+            }
 
-            var result = invoiceList.AsEnumerable().Select(s => new SalesInvoiceDto
+            var info = invoiceList.AsEnumerable().Select(s => new SalesInvoiceDto
             {
                 Id = s.Id,
                 InvoiceNumber = s.InvoiceSerialNo,
@@ -314,6 +405,21 @@ namespace TalukdarSalesAPI.Controllers
                 CollectionAmount = s.CollectionAmount,
                 CreatedDateTime = s.CreatedDateTime,
             }).ToList();
+
+            var _totalCollectionAmount = info
+                .Where(n => n.CollectionAmount > 0)
+                .Sum(n => n.CollectionAmount);
+
+            var _totalOfTotalPrice = info
+                .Where(n => n.TotalPrice > 0)
+                .Sum(n => n.TotalPrice);
+
+            var result = new SalesInvoiceInfoDto
+            {
+                SalesInvoiceInfo = info,
+                TotalCollectionAmount = _totalCollectionAmount,
+                TotalOfTotalPrice = _totalOfTotalPrice
+            };
 
             return Ok(result);
         }
@@ -353,7 +459,7 @@ namespace TalukdarSalesAPI.Controllers
             var oneMonthAgo = DateTime.Now.AddMonths(-1);
 
             if (from != null && to != null)
-                result = result.Where(n => n.CreatedOn >= from && n.CreatedOn <= to);
+                result = result.Where(n => n.CreatedOn >= from && n.CreatedOn <= to.Value.AddDays(1).AddSeconds(-1));
             else
                 result = result.Where(s => s.CreatedOn >= oneMonthAgo);
 
@@ -381,7 +487,7 @@ namespace TalukdarSalesAPI.Controllers
             var oneMonthAgo = DateTime.Now.AddMonths(-1);
 
             if (from != null && to != null)
-                result = result.Where(n => n.CreatedOn >= from && n.CreatedOn <= to);
+                result = result.Where(n => n.CreatedOn >= from && n.CreatedOn <= to.Value.AddDays(1).AddSeconds(-1));
             else
                 result = result.Where(s => s.CreatedOn >= oneMonthAgo);
 
@@ -409,7 +515,7 @@ namespace TalukdarSalesAPI.Controllers
             var oneMonthAgo = DateTime.Now.AddMonths(-1);
 
             if (from != null && to != null)
-                result = result.Where(n => n.CreatedOn >= from && n.CreatedOn <= to);
+                result = result.Where(n => n.CreatedOn >= from && n.CreatedOn <= to.Value.AddDays(1).AddSeconds(-1));
             else
                 result = result.Where(s => s.CreatedOn >= oneMonthAgo);
 
@@ -432,10 +538,10 @@ namespace TalukdarSalesAPI.Controllers
         [HttpGet("getTopFiveSellerWithDueAmount")]
         public ActionResult<User> GetTopFiveSellerWithDueAmount(DateTime? from, DateTime? to)
         {
-            var oneMonthAgo = DateTime.Now.AddMonths(-2);
+            var oneMonthAgo = DateTime.Now.AddMonths(-1);
             var result = _userRepository.GetAll();
             if (from != null && to != null)
-                result = result.Where(n => n.CreatedOn >= from && n.CreatedOn <= to);
+                result = result.Where(n => n.CreatedOn >= from && n.CreatedOn <= to.Value.AddDays(1).AddSeconds(-1));
             else
                 result = result.Where(s => s.CreatedOn >= oneMonthAgo);
 
@@ -454,7 +560,7 @@ namespace TalukdarSalesAPI.Controllers
             var invoiceList = _salesInvoiceDetailsRepository.GetAll().ToList();
 
             if (from != null && to != null)
-                invoiceList = invoiceList.Where(n => n.CreatedOn >= from && n.CreatedOn <= to).ToList();
+                invoiceList = invoiceList.Where(n => n.CreatedOn >= from && n.CreatedOn <= to.Value.AddDays(1).AddSeconds(-1)).ToList();
             else
                 invoiceList = invoiceList.Where(s => s.CreatedOn >= oneMonthAgo).ToList();
 
