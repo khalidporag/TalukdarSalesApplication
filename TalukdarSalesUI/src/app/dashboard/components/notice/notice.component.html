@@ -10,7 +10,7 @@
         <div class="col-lg-4 col-md-6 pb-25" *ngFor="let item of notices">
             <div class="card-1" (click)="openNoticeDetailsModal(item)">
                 <div class="logo">
-                    <img src="https://localhost:7019/images/notices/{{item.logoName}}" alt="">
+                    <img src="{{baseUrl}}/images/notices/{{item.logoName}}" alt="">
                 </div>
                 <div class="content">
                     <h3>{{item.title}}</h3>

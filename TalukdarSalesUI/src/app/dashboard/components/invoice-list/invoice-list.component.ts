@@ -7,6 +7,7 @@ import ValidateForm from 'src/app/helpers/validationform';
 import { ApiService } from 'src/app/services/api.service';
 import { AuthService } from 'src/app/services/auth.service';
 import { ModalService } from 'src/app/services/modal.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-invoice-list',
@@ -35,6 +36,8 @@ export class InvoiceListComponent implements OnInit {
   createCollectionModal: boolean = false;
   submitting: boolean = false;
   bodyText = 'This text can be updated in modal 1';
+
+  baseUrl = environment.apiBaseUrl;
 
   constructor(
     private api : ApiService,
@@ -69,7 +72,7 @@ export class InvoiceListComponent implements OnInit {
   }
 
   showPdf(invoiceNumber: string){
-    let pdfUrl = `http://localhost:8002/pdf/invoices/Invoice_${invoiceNumber}.pdf`;
+    let pdfUrl = `{{baseUrl}}/pdf/invoices/Invoice_${invoiceNumber}.pdf`;
     window.open(pdfUrl, '_blank');
   }
   
