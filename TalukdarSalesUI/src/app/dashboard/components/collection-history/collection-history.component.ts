@@ -4,6 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { NgToastService } from 'ng-angular-popup';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import ValidateForm from 'src/app/helpers/validationform';
+import { SalesInvoiceDto } from 'src/app/models/invoice-list.model';
 import { ApiService } from 'src/app/services/api.service';
 import { AuthService } from 'src/app/services/auth.service';
 import { ModalService } from 'src/app/services/modal.service';
@@ -14,7 +15,8 @@ import { ModalService } from 'src/app/services/modal.service';
 })
 export class CollectionHistoryComponent implements OnInit {
   public collectionHistory: any = [];
-  public invoiceList: any = [];
+  //public invoiceList: any = [];
+  public invoiceList: SalesInvoiceDto[] = [];
   collectionHistoryDateRange: Date[] = [];
 
   selectedUser: any;
@@ -40,6 +42,8 @@ export class CollectionHistoryComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    const today = new Date(); // Get today's date
+    this.collectionHistoryDateRange = [today, today]; 
     this.getUserTypes();
     this.getInvoiceList();
     this.selectedInvoice = this.route.snapshot.paramMap.get('id');
@@ -47,10 +51,11 @@ export class CollectionHistoryComponent implements OnInit {
   }
 
   getInvoiceList() {
-    this.api.getSalesInvoiceList()
+    this.api.getSalesInvoiceListForCollection()
       .subscribe(res => {
-        this.invoiceList = res;
-        console.log(this.invoiceList);
+        // this.invoiceList = res;
+        this.invoiceList = res.salesInvoiceInfo || [];
+        console.log(this.invoiceList)
       });
   }
 
@@ -59,31 +64,27 @@ export class CollectionHistoryComponent implements OnInit {
     this.getCollectionList();
   }
 
+ 
   getCollectionList() {
     if (this.selectedInvoice == null) {
-      this.api.getCollectionHistory(this.collectionHistoryDateRange[0], this.collectionHistoryDateRange[1], this.selectedUser)
-        .subscribe(res => {
-          this.collectionHistory = res;
-          console.log(res);
-        });
+        this.api.getCollectionHistory(this.collectionHistoryDateRange[0], this.collectionHistoryDateRange[1], this.selectedUser)
+            .subscribe(res => {
+                console.log('Collection History Response:', res);
+                this.collectionHistory = res;
+            });
+    } else {
+        this.api.getCollectionHistory(this.collectionHistoryDateRange[0], this.collectionHistoryDateRange[1], this.selectedUser, this.selectedInvoice)
+            .subscribe(res => {
+                console.log('Collection History Response:', res);
+                this.collectionHistory = res;
+            });
     }
-    this.api.getCollectionHistory(this.collectionHistoryDateRange[0], this.collectionHistoryDateRange[1], this.selectedUser, this.selectedInvoice)
-      .subscribe(res => {
-        this.collectionHistory = res;
+}
 
-        // const totalCollectionAmount = this.collectionHistory.reduce((sum, item) => {
-        //     return sum + item.collectionAmount;
-        // }, 0);
-        // console.log('Total Collection Amount:', totalCollectionAmount);
-
-      });
-  }
-
-  getUserTypes() {
+getUserTypes() {
     this.api.getUserTypes()
       .subscribe(res => {
         this.userTypes = res;
-        console.log(this.userTypes)
       });
   }
 

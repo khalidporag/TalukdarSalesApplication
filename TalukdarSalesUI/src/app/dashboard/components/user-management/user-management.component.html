@@ -1,7 +1,7 @@
 <div class="page-header">
     <div class="page-header__inner">
         <div class="search-area">
-            <input type="text" class="form-control" placeholder="Search user by Name..." [(ngModel)]="nameSearch"
+            <input type="text" class="form-control" placeholder="Name / Phone / User Id" [(ngModel)]="nameSearch"
               (input)="getUsers()">
             <button><img src="assets/images/icons/search.svg" alt=""></button>
         </div>
@@ -28,6 +28,7 @@
                     <h3>{{item.firstName}} {{item.lastName}}</h3>
                     <p>{{ item.phoneNumber }}</p>
                     <p>{{ item.userTypeName }}</p>
+                    <p>{{ item.username }}</p>
                 </div>
                 <div class="data">
                     <ul>

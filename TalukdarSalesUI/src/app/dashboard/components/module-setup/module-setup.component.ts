@@ -43,7 +43,6 @@ export class ModuleSetupComponent implements OnInit {
     this.api.getUserTypes()
     .subscribe(res=>{
     this.userTypes = res;
-    console.log(this.userTypes)
     });
   }
 
@@ -79,7 +78,6 @@ export class ModuleSetupComponent implements OnInit {
         },
         error: (err) => {
           this.toast.error({detail:"ERROR", summary:"Something when wrong!", duration: 5000});
-          console.log(err);
           this.closeModal();
         },
       });

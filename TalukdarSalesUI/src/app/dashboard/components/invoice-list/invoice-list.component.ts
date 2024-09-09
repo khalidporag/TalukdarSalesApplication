@@ -63,11 +63,11 @@ export class InvoiceListComponent implements OnInit {
     this.getInvoiceList();
   }
 
+
   getInvoiceList() {
     this.api.getSalesInvoiceList(this.selectedUser, this.invoiceListDateRange[0], this.invoiceListDateRange[1])
     .subscribe(res => {
       this.invoiceList = res;
-      console.log(this.invoiceList);
     });
   }
 
@@ -92,14 +92,12 @@ export class InvoiceListComponent implements OnInit {
     this.api.getUsers()
     .subscribe(res=>{
     this.users = res;
-    console.log(this.users)
     });
   }
   getUserTypes(){
     this.api.getUserTypes()
     .subscribe(res=>{
     this.userTypes = res;
-    console.log(this.userTypes)
     });
   }
 
@@ -154,7 +152,6 @@ export class InvoiceListComponent implements OnInit {
         },
         error: (err) => {
           this.toast.error({detail:"ERROR", summary:"Something when wrong!", duration: 5000});
-          console.log(err);
           this.closeModal();
         },
       });
@@ -169,5 +166,9 @@ export class InvoiceListComponent implements OnInit {
     // this.selectedUser = null;
     // this.getInvoiceList();
     window.location.reload();
+  }
+
+  formatNumberWithCommas(value: number): string {
+    return value.toLocaleString('en-US');
   }
 }

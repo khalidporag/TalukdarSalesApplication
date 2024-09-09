@@ -252,7 +252,12 @@ namespace TalukdarSalesAPI.Controllers
             if (userTypeId != null)
                 userList = userList.Where(n => n.UserTypeId == userTypeId).ToList();
             if (name != null)
-                userList = userList.Where(n => n.FirstName.ToLower().Contains(name.ToLower()) || n.LastName.ToLower().Contains(name.ToLower())).ToList();
+                userList = userList
+                    .Where(n => n.FirstName.ToLower().Contains(name.ToLower()) || 
+                                n.LastName.ToLower().Contains(name.ToLower()) ||
+                                n.PhoneNumber.ToLower().Contains(name.ToLower()) ||
+                                n.Username.ToLower().Contains(name.ToLower())
+                           ).ToList();
             var userTypeList = _userTypeRepository.GetAll().ToDictionary(n => n.Id);
             var result = userList.AsEnumerable().Select(n => new UserDto
             {

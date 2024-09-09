@@ -2,6 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { SalesInvoiceInfoDto } from '../models/invoice-list.model';
 
 
 
@@ -192,6 +193,27 @@ export class ApiService {
     }
     
     return this.http.get<any[]>(`${this.SalesInvoiceUrl}getSalesInvoiceList`, { params });
+  }
+
+  getSalesInvoiceListForCollection(param1?: number, fromDate?: Date, toDate?: Date): Observable<SalesInvoiceInfoDto> {
+    
+    let params = new HttpParams();
+    
+    if (param1 !== undefined || param1 != null) {
+      params = params.set('userId', param1?.toString());
+    }
+    
+    if (fromDate) {
+      params = params.set('from', fromDate.toISOString().split('T')[0]);
+    }
+    
+    if (toDate) {
+      params = params.set('to', toDate.toISOString().split('T')[0]);
+    }
+    
+    return this.http.get<SalesInvoiceInfoDto>(`${this.SalesInvoiceUrl}getSalesInvoiceList`, { params });
+    
+    // return this.http.get<SalesInvoiceInfoDto>('your-api-endpoint');
   }
 
   // getCollectionHistory(param1?: number, param2?: number) {

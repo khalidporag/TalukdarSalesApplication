@@ -29,11 +29,12 @@
                 <tr>
                     <th class="s-col" scope="col">#</th>
                     <th scope="col">Invoice For</th>
-                    <th scope="col">Invoice Number</th>
-                    <th scope="col">Requisition Serial</th>
-                    <th scope="col">Total Amount</th>
-                    <th scope="col">Collection Amount</th>
+                    <th scope="col">Invoice No</th>
+                    <th scope="col">Requisition No</th>
                     <th scope="col">Creation Time</th>
+                    <th scope="col">Total</th>
+                    <th scope="col">Collection</th>
+                    <th scope="col">Due</th>
                     <th scope="col">Action</th>
                 </tr>
             </thead>
@@ -41,11 +42,12 @@
                 <tr *ngFor="let invoice of invoiceList.salesInvoiceInfo; let i= index">
                     <td><span class="res-head">Id:</span>{{i+1}}</td>
                     <td><span class="res-head">Invoice For:</span>{{invoice.userName}}</td>
-                    <td><span class="res-head">Invoice Number:</span>{{invoice.invoiceNumber}}</td>
-                    <td><span class="res-head">Requisition Serial:</span>{{invoice.salesRequisitionNo}}</td>
-                    <td><span class="res-head">Total Amount:</span>{{invoice.totalPrice}}</td>
-                    <td><span class="res-head">Collection Amount:</span>{{invoice.collectionAmount}}</td>
+                    <td><span class="res-head">Invoice No:</span>{{invoice.invoiceNumber}}</td>
+                    <td><span class="res-head">Requisition No:</span>{{invoice.salesRequisitionNo}}</td>
                     <td><span class="res-head">Creation Time:</span>{{invoice.createdDateTime | date:'medium'}}</td>
+                    <td><span class="res-head">Total:</span>{{formatNumberWithCommas(invoice.totalPrice)}}</td>
+                    <td><span class="res-head">Collection:</span>{{formatNumberWithCommas(invoice.collectionAmount)}}</td>
+                    <td><span class="res-head">Due:</span>{{formatNumberWithCommas(invoice.totalPrice - invoice.collectionAmount)}}</td>
                     <td class="action">
                         <button (click)="openCollectionModal(invoice.id)">
                             <i class="fa fa-credit-card"></i>
@@ -61,10 +63,15 @@
                     </td>
                 </tr>
                 <tr>
-                    <td></td><td></td><td></td><td></td>
-                    <td>Total of Total Amount : {{ invoiceList.totalOfTotalPrice }}</td>
-                    <td>Total Collection : {{ invoiceList.totalCollectionAmount }}</td>
-                    <td></td>
+                    <th></th>
+                    <th>Total</th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th style="background: #52d3d0;text-align: center;">{{formatNumberWithCommas(invoiceList.totalOfTotalPrice)}} </th>
+                    <th style="background: #8AFF8A;text-align: center;">{{formatNumberWithCommas(invoiceList.totalCollectionAmount)}}</th>
+                    <th style="background: #FF8A8A;text-align: center;">{{formatNumberWithCommas(invoiceList.totalDueAmount) }}</th>
+                    <th></th>
                 </tr>
             </tbody>
         </table>

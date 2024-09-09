@@ -56,7 +56,6 @@ export class DashboardComponent implements OnInit{
     this.api.getTopFiveSeller()
     .subscribe(res=>{
     this.topFiveSeller = res;
-    console.log(this.topFiveSeller);
     });
   }
 

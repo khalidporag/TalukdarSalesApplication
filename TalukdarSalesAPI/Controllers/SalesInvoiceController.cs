@@ -94,7 +94,7 @@ namespace TalukdarSalesAPI.Controllers
 
             var result = new CollectionHistoryDto
             {
-                CollectionLedgerInfo = collectionHistory,
+                CollectionLedgerInfo = collectionHistory ,
                 TotalCollectionHistory = (double)totalCollectionAmount
             };
 
@@ -414,11 +414,14 @@ namespace TalukdarSalesAPI.Controllers
                 .Where(n => n.TotalPrice > 0)
                 .Sum(n => n.TotalPrice);
 
+            var _totalDue = _totalOfTotalPrice - _totalCollectionAmount;
+
             var result = new SalesInvoiceInfoDto
             {
                 SalesInvoiceInfo = info,
                 TotalCollectionAmount = _totalCollectionAmount,
-                TotalOfTotalPrice = _totalOfTotalPrice
+                TotalOfTotalPrice = _totalOfTotalPrice,
+                TotalDueAmount = _totalDue
             };
 
             return Ok(result);

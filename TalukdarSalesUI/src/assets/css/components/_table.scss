@@ -17,7 +17,7 @@
 
       th {
         padding: 10px 16px;
-        text-align: left;
+        text-align: center;
         overflow: hidden;
         color: #fff;
         min-width: 110px;
@@ -54,6 +54,7 @@
 
       td {
         padding: 10px 16px;
+        text-align: center;
         // border-bottom: 1px solid #eee;
 
         &:last-child {
@@ -134,6 +135,7 @@
             display: block;
             font-weight: 700;
             margin-right: 5px;
+            text-align: center;
           }
         }
 

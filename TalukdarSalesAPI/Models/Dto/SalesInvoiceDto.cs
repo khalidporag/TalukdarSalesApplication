@@ -22,5 +22,6 @@
         public List<SalesInvoiceDto> SalesInvoiceInfo { get; set; }
         public double? TotalOfTotalPrice { get; set; }
         public double? TotalCollectionAmount { get; set; }
+        public double? TotalDueAmount { get; set; }
     }
 }

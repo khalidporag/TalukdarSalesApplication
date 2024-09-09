@@ -38,10 +38,8 @@ export class LoginComponent implements OnInit {
   }
   onSubmit() {
     if (this.loginForm.valid) {
-      console.log(this.loginForm.value);
       this.auth.signIn(this.loginForm.value).subscribe({
         next: (res) => {
-          console.log(res.message);
           this.loginForm.reset();
           this.auth.storeToken(res.accessToken);
           this.auth.storeRefreshToken(res.refreshToken);
@@ -53,7 +51,6 @@ export class LoginComponent implements OnInit {
         },
         error: (err) => {
           this.toast.error({detail:"ERROR", summary:"Something when wrong!", duration: 5000});
-          console.log(err);
           this.router.navigate(['/login'])
         },
       });
