@@ -2,6 +2,7 @@
 using iTextSharp.text.pdf;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Project.Run.Repositories;
 using TalukdarSalesAPI.Interfaces;
 using TalukdarSalesAPI.Models;
@@ -541,19 +542,46 @@ namespace TalukdarSalesAPI.Controllers
         [HttpGet("getTopFiveSellerWithDueAmount")]
         public ActionResult<User> GetTopFiveSellerWithDueAmount(DateTime? from, DateTime? to)
         {
+
             var oneMonthAgo = DateTime.Now.AddMonths(-1);
-            var result = _userRepository.GetAll();
-            if (from != null && to != null)
-                result = result.Where(n => n.CreatedOn >= from && n.CreatedOn <= to.Value.AddDays(1).AddSeconds(-1));
+            var salesInvoices = _salesInvoiceRepository.GetAll();
+
+            if(from!= null && to != null)
+            {
+                salesInvoices = salesInvoices.Where(x=>x.CreatedOn >= from && x.CreatedOn <= to.Value.AddDays(1).AddSeconds(-1));
+            }
             else
-                result = result.Where(s => s.CreatedOn >= oneMonthAgo);
+            {
+                salesInvoices = salesInvoices.Where(s => s.CreatedOn >= oneMonthAgo);
+            }
 
-            var topUsersWithDueAmount = result.Where(s => s.DueAmount > 0)
-            .OrderByDescending(u => u.DueAmount)
-            .Take(5)
-            .ToList();
+            var temp = (from invoice in salesInvoices
+                        group invoice by new { invoice.TotalPrice, invoice.CollectionAmount, invoice.UserId } into g
+                        select new
+                        {
+                            DueAmount = g.Key.TotalPrice - g.Key.CollectionAmount,
+                            g.Key.UserId
+                        })
+                        .OrderByDescending(x => x.DueAmount)
+                        .Take(5)
+                        .ToList();
 
-            return Ok(topUsersWithDueAmount);
+            var result = (from user in _userRepository.GetAll()
+                          join t in temp on user.Id equals t.UserId
+                          select new
+                          {
+                              user.Id,
+                              user.UserTypeId,
+                              user.FirstName,
+                              user.LastName,
+                              user.PhoneNumber,
+                              t.DueAmount,
+                              user.ImageName,
+                              user.Username
+                          })
+                          .ToList();
+
+            return Ok(result);
         }
 
         [HttpGet("getDailyAccumulatedSalesSummary")]

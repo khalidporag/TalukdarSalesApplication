@@ -19,7 +19,6 @@
 <div class="user-card mt-25">
     <div class="row">
         <div class="col-xl-3 col-lg-4 col-md-6 mb-25" *ngFor="let item of users">
-            <a (click)="openUserEditModal(item)"><i class="fa fa-edit"></i></a>
             <div class="user-card__each">
                 <div class="thumb">
                     <img src="{{baseUrl}}/images/users/{{item.imageName}}" alt="User Profile" onerror="this.src = 'assets/images/no-user.jpeg'">
@@ -43,7 +42,16 @@
                     </ul>
                 </div>
                 <div class="btn-area">
-                    <button class="main-btn">View Profile</button>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <button class="main-btn">View</button>
+                        </div>
+                        <div class="col-md-4"></div>
+                        <div class="col-md-4">
+                            <button class="main-btn" (click)="openUserEditModal(item)">Edit</button>
+                        </div>
+                    </div>
+                   
                 </div>
             </div>
         </div>
