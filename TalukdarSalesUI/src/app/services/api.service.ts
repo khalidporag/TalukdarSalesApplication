@@ -335,5 +335,12 @@ export class ApiService {
 
     return this.http.get<any>(`${this.NoticeUrl}getAllNotices?${queryString}`);
   }
+
   
+
+  getLoggedInUser(username: string) {
+    console.log('this.username22',username)
+    return this.http.get<any>(`${this.userUrl}?getLoggedInUser=${username}`);
+  }
 }
+

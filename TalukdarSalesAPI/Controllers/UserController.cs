@@ -332,5 +332,19 @@ namespace TalukdarSalesAPI.Controllers
         {
             return Ok(_userTypeRepository.GetAll());
         }
+
+        [HttpGet("getLoggedInUser")]
+        public ActionResult<string> GetLoggedInUser(string username)
+        {
+            var user = _userRepository.FindBy(x => x.Username == username)?.FirstOrDefault();
+            var userName = "";
+            
+            if (user != null)
+            {
+                userName = user.FirstName + " " + user.LastName;
+            }
+
+            return userName != ""? userName: null;
+        }
     }
 }

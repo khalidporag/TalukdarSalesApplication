@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { CommonService } from '../services/common/common.service';
 import { ConfigService } from '../services/common/config.service';
+import { ApiService } from '../services/api.service';
 
 @Component({
   selector: 'app-header',
@@ -15,8 +16,11 @@ export class HeaderComponent {
   userData: any = [];
   userInfoModal: boolean = false;
   idom: string = this.config.imageURL;
-
-  constructor(private commonService: CommonService, private router: Router, public config: ConfigService) {
+  loggedinUserName = '';
+  username: any;
+  constructor(private commonService: CommonService, private router: Router, public config: ConfigService, private api : ApiService) {
+    this.username = localStorage.getItem('logged-user-name');
+    console.log('logged-user-name',this.username);
     router.events.forEach((event) => {
       if (event instanceof NavigationEnd) {
         this.pageTitle = event.url;
@@ -63,6 +67,18 @@ export class HeaderComponent {
   }
 
   ngOnInit() {
+    console.log('this.username',this.username);
+    this.getLoggedInUserName();
+  }
+
+  getLoggedInUserName(){
+    console.log('this.username11',this.username);
+
+    this.api.getLoggedInUser(this.username)
+    .subscribe(res=>{
+      console.log(res[0]);
+    this.loggedinUserName = res[0].firstName + " " + res[0].lastName;
+    });
   }
 
   getfullHeader() {

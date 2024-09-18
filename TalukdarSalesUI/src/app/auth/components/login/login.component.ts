@@ -37,6 +37,7 @@ export class LoginComponent implements OnInit {
     this.isText ? (this.type = 'text') : (this.type = 'password');
   }
   onSubmit() {
+    localStorage.removeItem('logged-user-name');
     if (this.loginForm.valid) {
       this.auth.signIn(this.loginForm.value).subscribe({
         next: (res) => {
@@ -47,6 +48,7 @@ export class LoginComponent implements OnInit {
           this.userStore.setFullNameForStore(tokenPayload.name);
           this.userStore.setRoleForStore(tokenPayload.role);
           this.toast.success({detail:"SUCCESS", summary:res.message, duration: 5000});
+          localStorage.setItem('logged-user-name', tokenPayload.name);
           this.router.navigate([''])
         },
         error: (err) => {
