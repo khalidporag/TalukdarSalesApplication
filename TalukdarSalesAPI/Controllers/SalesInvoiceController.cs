@@ -348,31 +348,111 @@ namespace TalukdarSalesAPI.Controllers
         public IActionResult ColllectInvoiceAmount([FromBody] CollectAmountDto collectAmountObj)
         {
             if (collectAmountObj == null)
-                return BadRequest();
-            var invoiceInfo = _salesInvoiceRepository.GetSingle((int)collectAmountObj?.SalesInvoiceId);
-            if (invoiceInfo.CollectionAmount + (double)collectAmountObj.CollectionAmount > invoiceInfo.TotalPrice)
-                return BadRequest();
-            invoiceInfo.CollectionAmount = invoiceInfo.CollectionAmount + (double)collectAmountObj.CollectionAmount;
-            _salesInvoiceRepository.Update(invoiceInfo);
-            _salesInvoiceRepository.Commit();
-
-            var collectionLedger = new CollectionLedger();
-            collectionLedger.UserId = (int)invoiceInfo?.UserId;
-            collectionLedger.SalesInvoiceId = (int)collectAmountObj?.SalesInvoiceId;
-            collectionLedger.CollectionAmount = (double)collectAmountObj?.CollectionAmount;
-            collectionLedger.PaymentMethod = collectAmountObj?.PaymentMethod;
-            _collectionLedgerRepository.Add(collectionLedger);
-            _collectionLedgerRepository.Commit();
-
-            if(collectionLedger?.Id != null)
             {
-                var userInfo = _userRepository.GetSingle(collectionLedger.UserId);
-                if (userInfo.DueAmount - (decimal)collectionLedger?.CollectionAmount < 0)
-                    return BadRequest();
-                userInfo.DueAmount = userInfo.DueAmount - (decimal)collectionLedger?.CollectionAmount;
-                _userRepository.Update(userInfo);
-                _userRepository.Commit();
+                return BadRequest();
             }
+                
+            var invoiceInfo = _salesInvoiceRepository.GetSingle((int)collectAmountObj?.SalesInvoiceId);
+            //if (invoiceInfo.CollectionAmount + (double)collectAmountObj.CollectionAmount > invoiceInfo.TotalPrice)
+            //{
+            //    return BadRequest();
+            //}
+
+            if (invoiceInfo != null)
+            {
+                var getAllInvoicesOfCurrentBillingUser = _salesInvoiceRepository.GetAll().Where(i => i.UserId == invoiceInfo.UserId && i.TotalPrice != i.CollectionAmount).OrderBy(i=>i.CreatedDateTime);
+
+                foreach(var item in getAllInvoicesOfCurrentBillingUser)
+                {
+                    var currentInvoice = _salesInvoiceRepository.GetSingle(item.Id);
+                    double currentCollectionAmount = 0;
+
+                    if(collectAmountObj.CollectionAmount > 0) {
+                        if(collectAmountObj.CollectionAmount >= (currentInvoice.TotalPrice - currentInvoice.CollectionAmount))
+                        {
+                            currentCollectionAmount = currentInvoice.TotalPrice - currentInvoice.CollectionAmount;
+                            #region Reduce current invoice amount
+                            currentInvoice.CollectionAmount = currentInvoice.CollectionAmount + currentCollectionAmount;
+                            _salesInvoiceRepository.Update(currentInvoice);
+                            _salesInvoiceRepository.Commit();
+                            #endregion
+
+                            #region Reduce collection amount 
+                            collectAmountObj.CollectionAmount = collectAmountObj.CollectionAmount - currentCollectionAmount;
+                            #endregion
+                        }
+                        else
+                        {
+                            currentCollectionAmount = currentInvoice.CollectionAmount + collectAmountObj.CollectionAmount.Value;
+                            
+                            #region Reduce current invoice amount
+                            currentInvoice.CollectionAmount = currentInvoice.CollectionAmount + currentCollectionAmount;
+                            _salesInvoiceRepository.Update(currentInvoice);
+                            _salesInvoiceRepository.Commit();
+                            #endregion
+
+                            #region Reduce collection amount 
+                            collectAmountObj.CollectionAmount = collectAmountObj.CollectionAmount - currentCollectionAmount;
+                            #endregion
+                        }
+
+                        #region Collection ledger
+                        var cuttentCollectionLedger = new CollectionLedger();
+                        cuttentCollectionLedger.UserId = currentInvoice.UserId;
+                        cuttentCollectionLedger.SalesInvoiceId = currentInvoice.Id;
+                        cuttentCollectionLedger.CollectionAmount = currentCollectionAmount;
+                        cuttentCollectionLedger.PaymentMethod = collectAmountObj?.PaymentMethod;
+                        _collectionLedgerRepository.Add(cuttentCollectionLedger);
+                        _collectionLedgerRepository.Commit();
+                        #endregion
+
+                        #region User wise use calculation
+
+                        if (cuttentCollectionLedger?.Id != null)
+                        {
+                            var userInfo = _userRepository.GetSingle(cuttentCollectionLedger.UserId);
+                            //if (userInfo.DueAmount - (decimal)cuttentCollectionLedger?.CollectionAmount < 0)
+                            //{
+                            //    return BadRequest();
+                            //}       
+                            userInfo.DueAmount = userInfo.DueAmount - (decimal)cuttentCollectionLedger?.CollectionAmount;
+                            _userRepository.Update(userInfo);
+                            _userRepository.Commit();
+                        }
+
+                        #endregion
+
+                    }
+
+
+
+                }
+            }
+
+            
+
+            
+            //invoiceInfo.CollectionAmount = invoiceInfo.CollectionAmount + (double)collectAmountObj.CollectionAmount;
+            //_salesInvoiceRepository.Update(invoiceInfo);
+            //_salesInvoiceRepository.Commit();
+
+            //var collectionLedger = new CollectionLedger();
+            //collectionLedger.UserId = (int)invoiceInfo?.UserId;
+            //collectionLedger.SalesInvoiceId = (int)collectAmountObj?.SalesInvoiceId;
+            //collectionLedger.CollectionAmount = (double)collectAmountObj?.CollectionAmount;
+            //collectionLedger.PaymentMethod = collectAmountObj?.PaymentMethod;
+            //_collectionLedgerRepository.Add(collectionLedger);
+            //_collectionLedgerRepository.Commit();
+
+            //if(collectionLedger?.Id != null)
+            //{
+            //    var userInfo = _userRepository.GetSingle(collectionLedger.UserId);
+            //    if (userInfo.DueAmount - (decimal)collectionLedger?.CollectionAmount < 0)
+            //        return BadRequest();
+            //    userInfo.DueAmount = userInfo.DueAmount - (decimal)collectionLedger?.CollectionAmount;
+            //    _userRepository.Update(userInfo);
+            //    _userRepository.Commit();
+            //}
             return Ok(new
             {
                 Status = 200,
