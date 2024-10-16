@@ -186,7 +186,7 @@ namespace TalukdarSalesAPI.Controllers
             });
         }
 
-        [HttpPost("createSalesInvoiceWithDetails")]
+        [HttpPost("ccc")]
         public IActionResult CreateSalesInvoiceWithDetails([FromBody] SalesInvoiceDto salesInvoiceObj)
         {
             if (salesInvoiceObj == null)
@@ -561,6 +561,49 @@ namespace TalukdarSalesAPI.Controllers
             .ToList();
 
             return Ok(topSellers);
+        }
+
+        [HttpGet("GetInvoiceDetails")]
+        public ActionResult<SalesInvoiceDto> GetInvoiceDetailsByInvoiceId(int invoiceId)
+        {
+            var invoiceHeader = _salesInvoiceRepository.GetSingle(invoiceId);
+            var invoiceDetails = _salesInvoiceDetailsRepository.GetAll().Where(i => i.SalesInvoiceId == invoiceId).ToList();
+            var userInfo = _userRepository.GetSingle(i => i.Id == invoiceHeader.UserId);
+
+            List<SalesInvoiceDetailsDto> salesInvoiceDetailsDtos = new List<SalesInvoiceDetailsDto>();
+
+            foreach(var item in invoiceDetails)
+            {
+                salesInvoiceDetailsDtos.Add(new SalesInvoiceDetailsDto
+                {
+                    Id = item.Id,
+                    CreatedDateTime = item.CreatedDateTime,
+                    DiscountAmount = item.DiscountAmount,
+                    DiscountPercentage = item.DiscountPercentage,
+                    FinishedGoodsId = item.FinishedGoodsId,
+                    FinishGoodName = _finishGoodRepository.GetSingle(item.FinishedGoodsId).Name,
+                    Price = item.Price,
+                    Quantity = item.Quantity
+                });
+            }
+
+            SalesInvoiceDto salesInvoiceDto = new SalesInvoiceDto()
+            {
+                Id = invoiceHeader.Id,
+                Quantity = invoiceHeader.Quantity,
+                CollectionAmount = invoiceHeader.CollectionAmount,
+                CreatedDateTime = invoiceHeader.CreatedDateTime,
+                DiscountAmount = invoiceHeader.DiscountAmount,
+                DiscountPercentage = invoiceHeader.DiscountPercentage,
+                InvoiceNumber = invoiceHeader.InvoiceSerialNo,
+                TotalPrice = invoiceHeader.TotalPrice,
+                UserId = invoiceHeader.UserId,
+                UserName = userInfo.FirstName +" "+userInfo.LastName,
+                SalesInvoiceDetails = salesInvoiceDetailsDtos,
+                UserSequencialId = userInfo.SequencialUserId
+            };
+            
+            return Ok(salesInvoiceDto);
         }
 
         [HttpGet("getTopFiveSellingProduct")]

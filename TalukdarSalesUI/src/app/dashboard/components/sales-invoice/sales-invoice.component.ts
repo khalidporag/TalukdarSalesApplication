@@ -79,6 +79,7 @@ export class SalesInvoiceComponent implements OnInit {
     console.log(this.userTypes)
     });
   }
+  
 
   onUserChange() {
     this.api.getSalesRequisitionList(this.selectedStatus,this.selectedUser,this.requisitionNo)

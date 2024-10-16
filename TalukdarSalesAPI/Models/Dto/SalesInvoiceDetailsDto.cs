@@ -10,5 +10,6 @@
         public double? Price { get; set; }
         public double? DiscountAmount { get; set; }
         public double? DiscountPercentage { get; set; }
+        public string? FinishGoodName { get; set; }
     }
 }

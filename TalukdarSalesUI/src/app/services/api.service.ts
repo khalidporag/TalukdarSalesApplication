@@ -290,6 +290,12 @@ export class ApiService {
   //   return this.http.get<any>(`${this.SalesInvoiceUrl}getLessFiveSellingProduct`);
   // }
 
+  getInvoiceDetails(invoiceId: string): Observable<any> {
+    let params = new HttpParams();
+    params = params.set('invoiceId', invoiceId?.toString());
+    return this.http.get(`${this.SalesInvoiceUrl}GetInvoiceDetails`, {params}); // Adjust the URL as per your API structure
+}
+
   getTopFiveSellerWithDueAmount(fromDate?: Date, toDate?: Date): Observable<any[]> {
     let params = new HttpParams();
     if (fromDate) {

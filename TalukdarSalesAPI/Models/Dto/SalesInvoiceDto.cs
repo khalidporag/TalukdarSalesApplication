@@ -15,6 +15,7 @@
         public double? DiscountPercentage { get; set; }
         public double? CollectionAmount { get; set; }
         public List<SalesInvoiceDetailsDto> SalesInvoiceDetails { get; set; }
+        public string UserSequencialId { get; set; }
     }
 
     public class SalesInvoiceInfoDto
