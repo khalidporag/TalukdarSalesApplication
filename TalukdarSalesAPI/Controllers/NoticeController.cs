@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using TalukdarSalesAPI.Helpers;
 using TalukdarSalesAPI.Interfaces;
 using TalukdarSalesAPI.Models;
 using TalukdarSalesAPI.Models.Dto;
@@ -7,6 +8,7 @@ namespace TalukdarSalesAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Microsoft.AspNetCore.Authorization.Authorize]
     public class NoticeController : ControllerBase
     {
         private readonly INoticeRepository _noticeRepository;
@@ -20,6 +22,14 @@ namespace TalukdarSalesAPI.Controllers
         {
             if (input == null)
                 return BadRequest();
+
+            var notice = _noticeRepository.FindBy(x => x.Title == input.Title).FirstOrDefault();
+
+            if (notice != null)
+                return NotFound(new { Message = "Title already Exist. Please try with another title!"});
+
+            if (input.Image != null && !UploadValidator.IsValidImage(input.Image))
+                return BadRequest(new { Message = "Invalid image. Allowed: jpg, jpeg, png, gif, webp up to 5 MB." });
 
             string uniqueFileName = "";
             if (input.Image != null)
@@ -38,11 +48,6 @@ namespace TalukdarSalesAPI.Controllers
                     await input.Image.CopyToAsync(stream);
                 }
             }
-
-            var notice = _noticeRepository.FindBy(x => x.Title == input.Title).FirstOrDefault();
-
-            if (notice != null)
-                return NotFound(new { Message = "Title already Exist. Please try with another title!"});
 
             var createNotice = new Notice();
             createNotice.Title = input.Title;

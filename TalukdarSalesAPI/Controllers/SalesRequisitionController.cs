@@ -9,6 +9,7 @@ namespace TalukdarSalesAPI.Controllers
 
     [Route("api/[controller]")]
     [ApiController]
+    [Microsoft.AspNetCore.Authorization.Authorize]
     public class SalesRequisitionController : ControllerBase
     {
         private readonly ISalesRequisitionRepository _salesRequisitionRepository;
@@ -223,16 +224,24 @@ namespace TalukdarSalesAPI.Controllers
             var productTypeList = _finishedGoodTypeRepository.GetAll().ToDictionary(n => n.Id);
 
             var dailyProductTypeWiseQuantities = requisitionList
-               .GroupBy(r => new { Date = r.CreatedDateTime.Date, r.FinishedGoodId})
+               .GroupBy(r => new
+               {
+                   Date = r.CreatedDateTime.Date,
+                   TypeId = finishedGoodList.ContainsKey(r.FinishedGoodId) ? finishedGoodList[r.FinishedGoodId].GoodTypeId : 0
+               })
                .Select(g => new ProductTypewiseRequisitionDto
                {
                    RequisitionDate = g.Key.Date,
+                   ProductTypeId = g.Key.TypeId,
+                   ProductTypeName = productTypeList.ContainsKey(g.Key.TypeId) ? productTypeList[g.Key.TypeId].Name : "",
                    FinishedGoods = g.GroupBy(fg => fg.FinishedGoodId)
                                     .Select(fg => new FinishedGoodsDto
                                     {
                                         FinishedGoodId = fg.Key,
                                         FinishedGoodName = finishedGoodList.ContainsKey(fg.Key) ? finishedGoodList[fg.Key].Name : "",
-                                        TotalQuantity = fg.Sum(f => f.Quantity)
+                                        TotalQuantity = fg.Sum(f => f.Quantity),
+                                        ProductTypeId = g.Key.TypeId,
+                                        ProductTypeName = productTypeList.ContainsKey(g.Key.TypeId) ? productTypeList[g.Key.TypeId].Name : ""
                                     }).ToList()
                })
                .OrderBy(result => result.RequisitionDate)
@@ -248,7 +257,7 @@ namespace TalukdarSalesAPI.Controllers
             if (TimeSpan.TryParse(fromTime, out var from) && TimeSpan.TryParse(toTime, out var to))
             {
                 var now = DateTime.Now.TimeOfDay;
-                return (from <= now) && (now <= to);
+                return from <= to ? (from <= now && now <= to) : (now >= from || now <= to);
             }
             else
             {
@@ -300,7 +309,7 @@ namespace TalukdarSalesAPI.Controllers
             var requisitionList = _salesRequisitionDetailRepository.GetAll().ToList();
 
             if (from != null && to != null)
-                requisitionList = requisitionList.Where(n => n.CreatedOn >= from && n.CreatedOn <= to).ToList();
+                requisitionList = requisitionList.Where(n => n.CreatedOn >= from && n.CreatedOn < to.Value.Date.AddDays(1)).ToList();
             else
                 requisitionList = requisitionList.Where(s => s.CreatedOn >= oneMonthAgo).ToList();
 

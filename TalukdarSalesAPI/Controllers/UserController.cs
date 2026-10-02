@@ -21,6 +21,7 @@ namespace TalukdarSalesAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Microsoft.AspNetCore.Authorization.Authorize]
     [EnableCors("MyPolicy")]
     public class UserController : ControllerBase
     {
@@ -29,12 +30,15 @@ namespace TalukdarSalesAPI.Controllers
         private readonly IUserRoleMappingRepository _userRoleMappingRepository;
 
         private readonly ApplicationDbContext _authContext;
+        private readonly IConfiguration _configuration;
         public UserController(
             IUserRepository userRepository,
             IUserTypeRepository userTypeRepository,
             IUserRoleMappingRepository userRoleMappingRepository,
-            ApplicationDbContext authContext)
+            ApplicationDbContext authContext,
+            IConfiguration configuration)
         {
+            _configuration = configuration;
             _userRepository = userRepository;
             _userTypeRepository = userTypeRepository;
             _userRoleMappingRepository = userRoleMappingRepository;
@@ -42,6 +46,7 @@ namespace TalukdarSalesAPI.Controllers
         }
 
         [HttpPost("authenticate")]
+        [Microsoft.AspNetCore.Authorization.AllowAnonymous]
         public IActionResult Authenticate([FromBody] User userObj)
         {
             if (userObj == null)
@@ -94,6 +99,9 @@ namespace TalukdarSalesAPI.Controllers
             userObj.IsPayRollUser = input.IsPayRollUser;
             userObj.RefreshToken = input.RefreshToken;
             userObj.RefreshTokenExpiryTime = input.RefreshTokenExpiryTime;
+
+            if (input.Image != null && !UploadValidator.IsValidImage(input.Image))
+                return BadRequest(new { Message = "Invalid image. Allowed: jpg, jpeg, png, gif, webp up to 5 MB." });
 
             string uniqueFileName = "";
             if (input.Image != null)
@@ -191,11 +199,10 @@ namespace TalukdarSalesAPI.Controllers
         private string CreateJwt(User user)
         {
             var jwtTokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes("veryverysceret.....");
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
             var identity = new ClaimsIdentity(new Claim[]
             {
-                //new Claim(ClaimTypes.Role, user.Role),
-                new Claim(ClaimTypes.Name,$"{user.Username}")
+                                new Claim(ClaimTypes.Name,$"{user.Username}")
             });
 
             var credentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);
@@ -203,7 +210,7 @@ namespace TalukdarSalesAPI.Controllers
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = identity,
-                Expires = DateTime.Now.AddSeconds(10),
+                Expires = DateTime.UtcNow.AddMinutes(_configuration.GetValue("Jwt:AccessTokenMinutes", 30)),
                 SigningCredentials = credentials
             };
             var token = jwtTokenHandler.CreateToken(tokenDescriptor);
@@ -226,7 +233,7 @@ namespace TalukdarSalesAPI.Controllers
 
         private ClaimsPrincipal GetPrincipleFromExpiredToken(string token)
         {
-            var key = Encoding.ASCII.GetBytes("veryverysceret.....");
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
             var tokenValidationParameters = new TokenValidationParameters
             {
                 ValidateAudience = false,
@@ -278,24 +285,29 @@ namespace TalukdarSalesAPI.Controllers
                 Address = n.Address,
                 ContactPersonName = n.ContactPersonName,
                 ContactPersonPhone = n.ContactPersonPhone,
-                Password = n.Password,
-                IsPayRollUser = n.IsPayRollUser,
-                Token = n.Token,
-                RefreshToken = n.RefreshToken,
-                RefreshTokenExpiryTime = n.RefreshTokenExpiryTime
+                IsPayRollUser = n.IsPayRollUser
             }).ToList();
             return Ok(result);
         }
 
         [HttpPost("refresh")]
+        [Microsoft.AspNetCore.Authorization.AllowAnonymous]
         public async Task<IActionResult> Refresh([FromBody] TokenApiDto tokenApiDto)
         {
             if (tokenApiDto is null)
                 return BadRequest("Invalid Client Request");
             string accessToken = tokenApiDto.AccessToken;
             string refreshToken = tokenApiDto.RefreshToken;
-            var principal = GetPrincipleFromExpiredToken(accessToken);
-            var username = principal.Identity.Name;
+            ClaimsPrincipal principal;
+            try
+            {
+                principal = GetPrincipleFromExpiredToken(accessToken);
+            }
+            catch (Exception)
+            {
+                return BadRequest("Invalid Request");
+            }
+            var username = principal.Identity?.Name;
             var user = _userRepository.FindBy(u => u.Username == username).FirstOrDefault();
             if (user is null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
                 return BadRequest("Invalid Request");
