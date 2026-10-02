@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Project.Run.Repositories;
+using TalukdarSalesAPI.Helpers;
 using TalukdarSalesAPI.Interfaces;
 using TalukdarSalesAPI.Models;
 using TalukdarSalesAPI.Models.Dto;
@@ -8,6 +9,7 @@ namespace TalukdarSalesAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Microsoft.AspNetCore.Authorization.Authorize]
     public class FinishedGoodController : ControllerBase
     {
         private readonly IFinishedGoodsRepository _finishedGoodsRepository;
@@ -49,6 +51,9 @@ namespace TalukdarSalesAPI.Controllers
         {
             if (input == null)
                 return BadRequest();
+            if (input.Image != null && !UploadValidator.IsValidImage(input.Image))
+                return BadRequest(new { Message = "Invalid image. Allowed: jpg, jpeg, png, gif, webp up to 5 MB." });
+
             string uniqueFileName = "";
             if (input.Image != null)
             {

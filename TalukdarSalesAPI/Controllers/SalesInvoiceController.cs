@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Project.Run.Repositories;
+using TalukdarSalesAPI.Context;
 using TalukdarSalesAPI.Interfaces;
 using TalukdarSalesAPI.Models;
 using TalukdarSalesAPI.Models.Dto;
@@ -13,6 +14,7 @@ namespace TalukdarSalesAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Microsoft.AspNetCore.Authorization.Authorize]
     public class SalesInvoiceController : ControllerBase
     {
         private readonly ICollectionLedgerRepository _collectionLedgerRepository;
@@ -22,6 +24,7 @@ namespace TalukdarSalesAPI.Controllers
         private readonly IUserRepository _userRepository;
         private readonly ISalesRequisitionDetailRepository _salesRequisitionDetailRepository;
         private readonly IFinishedGoodsRepository _finishGoodRepository;
+        private readonly ApplicationDbContext _context;
 
         public SalesInvoiceController(ICollectionLedgerRepository collectionLedgerRepository,
             ISalesInvoiceRepository salesInvoiceRepository,
@@ -29,7 +32,8 @@ namespace TalukdarSalesAPI.Controllers
             ISalesRequisitionRepository salesRequisitioinRepository,
             IUserRepository userRepository,
             ISalesRequisitionDetailRepository salesRequisitionDetailRepository,
-            IFinishedGoodsRepository finishGoodRepository)
+            IFinishedGoodsRepository finishGoodRepository,
+            ApplicationDbContext context)
         {
             _collectionLedgerRepository = collectionLedgerRepository;
             _salesInvoiceRepository = salesInvoiceRepository;
@@ -38,6 +42,7 @@ namespace TalukdarSalesAPI.Controllers
             _userRepository = userRepository;
             _salesRequisitionDetailRepository = salesRequisitionDetailRepository;
             _finishGoodRepository = finishGoodRepository;
+            _context = context;
         }
         [HttpPost("createCollectionLedger")]
         public IActionResult CreateCollectionLedger([FromBody] CollectionLedger collectionLedgerObj)
@@ -114,6 +119,7 @@ namespace TalukdarSalesAPI.Controllers
             requisitionList = requisitionList.Where(n => requisitionId.Contains(n.Id)).ToList();
             if (requisitionList.Count == 0)
                 return BadRequest();
+            using var bulkTransaction = _context.Database.BeginTransaction();
             foreach (var requisition in requisitionList)
             {
                 var requisitionDetails = _salesRequisitionDetailRepository.GetAll().ToList();
@@ -144,7 +150,7 @@ namespace TalukdarSalesAPI.Controllers
                 if (createSalesInvoice?.Id != null)
                 {
                     var userInfo = _userRepository.GetSingle(createSalesInvoice.UserId);
-                    userInfo.DueAmount = (decimal)createSalesInvoice?.TotalPrice;
+                    userInfo.DueAmount += (decimal)createSalesInvoice.TotalPrice;
                     _userRepository.Update(userInfo);
                     _userRepository.Commit();
 
@@ -179,6 +185,7 @@ namespace TalukdarSalesAPI.Controllers
 
 
             }
+            bulkTransaction.Commit();
             return Ok(new
             {
                 Status = 200,
@@ -220,7 +227,7 @@ namespace TalukdarSalesAPI.Controllers
             if(createSalesInvoice?.Id != null)
             {
                 var userInfo = _userRepository.GetSingle(createSalesInvoice.UserId);
-                userInfo.DueAmount = (decimal)createSalesInvoice?.TotalPrice;
+                userInfo.DueAmount += (decimal)createSalesInvoice.TotalPrice;
                 _userRepository.Update(userInfo);
                 _userRepository.Commit();
 
@@ -347,112 +354,59 @@ namespace TalukdarSalesAPI.Controllers
         [HttpPost("collectInvoiceAmount")]
         public IActionResult ColllectInvoiceAmount([FromBody] CollectAmountDto collectAmountObj)
         {
-            if (collectAmountObj == null)
-            {
-                return BadRequest();
-            }
-                
-            var invoiceInfo = _salesInvoiceRepository.GetSingle((int)collectAmountObj?.SalesInvoiceId);
-            //if (invoiceInfo.CollectionAmount + (double)collectAmountObj.CollectionAmount > invoiceInfo.TotalPrice)
-            //{
-            //    return BadRequest();
-            //}
+            if (collectAmountObj == null || collectAmountObj.CollectionAmount == null || collectAmountObj.CollectionAmount <= 0)
+                return BadRequest(new { Message = "Invalid collection amount" });
 
-            if (invoiceInfo != null)
-            {
-                var getAllInvoicesOfCurrentBillingUser = _salesInvoiceRepository.GetAll().Where(i => i.UserId == invoiceInfo.UserId && i.TotalPrice != i.CollectionAmount).OrderBy(i=>i.CreatedDateTime);
+            var invoiceInfo = _salesInvoiceRepository.GetSingle(collectAmountObj.SalesInvoiceId);
+            if (invoiceInfo == null)
+                return NotFound(new { Message = "Invoice not found" });
 
-                foreach(var item in getAllInvoicesOfCurrentBillingUser)
+            var userInfo = _userRepository.GetSingle(invoiceInfo.UserId);
+            if (userInfo == null)
+                return NotFound(new { Message = "User not found" });
+
+            // Outstanding invoices of the billed user, oldest first
+            var outstandingInvoices = _salesInvoiceRepository.GetAll()
+                .Where(i => i.UserId == invoiceInfo.UserId && i.TotalPrice > i.CollectionAmount)
+                .OrderBy(i => i.CreatedDateTime)
+                .ToList();
+
+            var remaining = collectAmountObj.CollectionAmount.Value;
+            var totalOutstanding = outstandingInvoices.Sum(i => i.TotalPrice - i.CollectionAmount);
+            if (remaining > totalOutstanding + 0.005)
+                return BadRequest(new { Message = "Collection amount exceeds the outstanding amount" });
+
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                var totalCollected = 0.0;
+                foreach (var invoice in outstandingInvoices)
                 {
-                    var currentInvoice = _salesInvoiceRepository.GetSingle(item.Id);
-                    double currentCollectionAmount = 0;
+                    if (remaining <= 0)
+                        break;
 
-                    if(collectAmountObj.CollectionAmount > 0) {
-                        if(collectAmountObj.CollectionAmount >= (currentInvoice.TotalPrice - currentInvoice.CollectionAmount))
-                        {
-                            currentCollectionAmount = currentInvoice.TotalPrice - currentInvoice.CollectionAmount;
-                            #region Reduce current invoice amount
-                            currentInvoice.CollectionAmount = currentInvoice.CollectionAmount + currentCollectionAmount;
-                            _salesInvoiceRepository.Update(currentInvoice);
-                            _salesInvoiceRepository.Commit();
-                            #endregion
+                    var applied = Math.Min(remaining, invoice.TotalPrice - invoice.CollectionAmount);
 
-                            #region Reduce collection amount 
-                            collectAmountObj.CollectionAmount = collectAmountObj.CollectionAmount - currentCollectionAmount;
-                            #endregion
-                        }
-                        else
-                        {
-                            currentCollectionAmount = currentInvoice.CollectionAmount + collectAmountObj.CollectionAmount.Value;
-                            
-                            #region Reduce current invoice amount
-                            currentInvoice.CollectionAmount = currentInvoice.CollectionAmount + currentCollectionAmount;
-                            _salesInvoiceRepository.Update(currentInvoice);
-                            _salesInvoiceRepository.Commit();
-                            #endregion
+                    invoice.CollectionAmount += applied;
+                    _salesInvoiceRepository.Update(invoice);
 
-                            #region Reduce collection amount 
-                            collectAmountObj.CollectionAmount = collectAmountObj.CollectionAmount - currentCollectionAmount;
-                            #endregion
-                        }
+                    var ledger = new CollectionLedger();
+                    ledger.UserId = invoice.UserId;
+                    ledger.SalesInvoiceId = invoice.Id;
+                    ledger.CollectionAmount = applied;
+                    ledger.PaymentMethod = collectAmountObj.PaymentMethod;
+                    _collectionLedgerRepository.Add(ledger);
 
-                        #region Collection ledger
-                        var cuttentCollectionLedger = new CollectionLedger();
-                        cuttentCollectionLedger.UserId = currentInvoice.UserId;
-                        cuttentCollectionLedger.SalesInvoiceId = currentInvoice.Id;
-                        cuttentCollectionLedger.CollectionAmount = currentCollectionAmount;
-                        cuttentCollectionLedger.PaymentMethod = collectAmountObj?.PaymentMethod;
-                        _collectionLedgerRepository.Add(cuttentCollectionLedger);
-                        _collectionLedgerRepository.Commit();
-                        #endregion
-
-                        #region User wise use calculation
-
-                        if (cuttentCollectionLedger?.Id != null)
-                        {
-                            var userInfo = _userRepository.GetSingle(cuttentCollectionLedger.UserId);
-                            //if (userInfo.DueAmount - (decimal)cuttentCollectionLedger?.CollectionAmount < 0)
-                            //{
-                            //    return BadRequest();
-                            //}       
-                            userInfo.DueAmount = userInfo.DueAmount - (decimal)cuttentCollectionLedger?.CollectionAmount;
-                            _userRepository.Update(userInfo);
-                            _userRepository.Commit();
-                        }
-
-                        #endregion
-
-                    }
-
-
-
+                    remaining -= applied;
+                    totalCollected += applied;
                 }
+
+                userInfo.DueAmount -= (decimal)totalCollected;
+                _userRepository.Update(userInfo);
+
+                _salesInvoiceRepository.Commit();
+                transaction.Commit();
             }
 
-            
-
-            
-            //invoiceInfo.CollectionAmount = invoiceInfo.CollectionAmount + (double)collectAmountObj.CollectionAmount;
-            //_salesInvoiceRepository.Update(invoiceInfo);
-            //_salesInvoiceRepository.Commit();
-
-            //var collectionLedger = new CollectionLedger();
-            //collectionLedger.UserId = (int)invoiceInfo?.UserId;
-            //collectionLedger.SalesInvoiceId = (int)collectAmountObj?.SalesInvoiceId;
-            //collectionLedger.CollectionAmount = (double)collectAmountObj?.CollectionAmount;
-            //collectionLedger.PaymentMethod = collectAmountObj?.PaymentMethod;
-            //_collectionLedgerRepository.Add(collectionLedger);
-            //_collectionLedgerRepository.Commit();
-
-            //if(collectionLedger?.Id != null)
-            //{
-            //    var userInfo = _userRepository.GetSingle(collectionLedger.UserId);
-            //    if (userInfo.DueAmount - (decimal)collectionLedger?.CollectionAmount < 0)
-            //        return BadRequest();
-            //    userInfo.DueAmount = userInfo.DueAmount - (decimal)collectionLedger?.CollectionAmount;
-            //    _userRepository.Update(userInfo);
-            //    _userRepository.Commit();
-            //}
             return Ok(new
             {
                 Status = 200,
