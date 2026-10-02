@@ -362,3 +362,7 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /TalukdarSalesAPI/wwwroot/images/users
+
+# Runtime uploads and generated files
+/TalukdarSalesAPI/wwwroot/images/
+/TalukdarSalesAPI/wwwroot/pdf/

@@ -63,6 +63,9 @@ namespace TalukdarSalesAPI.Controllers
                 return BadRequest(new { Message = "Password is Incorrect" });
             }
 
+            if (PasswordHasher.NeedsRehash(user.Password))
+                user.Password = PasswordHasher.HashPassword(userObj.Password);
+
             user.Token = CreateJwt(user);
             var newAccessToken = user.Token;
             var newRefreshToken = CreateRefreshToken();
@@ -204,6 +207,10 @@ namespace TalukdarSalesAPI.Controllers
             {
                                 new Claim(ClaimTypes.Name,$"{user.Username}")
             });
+
+            var roleIds = _userRoleMappingRepository.FindBy(m => m.UserId == user.Id).Select(m => m.RoleId).ToList();
+            foreach (var role in _authContext.ApplicationRoles.Where(r => roleIds.Contains(r.Id)).ToList())
+                identity.AddClaim(new Claim(ClaimTypes.Role, role.Name));
 
             var credentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);
 

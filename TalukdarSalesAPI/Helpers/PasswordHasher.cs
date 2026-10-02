@@ -1,47 +1,63 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 
 namespace TalukdarSalesAPI.Helpers
 {
     public class PasswordHasher
     {
-        private static RNGCryptoServiceProvider rngCsp = new RNGCryptoServiceProvider();
-        private static readonly int SaltSize = 16;
-        private static readonly int HashSize = 20;
-        private static readonly int Iterations = 10000;
+        private const string V2Prefix = "v2$";
+        private const int SaltSize = 16;
+        private const int V2HashSize = 32;
+        private const int V2Iterations = 100000;
+
+        // Legacy format: base64(salt[16] + PBKDF2-SHA1(10000 iterations)[20])
+        private const int LegacyHashSize = 20;
+        private const int LegacyIterations = 10000;
 
         public static string HashPassword(string password)
         {
-            byte[] salt;
-            rngCsp.GetBytes(salt = new byte[SaltSize]);
+            var salt = RandomNumberGenerator.GetBytes(SaltSize);
+            var hash = Rfc2898DeriveBytes.Pbkdf2(password, salt, V2Iterations, HashAlgorithmName.SHA256, V2HashSize);
 
-            var key = new Rfc2898DeriveBytes(password, salt, Iterations);
-            var hash = key.GetBytes(HashSize);
-
-            var hashBytes = new byte[SaltSize + HashSize];
+            var hashBytes = new byte[SaltSize + V2HashSize];
             Array.Copy(salt, 0, hashBytes, 0, SaltSize);
-            Array.Copy(hash, 0, hashBytes, SaltSize, HashSize);
+            Array.Copy(hash, 0, hashBytes, SaltSize, V2HashSize);
 
-            var base64Hash = Convert.ToBase64String(hashBytes);
-
-            return base64Hash;
+            return V2Prefix + Convert.ToBase64String(hashBytes);
         }
 
-        public static bool VerifyPassword(string password, string base64Hash)
+        public static bool VerifyPassword(string password, string storedHash)
         {
-            var hashBytes = Convert.FromBase64String(base64Hash);
+            if (string.IsNullOrEmpty(password) || string.IsNullOrEmpty(storedHash))
+                return false;
 
-            var salt = new byte[SaltSize];
-            Array.Copy(hashBytes, 0, salt, 0, SaltSize);
-
-            var key = new Rfc2898DeriveBytes(password, salt, Iterations);
-            byte[] hash = key.GetBytes(HashSize);
-
-            for (var i = 0; i < HashSize; i++)
+            try
             {
-                if (hashBytes[i + SaltSize] != hash[i])
+                if (storedHash.StartsWith(V2Prefix))
+                {
+                    var bytes = Convert.FromBase64String(storedHash.Substring(V2Prefix.Length));
+                    if (bytes.Length != SaltSize + V2HashSize)
+                        return false;
+                    var salt = bytes[..SaltSize];
+                    var expected = bytes[SaltSize..];
+                    var actual = Rfc2898DeriveBytes.Pbkdf2(password, salt, V2Iterations, HashAlgorithmName.SHA256, V2HashSize);
+                    return CryptographicOperations.FixedTimeEquals(expected, actual);
+                }
+
+                var legacy = Convert.FromBase64String(storedHash);
+                if (legacy.Length != SaltSize + LegacyHashSize)
                     return false;
+                var legacySalt = legacy[..SaltSize];
+                var legacyExpected = legacy[SaltSize..];
+                var legacyActual = Rfc2898DeriveBytes.Pbkdf2(password, legacySalt, LegacyIterations, HashAlgorithmName.SHA1, LegacyHashSize);
+                return CryptographicOperations.FixedTimeEquals(legacyExpected, legacyActual);
             }
-            return true;
+            catch (FormatException)
+            {
+                return false;
+            }
         }
+
+        public static bool NeedsRehash(string storedHash)
+            => string.IsNullOrEmpty(storedHash) || !storedHash.StartsWith(V2Prefix);
     }
 }
