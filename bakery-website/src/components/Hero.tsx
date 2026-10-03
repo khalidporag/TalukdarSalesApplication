@@ -16,8 +16,8 @@ function SealText() {
           <textPath href="#seal" textLength="384" lengthAdjust="spacing">Freshly baked • Made with care • Since 2021 •</textPath>
         </text>
       </svg>
-      <svg viewBox="0 0 40 40" className="absolute left-1/2 top-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2 text-caramel" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M20 5c6 4 10 10 10 17a10 10 0 0 1-20 0c0-7 4-13 10-17z" /><path d="M20 13v20M15 22l5 5 5-5" />
+      <svg viewBox="0 0 40 40" className="absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 text-caramel" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M20 36V12M20 12c-3-1-4-4-3-7 3 1 4 4 3 7zM20 12c3-1 4-4 3-7-3 1-4 4-3 7zM20 20c-4 0-6-3-6-6 4 0 6 3 6 6zM20 20c4 0 6-3 6-6-4 0-6 3-6 6zM20 28c-4 0-6-3-6-6 4 0 6 3 6 6zM20 28c4 0 6-3 6-6-4 0-6 3-6 6z" />
       </svg>
     </div>
   );

@@ -45,7 +45,7 @@ export function Navbar() {
     <>
       <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-700 ease-silk ${scrolled ? 'border-b border-espresso/10 bg-ivory/80 py-3 backdrop-blur-xl' : 'border-b border-transparent py-6'}`}>
         <div className="container-x flex items-center justify-between gap-6">
-          <Link to="/" aria-label={`${brand.name} home`} data-cursor><Logo /></Link>
+          <Link to="/" aria-label={`${brand.name} home`} data-cursor><Logo className="h-12 sm:h-14" /></Link>
 
           <nav className="hidden items-center gap-9 lg:flex" aria-label="Main">
             {links.map((l) => (
@@ -80,7 +80,7 @@ export function Navbar() {
         {open ? (
           <motion.div key="drawer" className="fixed inset-0 z-[80] flex flex-col bg-espresso text-ivory" initial={{ clipPath: 'inset(0 0 100% 0)' }} animate={{ clipPath: 'inset(0 0 0% 0)' }} exit={{ clipPath: 'inset(0 0 100% 0)' }} transition={{ duration: 0.9, ease: silk }} role="dialog" aria-modal="true" aria-label="Menu">
             <div className="container-x flex items-center justify-between py-6">
-              <Logo light />
+              <Logo className="h-16" />
               <button onClick={() => setOpen(false)} className="flex h-11 w-11 items-center justify-center rounded-full border border-ivory/25" aria-label="Close menu"><X size={19} strokeWidth={1.5} /></button>
             </div>
             <nav className="container-x flex flex-1 flex-col justify-center gap-1" aria-label="Mobile">

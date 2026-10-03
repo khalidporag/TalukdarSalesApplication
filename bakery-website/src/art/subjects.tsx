@@ -522,7 +522,7 @@ function Box({ uid, t }: SubjectProps) {
     <g>
       <defs>
         <Linear id={`${uid}bx`} stops={[[0, '#FFFBF1'], [1, '#EADBBD']]} />
-        <Linear id={`${uid}rb`} stops={[[0, '#B5803F'], [1, '#8F5F28']]} />
+        <Linear id={`${uid}rb`} stops={[[0, '#C8962E'], [1, '#B3202B']]} />
       </defs>
       <Shadow uid={uid} cx={410} cy={766} rx={290} ry={30} o={0.5} />
       <path d="M180 460 L520 460 L620 410 L280 410Z" fill="#F3E7CE" />
@@ -531,12 +531,12 @@ function Box({ uid, t }: SubjectProps) {
       <rect x="180" y="460" width="340" height="24" fill="#fff" opacity="0.4" />
       <rect x="326" y="460" width="48" height="270" fill={`url(#${uid}rb)`} />
       <path d="M520 460 L620 410 V680" stroke="#fff" strokeOpacity="0.4" fill="none" />
-      <path d="M350 410 L350 460 M350 410 L350 460" stroke="#8F5F28" strokeWidth="2" />
+      <path d="M350 410 L350 460 M350 410 L350 460" stroke="#B3202B" strokeWidth="2" />
       <path d="M350 456 C270 380 220 380 232 420 C244 460 320 458 350 456Z" fill={`url(#${uid}rb)`} />
       <path d="M350 456 C430 380 480 380 468 420 C456 460 380 458 350 456Z" fill={`url(#${uid}rb)`} />
       <circle cx="350" cy="456" r="18" fill="#A87635" />
       <path d="M338 466 L300 560 M362 466 L402 556" stroke="#A87635" strokeWidth="14" strokeLinecap="round" />
-      <text x="262" y="660" fontFamily="Cormorant Garamond, Georgia, serif" fontStyle="italic" fontSize="38" fill="#8F5F28" textAnchor="middle">Aurum</text>
+      <text x="262" y="660" fontFamily="Cormorant Garamond, Georgia, serif" fontStyle="italic" fontSize="38" fill="#B3202B" textAnchor="middle">Talukder</text>
       <Crumbs seed={29} n={12} cy={760} spread={300} color={t.ink} />
     </g>
   );
@@ -552,7 +552,7 @@ function Storefront({ uid }: SubjectProps) {
       <rect width="800" height="1000" fill="#3a241a" opacity="0.5" />
       <rect x="90" y="250" width="620" height="520" fill="#1d100a" />
       <rect x="120" y="330" width="560" height="400" fill={`url(#${uid}gl)`} />
-      {[0, 1, 2].map((i) => <rect key={i} x={140} y={440 + i * 100} width="520" height="10" fill="#8F5F28" opacity="0.8" />)}
+      {[0, 1, 2].map((i) => <rect key={i} x={140} y={440 + i * 100} width="520" height="10" fill="#B3202B" opacity="0.8" />)}
       {Array.from({ length: 12 }).map((_, i) => (
         <g key={i} transform={`translate(${190 + (i % 4) * 135} ${430 + Math.floor(i / 4) * 100})`}>
           <ellipse cx="0" cy="0" rx="46" ry="20" fill="#C98233" />
@@ -560,8 +560,8 @@ function Storefront({ uid }: SubjectProps) {
         </g>
       ))}
       <path d="M70 230 H730 L700 330 H100Z" fill={`url(#${uid}aw)`} />
-      {Array.from({ length: 8 }).map((_, i) => <path key={i} d={`M${100 + i * 80} 230 L${104 + i * 76} 330 H${150 + i * 76} L${140 + i * 80} 230Z`} fill={i % 2 ? '#E9DDC6' : '#B5803F'} opacity="0.92" />)}
-      <text x="400" y="210" fontFamily="Cormorant Garamond, Georgia, serif" fontStyle="italic" fontSize="64" fill="#F4E2B6" textAnchor="middle">Aurum</text>
+      {Array.from({ length: 8 }).map((_, i) => <path key={i} d={`M${100 + i * 80} 230 L${104 + i * 76} 330 H${150 + i * 76} L${140 + i * 80} 230Z`} fill={i % 2 ? '#E9DDC6' : '#C8962E'} opacity="0.92" />)}
+      <text x="400" y="210" fontFamily="Cormorant Garamond, Georgia, serif" fontStyle="italic" fontSize="64" fill="#F4E2B6" textAnchor="middle">Talukder</text>
       <rect x="60" y="770" width="680" height="30" fill="#120a06" />
     </g>
   );

@@ -20,12 +20,12 @@
     font-feature-settings: 'ss01', 'cv11';
     overflow-x: hidden;
   }
-  ::selection { background: #B5803F; color: #FFFBF1; }
+  ::selection { background: #C8962E; color: #FFFBF1; }
   h1, h2, h3, h4 { @apply font-display font-medium; letter-spacing: -0.015em; }
   .font-display { font-variant-numeric: lining-nums; }
   img, svg { display: block; }
   button { @apply cursor-pointer; }
-  :focus-visible { outline: 2px solid #B5803F; outline-offset: 3px; border-radius: 4px; }
+  :focus-visible { outline: 2px solid #C8962E; outline-offset: 3px; border-radius: 4px; }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }

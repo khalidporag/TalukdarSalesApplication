@@ -13,7 +13,7 @@ export function Footer() {
     <footer className="relative border-t border-ivory/10 bg-ink text-ivory">
       <div className="container-x grid grid-cols-2 gap-x-6 gap-y-12 py-20 sm:py-24 lg:grid-cols-12 lg:gap-x-10">
         <div className="col-span-2 lg:col-span-4">
-          <Logo light />
+          <Logo className="h-16" />
           <p className="mt-7 max-w-xs font-display text-2xl italic leading-snug text-ivory/85">{brand.tagline}</p>
           <p className="mt-4 max-w-xs text-[0.88rem] leading-relaxed text-ivory/55">{brand.statement}</p>
           <div className="mt-7 flex gap-3">

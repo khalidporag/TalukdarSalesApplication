@@ -19,10 +19,10 @@ function MapArt() {
       <path d="M-20 420 C150 340 300 460 620 300" stroke="#C7D3C0" strokeWidth="38" fill="none" strokeLinecap="round" opacity="0.75" />
       <g fill="#B9C6A3" opacity="0.7"><circle cx="90" cy="230" r="30" /><circle cx="520" cy="110" r="26" /></g>
       <g transform="translate(300 220)">
-        <circle r="46" fill="#B5803F" opacity="0.14"><animate attributeName="r" values="26;62;26" dur="4.5s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.3;0;0.3" dur="4.5s" repeatCount="indefinite" /></circle>
+        <circle r="46" fill="#C8962E" opacity="0.14"><animate attributeName="r" values="26;62;26" dur="4.5s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.3;0;0.3" dur="4.5s" repeatCount="indefinite" /></circle>
         <path d="M0 -64 C-24 -64 -38 -46 -38 -26 C-38 2 0 36 0 36 C0 36 38 2 38 -26 C38 -46 24 -64 0 -64Z" fill="#241710" />
         <circle cy="-28" r="13" fill="#F8F2E9" />
-        <path d="M0 -37 c4 3 6 6 6 10 a6 6 0 0 1 -12 0 c0 -4 2 -7 6 -10Z" fill="#B5803F" />
+        <path d="M0 -37 c4 3 6 6 6 10 a6 6 0 0 1 -12 0 c0 -4 2 -7 6 -10Z" fill="#C8962E" />
       </g>
     </svg>
   );

@@ -1,8 +1,8 @@
-# Aurum Bakehouse: bakery website
+# Talukder Foods: bakery website
 
 A static, premium, editorial website for a boutique bakery. No backend. Built with React, TypeScript, Vite, Tailwind CSS, Framer Motion and Lucide icons.
 
-**"Aurum Bakehouse" is a placeholder brand.** The reference Facebook page could not be read while building (it needs a login and was not reachable), so the identity, products, prices and copy are invented and clearly marked for replacement. Everything you need to change lives in `src/data/`.
+**The logo is the real Talukder Foods mark; the rest of the brand copy is placeholder.** The reference Facebook page could not be read while building (it needs a login and was not reachable), so the identity, products, prices and copy are invented and clearly marked for replacement. Everything you need to change lives in `src/data/`.
 
 ## Run it
 

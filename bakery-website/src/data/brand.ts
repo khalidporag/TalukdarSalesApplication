@@ -4,8 +4,8 @@
  * and the canonical / og:image URLs there once the real domain is known.
  */
 export const brand = {
-  name: 'Aurum Bakehouse',
-  short: 'Aurum',
+  name: 'Talukder Foods',
+  short: 'Talukder',
   tagline: 'Made slowly. Loved deeply.',
   statement: 'A small kitchen, a slow clock and real butter. We bake cakes, pastries and breads by hand, every morning, in small batches.',
   established: 'Est. 2021',
@@ -17,8 +17,8 @@ export const brand = {
   email: 'hello@example.com',
   mapsUrl: 'https://maps.google.com/?q=Dhaka',
   facebook: 'https://www.facebook.com/share/1Bw2qaF2P9/',
-  instagram: 'https://www.instagram.com/aurumbakehouse',
-  instagramHandle: '@aurumbakehouse',
+  instagram: 'https://www.instagram.com/talukderfoods',
+  instagramHandle: '@talukderfoods',
   hours: [
     { days: 'Saturday to Thursday', time: '9:00 AM to 9:00 PM' },
     { days: 'Friday', time: '3:00 PM to 10:00 PM' },
