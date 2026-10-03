@@ -1,58 +1,38 @@
-using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using TalukdarSales.Web.Infrastructure;
-using TalukdarSales.Web.Interfaces;
 using TalukdarSales.Web.Services;
 
 namespace TalukdarSales.Web.Pages.Invoices
 {
+    public record CollectPanel(InvoiceRow Invoice, double Owed, List<OpenInvoice> Open, string[] Methods);
+
     public class IndexModel : PageModelBase
     {
+        private const int PageSize = 25;
+        public static readonly string[] Methods = { "Cash", "bKash", "Bank", "Cheque" };
         private readonly InvoiceService _invoices;
-        private readonly IUserTypeRepository _userTypes;
-        private readonly IUserRepository _users;
 
-        public IndexModel(InvoiceService invoices, IUserTypeRepository userTypes, IUserRepository users)
-        {
-            _invoices = invoices;
-            _userTypes = userTypes;
-            _users = users;
-        }
+        public IndexModel(InvoiceService invoices) => _invoices = invoices;
 
-        [BindProperty(SupportsGet = true)] public int? TypeId { get; set; }
-        [BindProperty(SupportsGet = true)] public int? UserId { get; set; }
-        [BindProperty(SupportsGet = true)] public DateTime? From { get; set; }
-        [BindProperty(SupportsGet = true)] public DateTime? To { get; set; }
-        /// <summary>Set once the user touched the date filter, so an empty range means "all dates" instead of "today".</summary>
-        [BindProperty(SupportsGet = true)] public bool Filtered { get; set; }
+        [BindProperty(SupportsGet = true)] public string Status { get; set; } = "all";
+        [BindProperty(SupportsGet = true)] public string Q { get; set; }
+        [BindProperty(SupportsGet = true)] public int Days { get; set; } = 30;
+        [BindProperty(SupportsGet = true)] public int? Id { get; set; }
+        [BindProperty(SupportsGet = true, Name = "p")] public int PageNo { get; set; } = 1;
 
-        public InvoiceList Result { get; private set; }
-        public List<SelectListItem> TypeOptions { get; private set; }
-        public List<SelectListItem> UserOptions { get; private set; }
-        public CollectInput Collect { get; set; } = new();
-        public InvoiceRow CollectInvoice { get; private set; }
-        public double UserDue { get; private set; }
-
-        public class CollectInput
-        {
-            public int InvoiceId { get; set; }
-            [Required, Range(0.01, double.MaxValue, ErrorMessage = "Enter an amount greater than zero")] public double? Amount { get; set; }
-            [Required, StringLength(50)] public string PaymentMethod { get; set; }
-        }
+        public InvoiceBoard Board { get; private set; }
+        public CollectPanel Panel { get; private set; }
 
         public void OnGet()
         {
-            if (!Filtered && From == null && To == null)
-                From = To = DateTime.Today;
-            LoadOptions();
             Load();
+            if (Id != null) Panel = LoadPanel(Id.Value);
         }
 
-        public IActionResult OnGetList()
+        public IActionResult OnGetPanel(int id)
         {
-            Load();
-            return Partial("_List", this);
+            Panel = LoadPanel(id);
+            return Panel == null ? NotFound() : Partial("_Collect", Panel);
         }
 
         public IActionResult OnGetExport()
@@ -60,55 +40,33 @@ namespace TalukdarSales.Web.Pages.Invoices
             Load();
             return Excel.Sheet("InvoiceList.xlsx", "Invoice Data",
                 new[] { "Invoice For", "Invoice No", "Requisition No", "Creation Time", "Total", "Collection", "Due" },
-                Result.Rows.Select(r => new object[] { r.UserName, r.Number, r.RequisitionNo, r.CreatedDateTime, r.Total, r.Collected, r.Due }),
-                new object[] { "Total", null, null, null, Result.Total, Result.Collected, Result.Due });
+                Board.Page.Items.Select(r => new object[] { r.UserName, r.Number, r.RequisitionNo, r.CreatedDateTime, r.Total, r.Collected, r.Due }),
+                new object[] { "Total", null, null, null, Board.Billed, Board.Collected, Board.Due });
         }
 
-        public IActionResult OnGetCollect(int id)
+        public IActionResult OnPostCollect(int invoiceId, double? amount, string method)
         {
-            if (!LoadCollect(id))
-                return NotFound();
-            Collect = new CollectInput { InvoiceId = id, PaymentMethod = "Cash" };
-            return Partial("_CollectForm", this);
-        }
-
-        public IActionResult OnPostCollect([Bind(Prefix = nameof(Collect))] CollectInput input)
-        {
-            Collect = input ?? new CollectInput();
-            if (!LoadCollect(Collect.InvoiceId))
-                return NotFound();
-            if (!ModelState.IsValid)
-                return Partial("_CollectForm", this);
-
-            var (ok, error) = _invoices.Collect(Collect.InvoiceId, Collect.Amount.Value, Collect.PaymentMethod.Trim());
-            if (!ok)
+            if (amount == null || amount <= 0)
+                TempData["Flash"] = "Enter an amount greater than zero.";
+            else
             {
-                ModelState.AddModelError(string.Empty, error);
-                return Partial("_CollectForm", this);
+                var (ok, error) = _invoices.Collect(invoiceId, amount.Value, string.IsNullOrWhiteSpace(method) ? "Cash" : method.Trim());
+                TempData["Flash"] = ok ? $"৳ {Fmt.Money(amount.Value)} collected by {method}." : error;
             }
-            Toast("Amount Collected!");
-            CloseModal();
-            RefreshList();
-            return new EmptyResult();
+            return RedirectToPage("Index", new { Status, Q, Days, Id = invoiceId });
         }
 
-        private bool LoadCollect(int id)
+        private void Load()
         {
-            var detail = _invoices.Get(id);
-            if (detail == null)
-                return false;
-            CollectInvoice = detail.Header;
-            UserDue = _invoices.OutstandingFor(detail.Header.UserId);
-            return true;
+            Status = Status is "unpaid" or "partial" or "paid" or "due" ? Status : "all";
+            Board = _invoices.Board(Status, Q, Days, PageNo, PageSize);
         }
 
-        private void Load() => Result = _invoices.List(UserId, From, To ?? From);
-
-        private void LoadOptions()
+        private CollectPanel LoadPanel(int id)
         {
-            TypeOptions = _userTypes.GetAll().Select(t => new SelectListItem(t.TypeName, t.Id.ToString())).ToList();
-            UserOptions = _users.GetAll().Where(u => TypeId == null || u.UserTypeId == TypeId)
-                .OrderBy(u => u.FirstName).Select(u => new SelectListItem($"{u.FirstName} {u.LastName} ({u.Username})", u.Id.ToString())).ToList();
+            var d = _invoices.Get(id);
+            if (d == null) return null;
+            return new CollectPanel(d.Header, _invoices.OutstandingFor(d.Header.UserId), _invoices.OpenInvoices(d.Header.UserId), Methods);
         }
     }
 }

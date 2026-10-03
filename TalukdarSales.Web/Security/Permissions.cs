@@ -85,6 +85,7 @@ namespace TalukdarSales.Web.Security
             new("/Requisitions/Index", "Create", InvoiceCreate),
 
             new("/Invoices/Index", null, InvoiceView),
+            new("/Invoices/Index", "Panel", InvoiceCollect),
             new("/Invoices/Index", "Collect", InvoiceCollect),
             new("/Invoices/Details", null, InvoiceView),
             new("/Collections/Index", null, CollectionView),

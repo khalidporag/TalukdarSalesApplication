@@ -1,0 +1,63 @@
+@model TalukdarSales.Web.Pages.Invoices.CollectPanel
+@{
+    var inv = Model.Invoice;
+    var initial = Math.Min(Model.Owed, 10000);
+}
+<form method="post" asp-page="/Invoices/Index" asp-page-handler="Collect" id="collect" class="col" style="gap:16px"
+      data-owed="@Model.Owed" data-this="@inv.Due">
+    <input type="hidden" name="invoiceId" value="@inv.Id" />
+    <div class="ct">Collect payment</div>
+    <div class="selected-cust" style="padding:14px;gap:12px">
+        <div class="avatar big" style="width:44px;height:44px;font-size:16px">@Fmt.Initials(inv.UserName)</div>
+        <div class="grow" style="min-width:0"><div class="strong">@inv.UserName</div><div class="lbl">Owes ৳ @Fmt.Int(Model.Owed) across @Model.Open.Count @(Model.Open.Count == 1 ? "invoice" : "invoices")</div></div>
+    </div>
+    <div>
+        <label for="amt" class="lbl" style="display:block;margin-bottom:6px">Amount received</label>
+        <div style="position:relative"><span class="num" style="position:absolute;left:14px;top:11px;font-size:20px;color:var(--ink-3)">৳</span>
+            <input id="amt" name="amount" inputmode="decimal" autocomplete="off" class="num money-input" value="@Fmt.Money(initial).Replace(",", "")" /></div>
+        <div class="chips" style="margin-top:10px">
+            <button type="button" class="chip" data-set="@Model.Owed">Pay all ৳ @Fmt.Int(Model.Owed)</button>
+            <button type="button" class="chip" data-set="@inv.Due">This invoice ৳ @Fmt.Int(inv.Due)</button>
+            <button type="button" class="chip" data-set="@Math.Round(Model.Owed / 2)">Half</button>
+        </div>
+    </div>
+    <div>
+        <div class="lbl" style="margin-bottom:6px">Method</div>
+        <div class="seg" role="group" aria-label="Payment method" style="display:flex">
+            @for (var i = 0; i < Model.Methods.Length; i++) { <label class="seg-opt @(i == 0 ? "on" : "")" style="flex:1"><input type="radio" name="method" value="@Model.Methods[i]" @(i == 0 ? "checked" : null) />@Model.Methods[i]</label> }
+        </div>
+    </div>
+    <div class="col" style="gap:8px">
+        <div class="lbl">Clears oldest invoices first</div>
+        <div id="alloc" class="col" style="gap:8px"></div>
+        <div class="pill bad" id="over" hidden style="border-radius:10px;padding:8px 12px;white-space:normal">More than the customer owes. Max ৳ @Fmt.Int(Model.Owed).</div>
+        <script type="application/json" id="open-json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Open.Select(o => new { no = o.Number, date = o.Created.ToString("d MMM"), due = o.Due })))</script>
+    </div>
+    <button class="btn btn-p btn-lg btn-block" id="collect-go">Collect</button>
+</form>
+<script>
+(function () {
+  const f = document.getElementById('collect'); if (!f) return;
+  const open = JSON.parse(document.getElementById('open-json').textContent), owed = parseFloat(f.dataset.owed);
+  const input = f.querySelector('#amt'), box = f.querySelector('#alloc');
+  const fmt = n => { n = Math.round(n * 100) / 100; let [w, d] = Math.abs(n).toFixed(2).split('.'); const l = w.slice(-3), r = w.slice(0, -3).replace(/\B(?=(\d{2})+(?!\d))/g, ','); return (r ? r + ',' + l : l) + (d === '00' ? '' : '.' + d); };
+  function update() {
+    const amount = parseFloat(input.value) || 0; let left = amount; box.textContent = '';
+    open.forEach(o => {
+      if (left <= 0.004) return;
+      const t = Math.min(left, o.due), full = Math.abs(t - o.due) < 0.005; left -= t;
+      const row = document.createElement('div'); row.className = 'alloc-row';
+      row.innerHTML = '<span class="grow"><b></b> <span class="lbl"></span></span><span class="num strong"></span><span class="pill ' + (full ? 'good' : 'warn') + '">' + (full ? 'Cleared' : 'Partial') + '</span>';
+      row.querySelector('b').textContent = o.no; row.querySelector('.lbl').textContent = '· ' + o.date; row.querySelector('.num').textContent = '৳ ' + fmt(t);
+      box.appendChild(row);
+    });
+    const over = amount > owed + 0.005;
+    f.querySelector('#over').hidden = !over;
+    const go = f.querySelector('#collect-go'); go.disabled = !(amount > 0) || over; go.textContent = 'Collect ৳ ' + fmt(amount);
+  }
+  f.querySelectorAll('[data-set]').forEach(b => b.addEventListener('click', () => { input.value = b.dataset.set; update(); }));
+  input.addEventListener('input', update);
+  f.querySelectorAll('.seg-opt input').forEach(r => r.addEventListener('change', () => f.querySelectorAll('.seg-opt').forEach(l => l.classList.toggle('on', l.contains(r) && r.checked))));
+  update();
+})();
+</script>

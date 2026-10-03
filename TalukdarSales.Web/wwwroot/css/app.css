@@ -301,3 +301,12 @@ details>summary{list-style:none}details>summary::-webkit-details-marker{display:
 [hidden]{display:none!important}
 .row>input:not([type=checkbox]):not([type=radio]),.row>select,.chips>input{width:auto}
 .row.wrap>input[type=search]{flex:0 1 240px}
+.money-input{width:100%;min-height:56px;border-radius:12px;border:2px solid var(--red);padding:0 14px 0 34px;font-size:26px;font-weight:600;background:#fff}
+.seg-opt{display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:9px;font-size:13.5px;font-weight:600;color:var(--ink-2);min-height:36px;cursor:pointer}
+.seg-opt input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
+.seg-opt.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(43,18,51,.12)}
+.alloc-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:#FFFDF7;border:1px solid #F3EBD6}
+aside.panel{flex:0 1 360px;min-width:300px;position:sticky;top:16px;display:flex;flex-direction:column;gap:14px}
+@media (max-width:900px){aside.panel{position:static;flex:1 1 100%}}
+.tbl td,.tbl th{white-space:nowrap}
+.tbl td.wrap{white-space:normal}
