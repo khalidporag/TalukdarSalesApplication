@@ -57,6 +57,8 @@ builder.Services.AddScoped<ITimeSettingRepository, TimeSettingRepository>();
 builder.Services.AddScoped<INoticeRepository, NoticeRepository>();
 builder.Services.AddScoped<TalukdarSales.Web.Services.UserService>();
 builder.Services.AddScoped<TalukdarSales.Web.Services.ImageStore>();
+builder.Services.AddScoped<TalukdarSales.Web.Services.RequisitionService>();
+builder.Services.AddScoped<TalukdarSales.Web.Services.InvoiceService>();
 
 // Pages use a cookie; /api/* keeps JWT bearer. The policy scheme picks one per request so a
 // browser cookie is never accepted by the API (no CSRF exposure there).

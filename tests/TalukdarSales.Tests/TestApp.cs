@@ -28,7 +28,9 @@ namespace TalukdarSales.Tests
             {
                 services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
                 services.RemoveAll<ApplicationDbContext>();
-                services.AddDbContext<ApplicationDbContext>(o => o.UseInMemoryDatabase(_dbName));
+                services.AddDbContext<ApplicationDbContext>(o => o
+                    .UseInMemoryDatabase(_dbName)
+                    .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning)));
             });
         }
 
@@ -58,6 +60,28 @@ namespace TalukdarSales.Tests
             });
             return id;
         }
+
+        public T Run<T>(Func<IServiceProvider, T> action)
+        {
+            using var scope = Services.CreateScope();
+            return action(scope.ServiceProvider);
+        }
+
+        public int SeedGood(string name, double price, bool active = true)
+        {
+            var id = 0;
+            Seed(db =>
+            {
+                var g = new FinishedGood { Name = name, UnitPrice = price, IsActive = active, UOM = "pc", Description = "", LogoName = "", CreatedOn = DateTime.Now };
+                db.FinishedGoods.Add(g);
+                db.SaveChanges();
+                id = g.Id;
+            });
+            return id;
+        }
+
+        public void SeedOpenWindow(string from = "00:00", string to = "23:59") =>
+            Seed(db => db.TimeSettings.Add(new TimeSetting { From = from, To = to, CreatedOn = DateTime.Now }));
 
         public HttpClient NewClient() => CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, HandleCookies = true });
 

@@ -1,14 +1,12 @@
-﻿using iTextSharp.text;
-using iTextSharp.text.pdf;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Project.Run.Repositories;
-using TalukdarSales.Web.Context;
 using TalukdarSales.Web.Interfaces;
 using TalukdarSales.Web.Models;
 using TalukdarSales.Web.Models.Dto;
 using TalukdarSales.Web.Repositories;
+using TalukdarSales.Web.Services;
 
 namespace TalukdarSales.Web.Controllers
 {
@@ -24,7 +22,7 @@ namespace TalukdarSales.Web.Controllers
         private readonly IUserRepository _userRepository;
         private readonly ISalesRequisitionDetailRepository _salesRequisitionDetailRepository;
         private readonly IFinishedGoodsRepository _finishGoodRepository;
-        private readonly ApplicationDbContext _context;
+        private readonly InvoiceService _invoiceService;
 
         public SalesInvoiceController(ICollectionLedgerRepository collectionLedgerRepository,
             ISalesInvoiceRepository salesInvoiceRepository,
@@ -33,7 +31,7 @@ namespace TalukdarSales.Web.Controllers
             IUserRepository userRepository,
             ISalesRequisitionDetailRepository salesRequisitionDetailRepository,
             IFinishedGoodsRepository finishGoodRepository,
-            ApplicationDbContext context)
+            InvoiceService invoiceService)
         {
             _collectionLedgerRepository = collectionLedgerRepository;
             _salesInvoiceRepository = salesInvoiceRepository;
@@ -42,7 +40,7 @@ namespace TalukdarSales.Web.Controllers
             _userRepository = userRepository;
             _salesRequisitionDetailRepository = salesRequisitionDetailRepository;
             _finishGoodRepository = finishGoodRepository;
-            _context = context;
+            _invoiceService = invoiceService;
         }
         [HttpPost("createCollectionLedger")]
         public IActionResult CreateCollectionLedger([FromBody] CollectionLedger collectionLedgerObj)
@@ -110,230 +108,35 @@ namespace TalukdarSales.Web.Controllers
         [HttpPost("createBulkInvoiceWithDetails")]
         public IActionResult CreateBulkInvoiceWithDetails(RequisitionDto obj)
         {
-            List<int> requisitionId = obj.RequistionIds
-            .Split(',')
-            .Select(int.Parse)
-            .ToList();
-
-            var requisitionList = _salesRequisitioinRepository.GetAll().Where(n => n.IsActive == true).ToList();
-            requisitionList = requisitionList.Where(n => requisitionId.Contains(n.Id)).ToList();
-            if (requisitionList.Count == 0)
-                return BadRequest();
-            using var bulkTransaction = _context.Database.BeginTransaction();
-            foreach (var requisition in requisitionList)
+            var ids = new List<int>();
+            foreach (var part in (obj?.RequistionIds ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
             {
-                var requisitionDetails = _salesRequisitionDetailRepository.GetAll().ToList();
-                requisitionDetails = requisitionDetails.Where(n => n.SalesRequisitionId == requisition.Id).ToList();
-                var totalQuantity = 0.0;
-                var totalPrice = 0.0;
-                foreach (var details in requisitionDetails)
-                {
-                    totalQuantity += (double)details.Quantity;
-                    totalPrice += (double)details.Price * (double)details.Quantity;
-                }
-
-                var createSalesInvoice = new SalesInvoice();
-                var invoiceDetailsList = new List<SalesInvoiceDetails>();
-
-                createSalesInvoice.TotalPrice = totalPrice;
-                createSalesInvoice.Quantity = totalQuantity;
-                createSalesInvoice.UserId = requisition.UserId;
-                createSalesInvoice.SalesRequisitionId = requisition.Id;
-                createSalesInvoice.DiscountAmount = 0;
-                createSalesInvoice.DiscountPercentage = 0;
-                createSalesInvoice.CollectionAmount = 0;
-                createSalesInvoice.CreatedDateTime = DateTime.Now;
-
-                _salesInvoiceRepository.Add(createSalesInvoice);
-                _salesInvoiceRepository.Commit();
-
-                if (createSalesInvoice?.Id != null)
-                {
-                    var userInfo = _userRepository.GetSingle(createSalesInvoice.UserId);
-                    userInfo.DueAmount += (decimal)createSalesInvoice.TotalPrice;
-                    _userRepository.Update(userInfo);
-                    _userRepository.Commit();
-
-                    string invoiceSerialNo = "INV - " + createSalesInvoice.Id.ToString("D6");
-
-                    createSalesInvoice.InvoiceSerialNo = invoiceSerialNo;
-                    _salesInvoiceRepository.Update(createSalesInvoice);
-                    _salesInvoiceRepository.Commit();
-
-                    foreach (var details in requisitionDetails)
-                    {
-                        var invoiceDetails = new SalesInvoiceDetails();
-                        invoiceDetails.SalesInvoiceId = createSalesInvoice.Id;
-                        invoiceDetails.FinishedGoodsId = details.FinishedGoodId;
-                        invoiceDetails.CreatedDateTime = DateTime.Now;
-                        invoiceDetails.Quantity = (double)details?.Quantity;
-                        invoiceDetails.Price = (double)details?.Price;
-                        invoiceDetails.DiscountAmount = 0;
-                        invoiceDetails.DiscountPercentage = 0;
-
-                        invoiceDetailsList.Add(invoiceDetails);
-                    }
-
-                    _salesInvoiceDetailsRepository.AddRange(invoiceDetailsList);
-                    _salesInvoiceDetailsRepository.Commit();
-
-                    var requisitionInfo = _salesRequisitioinRepository.GetSingle((int)createSalesInvoice?.SalesRequisitionId);
-                    requisitionInfo.IsActive = false;
-                    _salesRequisitioinRepository.Update(requisitionInfo);
-                    _salesRequisitioinRepository.Commit();
-                }
-
-
+                if (!int.TryParse(part, out var id))
+                    return BadRequest(new { Message = "Invalid requisition id list." });
+                ids.Add(id);
             }
-            bulkTransaction.Commit();
-            return Ok(new
-            {
-                Status = 200,
-                Message = "Sales Invoice Created!"
-            });
+
+            var (ok, error, _) = _invoiceService.CreateFromRequisitions(ids);
+            if (!ok)
+                return BadRequest(new { Message = error });
+            return Ok(new { Status = 200, Message = "Sales Invoice Created!" });
         }
 
+        // Manual invoice for one requisition (adjusted quantities). Prices come from the requisition, not the caller.
         [HttpPost("ccc")]
         public IActionResult CreateSalesInvoiceWithDetails([FromBody] SalesInvoiceDto salesInvoiceObj)
         {
-            if (salesInvoiceObj == null)
+            if (salesInvoiceObj?.SalesRequisitionId == null || salesInvoiceObj.SalesInvoiceDetails == null)
                 return BadRequest();
 
-            var createSalesInvoice = new SalesInvoice();
-            var invoiceDetailsList = new List<SalesInvoiceDetails>();
-            var totalQuantity = 0.0;
-            var totalPrice = 0.0;
-            foreach(var details in salesInvoiceObj.SalesInvoiceDetails)
-            {
-                totalQuantity += (double)details.Quantity;
-                totalPrice += (double)details.Price * (double)details.Quantity;
-            }
+            var lines = salesInvoiceObj.SalesInvoiceDetails
+                .Where(d => d.FinishedGoodsId != null && d.Quantity != null)
+                .Select(d => new InvoiceLine(d.FinishedGoodsId.Value, d.Quantity.Value));
 
-            //var ttotalQuantity = salesInvoiceObj.SalesInvoiceDetails.Sum(s => s.Quantity);
-            //var ttotalPrice = salesInvoiceObj.SalesInvoiceDetails.Sum(s => s.Price);
-
-            createSalesInvoice.TotalPrice = totalPrice;
-            createSalesInvoice.Quantity = totalQuantity;
-            createSalesInvoice.UserId = (int)salesInvoiceObj?.UserId;
-            createSalesInvoice.SalesRequisitionId = (int)salesInvoiceObj?.SalesRequisitionId;
-            createSalesInvoice.DiscountAmount = 0;
-            createSalesInvoice.DiscountPercentage = 0;
-            createSalesInvoice.CollectionAmount = 0;
-            createSalesInvoice.CreatedDateTime = DateTime.Now;
-
-            _salesInvoiceRepository.Add(createSalesInvoice);
-            _salesInvoiceRepository.Commit();
-
-            if(createSalesInvoice?.Id != null)
-            {
-                var userInfo = _userRepository.GetSingle(createSalesInvoice.UserId);
-                userInfo.DueAmount += (decimal)createSalesInvoice.TotalPrice;
-                _userRepository.Update(userInfo);
-                _userRepository.Commit();
-
-                string invoiceSerialNo = "INV - " + createSalesInvoice.Id.ToString("D6");
-
-                createSalesInvoice.InvoiceSerialNo = invoiceSerialNo;
-                _salesInvoiceRepository.Update(createSalesInvoice);
-                _salesInvoiceRepository.Commit();
-
-                foreach (var details in salesInvoiceObj.SalesInvoiceDetails)
-                {
-                    var invoiceDetails = new SalesInvoiceDetails();
-                    invoiceDetails.SalesInvoiceId = createSalesInvoice.Id;
-                    invoiceDetails.FinishedGoodsId = (int)details?.FinishedGoodsId;
-                    invoiceDetails.CreatedDateTime = DateTime.Now;
-                    invoiceDetails.Quantity = (double)details?.Quantity;
-                    invoiceDetails.Price = (double)details?.Price;
-                    invoiceDetails.DiscountAmount = 0;
-                    invoiceDetails.DiscountPercentage = 0;
-
-                    invoiceDetailsList.Add(invoiceDetails);
-                }
-
-                _salesInvoiceDetailsRepository.AddRange(invoiceDetailsList);
-                _salesInvoiceDetailsRepository.Commit();
-
-                var requisition = _salesRequisitioinRepository.GetSingle((int)createSalesInvoice?.SalesRequisitionId);
-                requisition.IsActive = false;
-                _salesRequisitioinRepository.Update(requisition);
-                _salesRequisitioinRepository.Commit();
-            }
-
-            //Pdf
-
-            var finishGoodList = _finishGoodRepository.GetAll().ToDictionary(n => n.Id);
-
-            using (var memoryStream = new MemoryStream())
-            {
-                Document document = new Document();
-                PdfWriter.GetInstance(document, memoryStream).CloseStream = false;
-                document.Open();
-
-                document.Add(new Paragraph("Sales Invoice"));
-                document.Add(new Paragraph("Invoice No: " + createSalesInvoice.InvoiceSerialNo));
-                document.Add(new Paragraph("Date: " + createSalesInvoice.CreatedDateTime.ToString("yyyy-MM-dd")));
-                //document.Add(new Paragraph("User ID: " + createSalesInvoice.UserId));
-                document.Add(new Paragraph("Total Price: BDT " + createSalesInvoice.TotalPrice.ToString("F2")));
-                document.Add(new Paragraph("Total Quantity: " + createSalesInvoice.Quantity.ToString("F2")));
-                //document.Add(new Paragraph("Sales Requisition ID: " + createSalesInvoice.SalesRequisitionId));
-                document.Add(new Paragraph("\nInvoice Details:"));
-
-                PdfPTable table = new PdfPTable(4); // 4 columns
-                table.AddCell("Finished Goods");
-                table.AddCell("Quantity");
-                table.AddCell("Price");
-                table.AddCell("Total");
-                int i = 1;
-                foreach (var details in invoiceDetailsList)
-                {
-                    
-                    string fontPath = Path.Combine("wwwroot", "ttf", "kalpurus.ttf");
-                    //var fontPath = Path.Combine("wwwroot", "ttf", "font");
-                    //var baseFont = BaseFont.CreateFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
-
-                    // Create a Font object
-                    //var font = new Font(baseFont, 12, Font.NORMAL);
-
-                    var goodName = finishGoodList.ContainsKey(details.FinishedGoodsId) ? finishGoodList[details.FinishedGoodsId].Name : "";
-
-                    // Add content to the table with the specified font
-                    //table.AddCell(new Phrase(goodName, font));
-                    //table.AddCell(new Phrase(details.Quantity.ToString("F2"), font));
-                    //table.AddCell(new Phrase(details.Price.ToString("F2"), font));
-                    //table.AddCell(new Phrase((details.Quantity * details.Price).ToString("F2"), font));
-
-                    table.AddCell(i+ ". " + goodName);
-                    table.AddCell(details.Quantity.ToString("F2"));
-                    table.AddCell(details.Price.ToString("F2"));
-                    table.AddCell((details.Quantity * details.Price).ToString("F2"));
-                    i = i + 1;
-                }
-
-                document.Add(table);
-                document.Close();
-
-                memoryStream.Position = 0;
-
-                var directoryPath = Path.Combine("wwwroot", "pdf", "invoices");
-                var filePath = Path.Combine(directoryPath, "Invoice_" + createSalesInvoice.Id + ".pdf");
-
-                if (!Directory.Exists(directoryPath))
-                {
-                    Directory.CreateDirectory(directoryPath);
-                }
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
-                {
-                    memoryStream.CopyTo(fileStream);
-                }
-            }
-
-            return Ok(new
-            {
-                Status = 200,
-                Message = "Sales Invoice Created!"
-            });
+            var (ok, error, _) = _invoiceService.CreateForRequisition(salesInvoiceObj.SalesRequisitionId.Value, lines);
+            if (!ok)
+                return BadRequest(new { Message = error });
+            return Ok(new { Status = 200, Message = "Sales Invoice Created!" });
         }
 
         [HttpPost("createSalesInvoice")]
@@ -354,64 +157,13 @@ namespace TalukdarSales.Web.Controllers
         [HttpPost("collectInvoiceAmount")]
         public IActionResult ColllectInvoiceAmount([FromBody] CollectAmountDto collectAmountObj)
         {
-            if (collectAmountObj == null || collectAmountObj.CollectionAmount == null || collectAmountObj.CollectionAmount <= 0)
+            if (collectAmountObj == null)
                 return BadRequest(new { Message = "Invalid collection amount" });
 
-            var invoiceInfo = _salesInvoiceRepository.GetSingle(collectAmountObj.SalesInvoiceId);
-            if (invoiceInfo == null)
-                return NotFound(new { Message = "Invoice not found" });
-
-            var userInfo = _userRepository.GetSingle(invoiceInfo.UserId);
-            if (userInfo == null)
-                return NotFound(new { Message = "User not found" });
-
-            // Outstanding invoices of the billed user, oldest first
-            var outstandingInvoices = _salesInvoiceRepository.GetAll()
-                .Where(i => i.UserId == invoiceInfo.UserId && i.TotalPrice > i.CollectionAmount)
-                .OrderBy(i => i.CreatedDateTime)
-                .ToList();
-
-            var remaining = collectAmountObj.CollectionAmount.Value;
-            var totalOutstanding = outstandingInvoices.Sum(i => i.TotalPrice - i.CollectionAmount);
-            if (remaining > totalOutstanding + 0.005)
-                return BadRequest(new { Message = "Collection amount exceeds the outstanding amount" });
-
-            using (var transaction = _context.Database.BeginTransaction())
-            {
-                var totalCollected = 0.0;
-                foreach (var invoice in outstandingInvoices)
-                {
-                    if (remaining <= 0)
-                        break;
-
-                    var applied = Math.Min(remaining, invoice.TotalPrice - invoice.CollectionAmount);
-
-                    invoice.CollectionAmount += applied;
-                    _salesInvoiceRepository.Update(invoice);
-
-                    var ledger = new CollectionLedger();
-                    ledger.UserId = invoice.UserId;
-                    ledger.SalesInvoiceId = invoice.Id;
-                    ledger.CollectionAmount = applied;
-                    ledger.PaymentMethod = collectAmountObj.PaymentMethod;
-                    _collectionLedgerRepository.Add(ledger);
-
-                    remaining -= applied;
-                    totalCollected += applied;
-                }
-
-                userInfo.DueAmount -= (decimal)totalCollected;
-                _userRepository.Update(userInfo);
-
-                _salesInvoiceRepository.Commit();
-                transaction.Commit();
-            }
-
-            return Ok(new
-            {
-                Status = 200,
-                Message = "Amount Collected!"
-            });
+            var (ok, error) = _invoiceService.Collect(collectAmountObj.SalesInvoiceId, collectAmountObj.CollectionAmount ?? 0, collectAmountObj.PaymentMethod);
+            if (!ok)
+                return BadRequest(new { Message = error });
+            return Ok(new { Status = 200, Message = "Amount Collected!" });
         }
 
         [HttpGet("getSalesInvoiceList")]

@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using TalukdarSales.Web.Interfaces;
 using TalukdarSales.Web.Models;
 using TalukdarSales.Web.Models.Dto;
+using TalukdarSales.Web.Services;
 
 namespace TalukdarSales.Web.Controllers
 {
@@ -19,6 +20,7 @@ namespace TalukdarSales.Web.Controllers
         private readonly ITimeSettingRepository _timeSettingRepository;
         private readonly IConfiguration _configuration;
         private readonly IFinishedGoodTypeRepository _finishedGoodTypeRepository;
+        private readonly RequisitionService _requisitionService;
 
 
         public SalesRequisitionController(ISalesRequisitionRepository salesRequisitionRepository,
@@ -27,8 +29,10 @@ namespace TalukdarSales.Web.Controllers
             IUserRepository userRepository,
             ITimeSettingRepository timeSettingRepository,
             IConfiguration configuration,
-            IFinishedGoodTypeRepository finishedGoodTypeRepository)
+            IFinishedGoodTypeRepository finishedGoodTypeRepository,
+            RequisitionService requisitionService)
         {
+            _requisitionService = requisitionService;
             _salesRequisitionRepository = salesRequisitionRepository;
             _salesRequisitionDetailRepository = salesRequisitionDetailRepository;
             _finishedGoodsRepository = finishedGoodsRepository;
@@ -41,65 +45,17 @@ namespace TalukdarSales.Web.Controllers
         [HttpPost("createSalesRequisitionWithDetail")]
         public IActionResult CreateSalesRequisitionWithDetail([FromBody] SalesRequisitionDto salesRequisitionWithDetailObj)
         {
-            var timeSettingInfo = _timeSettingRepository.GetAll().OrderByDescending(n => n.CreatedOn).FirstOrDefault();
-            var from = timeSettingInfo?.From;
-            var to = timeSettingInfo?.To;
-
-            //var from = _configuration["Settings:From"];
-            //var to = _configuration["Settings:To"];
-
-            if (!TimeIsWithinRange(from, to))
-            {
-                return BadRequest();
-            }
-
-            if (salesRequisitionWithDetailObj == null)
+            if (salesRequisitionWithDetailObj?.RequisitionDetails == null || salesRequisitionWithDetailObj.UserId == 0)
                 return BadRequest();
 
-            salesRequisitionWithDetailObj.RequisitionDetails = salesRequisitionWithDetailObj.RequisitionDetails.Where(n => n.Quantity != null).ToList();
+            var lines = salesRequisitionWithDetailObj.RequisitionDetails
+                .Where(d => d.FinishedGoodId != null && d.Quantity != null)
+                .Select(d => new RequisitionLine(d.FinishedGoodId.Value, d.Quantity.Value));
 
-            if (salesRequisitionWithDetailObj?.UserId == 0)
-                return BadRequest();
-
-            var addRequisition = new SalesRequisition();
-            addRequisition.UserId = salesRequisitionWithDetailObj.UserId;
-            addRequisition.CreatedDateTime = DateTime.Now;
-            addRequisition.IsActive = true;
-
-            _salesRequisitionRepository.Add(addRequisition);
-            _salesRequisitionRepository.Commit();
-
-            if (addRequisition?.Id == 0)
-                return BadRequest();
-
-            string requistionSerialNo = "REQ - " + addRequisition.Id.ToString("D6");
-
-            addRequisition.RequisitionSerial = requistionSerialNo;
-            _salesRequisitionRepository.Update(addRequisition);
-            _salesRequisitionRepository.Commit();
-
-            var requistionDetailsList = new List<SalesRequisitionDetail>();
-            foreach (var detail in salesRequisitionWithDetailObj?.RequisitionDetails)
-            {
-                var requistionDetail = new SalesRequisitionDetail();
-                requistionDetail.SalesRequisitionId = addRequisition.Id;
-                requistionDetail.CreatedDateTime = DateTime.Now;
-                requistionDetail.FinishedGoodId = (int)detail?.FinishedGoodId;
-                requistionDetail.Quantity = (double)detail?.Quantity;
-                requistionDetail.Price = (double)detail?.Price;
-
-                if(requistionDetail.Quantity > 0 && requistionDetail.FinishedGoodId != 0)
-                    requistionDetailsList.Add(requistionDetail);
-            }
-
-            _salesRequisitionDetailRepository.AddRange(requistionDetailsList);
-            _salesRequisitionDetailRepository.Commit();
-
-            return Ok(new
-            {
-                Status = 200,
-                Message = "Sales Requisition Details Added!"
-            });
+            var (ok, error, _) = _requisitionService.Create(salesRequisitionWithDetailObj.UserId, lines);
+            if (!ok)
+                return BadRequest(new { Message = error });
+            return Ok(new { Status = 200, Message = "Sales Requisition Details Added!" });
         }
 
         [HttpPost("createSalesRequisition")]
@@ -251,19 +207,6 @@ namespace TalukdarSales.Web.Controllers
             return Ok(dailyProductTypeWiseQuantities);
         }
 
-
-        private bool TimeIsWithinRange(string fromTime, string toTime)
-        {
-            if (TimeSpan.TryParse(fromTime, out var from) && TimeSpan.TryParse(toTime, out var to))
-            {
-                var now = DateTime.Now.TimeOfDay;
-                return from <= to ? (from <= now && now <= to) : (now >= from || now <= to);
-            }
-            else
-            {
-                return false;
-            }
-        }
 
         [HttpPost("updateTimeSetting")]
         public IActionResult UpdateRequisitionTimeSetting([FromBody] TimeSetting timeSettingObj)
