@@ -1,0 +1,17 @@
+@model TalukdarSales.Web.Pages.Products.IndexModel
+<form method="post" enctype="multipart/form-data" hx-post="/Products?handler=Create" hx-target="#modal-content" hx-encoding="multipart/form-data">
+    <div class="modal-header"><h5 class="modal-title">Add Product</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <div class="row g-3">
+            <div class="col-md-6"><label class="form-label">Name *</label><input class="form-control" asp-for="Create.Name" /><span class="text-danger small" asp-validation-for="Create.Name"></span></div>
+            <div class="col-md-3"><label class="form-label">UOM *</label><input class="form-control" asp-for="Create.UOM" /><span class="text-danger small" asp-validation-for="Create.UOM"></span></div>
+            <div class="col-md-3"><label class="form-label">Unit price *</label><input class="form-control" type="number" step="0.01" min="0" asp-for="Create.UnitPrice" /><span class="text-danger small" asp-validation-for="Create.UnitPrice"></span></div>
+            <div class="col-md-6"><label class="form-label">Product type *</label>
+                <select class="form-select" asp-for="Create.GoodTypeId" asp-items="Model.TypeOptions"><option value="0">Select…</option></select>
+                <span class="text-danger small" asp-validation-for="Create.GoodTypeId"></span></div>
+            <div class="col-md-6"><label class="form-label">Image</label><input class="form-control" type="file" accept="image/*" asp-for="Create.Image" /><span class="text-danger small" asp-validation-for="Create.Image"></span></div>
+            <div class="col-12"><label class="form-label">Description *</label><textarea class="form-control" rows="2" asp-for="Create.Description"></textarea><span class="text-danger small" asp-validation-for="Create.Description"></span></div>
+        </div>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-success">Save</button></div>
+</form>

@@ -80,3 +80,22 @@ namespace TalukdarSales.Tests
         }
     }
 }
+
+namespace TalukdarSales.Tests
+{
+    public static class HttpExtensions
+    {
+        /// <summary>POST an htmx form (multipart) with the antiforgery token scraped from <paramref name="pageUrl"/>.</summary>
+        public static async Task<HttpResponseMessage> HtmxPost(this HttpClient client, string pageUrl, string handlerUrl, Dictionary<string, string> fields)
+        {
+            var form = new MultipartFormDataContent { { new StringContent(await TestApp.Antiforgery(client, pageUrl)), "__RequestVerificationToken" } };
+            foreach (var kv in fields) form.Add(new StringContent(kv.Value), kv.Key);
+            var req = new HttpRequestMessage(HttpMethod.Post, handlerUrl) { Content = form };
+            req.Headers.Add("HX-Request", "true");
+            return await client.SendAsync(req);
+        }
+
+        public static string Trigger(this HttpResponseMessage res) =>
+            res.Headers.TryGetValues("HX-Trigger", out var v) ? string.Join(",", v) : "";
+    }
+}

@@ -14,16 +14,16 @@ namespace TalukdarSales.Web.Services
         private readonly IUserTypeRepository _userTypes;
         private readonly IUserRoleMappingRepository _roleMappings;
         private readonly ApplicationDbContext _db;
-        private readonly IWebHostEnvironment _env;
+        private readonly ImageStore _images;
 
         public UserService(IUserRepository users, IUserTypeRepository userTypes,
-            IUserRoleMappingRepository roleMappings, ApplicationDbContext db, IWebHostEnvironment env)
+            IUserRoleMappingRepository roleMappings, ApplicationDbContext db, ImageStore images)
         {
             _users = users;
             _userTypes = userTypes;
             _roleMappings = roleMappings;
             _db = db;
-            _env = env;
+            _images = images;
         }
 
         public List<UserDto> Search(int? userTypeId, string name)
@@ -71,7 +71,7 @@ namespace TalukdarSales.Web.Services
         {
             if (input == null)
                 return (false, "Invalid request.");
-            if (input.Image != null && !UploadValidator.IsValidImage(input.Image))
+            if (!ImageStore.IsValid(input.Image))
                 return (false, "Invalid image. Allowed: jpg, jpeg, png, gif, webp up to 5 MB.");
 
             var sequence = NextUserNumber();
@@ -92,7 +92,7 @@ namespace TalukdarSales.Web.Services
                 IsPayRollUser = input.IsPayRollUser,
                 RefreshToken = input.RefreshToken,
                 RefreshTokenExpiryTime = input.RefreshTokenExpiryTime,
-                ImageName = await SaveImageAsync(input.Image),
+                ImageName = await _images.SaveAsync(input.Image, "users"),
                 Token = ""
             };
 
@@ -137,18 +137,6 @@ namespace TalukdarSales.Web.Services
                 .DefaultIfEmpty(0)
                 .Max();
             return (max + 1).ToString("D4");
-        }
-
-        private async Task<string> SaveImageAsync(IFormFile image)
-        {
-            if (image == null)
-                return "";
-            var fileName = Guid.NewGuid() + Path.GetExtension(image.FileName).ToLowerInvariant();
-            var dir = Path.Combine(_env.WebRootPath, "images", "users");
-            Directory.CreateDirectory(dir);
-            await using var stream = new FileStream(Path.Combine(dir, fileName), FileMode.Create);
-            await image.CopyToAsync(stream);
-            return fileName;
         }
     }
 }
