@@ -11,6 +11,7 @@ using TalukdarSales.Web.Helpers;
 using TalukdarSales.Web.Interfaces;
 using TalukdarSales.Web.Models;
 using TalukdarSales.Web.Models.Dto;
+using TalukdarSales.Web.Services;
 using System;
 using TalukdarSales.Web.Context;
 using Microsoft.AspNetCore.Authorization;
@@ -31,13 +32,16 @@ namespace TalukdarSales.Web.Controllers
 
         private readonly ApplicationDbContext _authContext;
         private readonly IConfiguration _configuration;
+        private readonly UserService _userService;
         public UserController(
             IUserRepository userRepository,
             IUserTypeRepository userTypeRepository,
             IUserRoleMappingRepository userRoleMappingRepository,
             ApplicationDbContext authContext,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            UserService userService)
         {
+            _userService = userService;
             _configuration = configuration;
             _userRepository = userRepository;
             _userTypeRepository = userTypeRepository;
@@ -83,109 +87,19 @@ namespace TalukdarSales.Web.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> RegisterUserAsync([FromForm] CreateUserDto input)
         {
-            if (input == null)
-                return BadRequest();
-
-            var userObj = new User();
-            userObj.SequencialUserId = "1981-" + GetUserCountAsync();
-            userObj.UserTypeId = input.UserTypeId;
-            userObj.FirstName = input.FirstName;
-            userObj.LastName = input.LastName;
-            userObj.PhoneNumber = input.PhoneNumber;
-            userObj.DueAmount = input.DueAmount;
-            userObj.MaxCreditLimit = input.MaxCreditLimit;
-            userObj.MaxCreditDays = input.MaxCreditDays;
-            userObj.Address = input.Address;
-            userObj.ContactPersonName = input.ContactPersonName;
-            userObj.ContactPersonPhone = input.ContactPersonPhone;
-            userObj.Username = "1981-" + GetUserCountAsync();
-            userObj.IsPayRollUser = input.IsPayRollUser;
-            userObj.RefreshToken = input.RefreshToken;
-            userObj.RefreshTokenExpiryTime = input.RefreshTokenExpiryTime;
-
-            if (input.Image != null && !UploadValidator.IsValidImage(input.Image))
-                return BadRequest(new { Message = "Invalid image. Allowed: jpg, jpeg, png, gif, webp up to 5 MB." });
-
-            string uniqueFileName = "";
-            if (input.Image != null)
-            {
-                uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(input.Image.FileName);
-                var directoryPath = "wwwroot/images/users";
-                var filePath = Path.Combine(directoryPath, uniqueFileName);
-
-                if (!Directory.Exists(directoryPath))
-                {
-                    Directory.CreateDirectory(directoryPath);
-                }
-
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await input.Image.CopyToAsync(stream);
-                }
-            }
-
-            userObj.ImageName = uniqueFileName;
-
-            //check username
-            if (CheckUsernameExistAsync(userObj.Username))
-                return BadRequest(new { Message = "Username Already Exist" });
-
-            //var passMessage = CheckPasswordStrength(userObj.Password);
-            //if (!string.IsNullOrEmpty(passMessage))
-            //    return BadRequest(new { Message = passMessage.ToString() });
-
-            userObj.Password = PasswordHasher.HashPassword(userObj.PhoneNumber);
-            userObj.Token = "";
-            _userRepository.Add(userObj);
-            _userRepository.Commit();
-
-            if (userObj.Id > 0 && input.RoleId > 0)
-            {
-                var userRoleMapping = new UserRoleMapping();
-                userRoleMapping.UserId = userObj.Id;
-                userRoleMapping.RoleId = input.RoleId;
-                _userRoleMappingRepository.Add(userRoleMapping);
-                _userRoleMappingRepository.Commit();
-            }
-
-            return Ok(new
-            {
-                Status = 200,
-                Message = "User Added!"
-            });
+            var (ok, message) = await _userService.CreateAsync(input);
+            if (!ok)
+                return BadRequest(new { Message = message });
+            return Ok(new { Status = 200, Message = message });
         }
 
         [HttpPost("updateUser")]
-        public async Task<IActionResult> UpdateUserAsync([FromForm] UpdateUserDto input)
+        public IActionResult UpdateUser([FromForm] UpdateUserDto input)
         {
-            if (input == null)
+            if (input == null || !_userService.Update(input))
                 return BadRequest();
-
-            var result = _userRepository.GetAll().Where(n => n.Id == input.Id).FirstOrDefault();
-            if (result == null)
-                return BadRequest();
-            result.FirstName = input.FirstName;
-            result.LastName = input.LastName;
-            result.MaxCreditLimit = input.MaxCreditLimit;
-            _userRepository.Update(result);
-            _userRepository.Commit();
-            return Ok(new
-            {
-                Status = 200,
-                Message = "User Updated!"
-            });
+            return Ok(new { Status = 200, Message = "User Updated!" });
         }
-
-        private bool CheckUsernameExistAsync(string? username)
-           => _userRepository.FindBy(x => x.Username == username).Any();
-
-        private string GetUserCountAsync() 
-        {
-            var userCount = _userRepository.GetAll().Where(n => n.Id > 0).Count() + 1;
-            var result = userCount.ToString("D4");
-            return result;
-        }
-
 
         //private static string CheckPasswordStrength(string pass)
         //{
@@ -260,42 +174,8 @@ namespace TalukdarSales.Web.Controllers
         }
 
         [HttpGet]
-        public ActionResult<User> GetAllUsers(int? userTypeId, string name)
-        {
-            var userList = _userRepository.GetAll().OrderByDescending(n => n.CreatedOn).ToList();
-            if (userTypeId != null)
-                userList = userList.Where(n => n.UserTypeId == userTypeId).ToList();
-            if (name != null)
-                userList = userList
-                    .Where(n => n.FirstName.ToLower().Contains(name.ToLower()) || 
-                                n.LastName.ToLower().Contains(name.ToLower()) ||
-                                n.PhoneNumber.ToLower().Contains(name.ToLower()) ||
-                                n.Username.ToLower().Contains(name.ToLower())
-                           ).ToList();
-            var userTypeList = _userTypeRepository.GetAll().ToDictionary(n => n.Id);
-            var result = userList.AsEnumerable().Select(n => new UserDto
-            {
-                Id = n.Id,
-                CreatedOn = n.CreatedOn,
-                DeletedOn = n.DeletedOn,
-                SequencialUserId = n.SequencialUserId,
-                UserTypeId = n.UserTypeId,
-                UserTypeName = userTypeList.ContainsKey(n.UserTypeId) ? userTypeList[n.UserTypeId].TypeName : "",
-                FirstName = n.FirstName,
-                LastName = n.LastName,
-                ImageName = n.ImageName,
-                PhoneNumber = n.PhoneNumber,
-                DueAmount = n.DueAmount,
-                Username = n.Username,
-                MaxCreditDays = n.MaxCreditDays,
-                MaxCreditLimit = n.MaxCreditLimit,
-                Address = n.Address,
-                ContactPersonName = n.ContactPersonName,
-                ContactPersonPhone = n.ContactPersonPhone,
-                IsPayRollUser = n.IsPayRollUser
-            }).ToList();
-            return Ok(result);
-        }
+        public ActionResult<List<UserDto>> GetAllUsers(int? userTypeId, string name)
+            => Ok(_userService.Search(userTypeId, name));
 
         [HttpPost("refresh")]
         [Microsoft.AspNetCore.Authorization.AllowAnonymous]

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -54,12 +55,48 @@ builder.Services.AddScoped<ISalesInvoiceRepository, SalesInvoiceRepository>();
 builder.Services.AddScoped<ISalesInvoiceDetailsRepository, SalesInvoiceDetailsRepository>();
 builder.Services.AddScoped<ITimeSettingRepository, TimeSettingRepository>();
 builder.Services.AddScoped<INoticeRepository, NoticeRepository>();
+builder.Services.AddScoped<TalukdarSales.Web.Services.UserService>();
 
+// Pages use a cookie; /api/* keeps JWT bearer. The policy scheme picks one per request so a
+// browser cookie is never accepted by the API (no CSRF exposure there).
+const string SmartScheme = "Smart";
 builder.Services.AddAuthentication(x =>
 {
-    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(x =>
+    x.DefaultScheme = SmartScheme;
+    x.DefaultAuthenticateScheme = SmartScheme;
+    x.DefaultChallengeScheme = SmartScheme;
+})
+.AddPolicyScheme(SmartScheme, SmartScheme, o =>
+{
+    o.ForwardDefaultSelector = ctx =>
+        ctx.Request.Path.StartsWithSegments("/api")
+            ? JwtBearerDefaults.AuthenticationScheme
+            : CookieAuthenticationDefaults.AuthenticationScheme;
+})
+.AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, o =>
+{
+    o.Cookie.Name = "TSA.Auth";
+    o.Cookie.HttpOnly = true;
+    o.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax;
+    o.ExpireTimeSpan = TimeSpan.FromHours(8);
+    o.SlidingExpiration = true;
+    o.LoginPath = "/Login";
+    o.LogoutPath = "/Logout";
+    o.AccessDeniedPath = "/Login";
+    o.Events.OnRedirectToLogin = ctx =>
+    {
+        // htmx requests: ask the browser to do a full-page redirect instead of swapping the login page into a fragment
+        if (ctx.Request.Headers.ContainsKey("HX-Request"))
+        {
+            ctx.Response.Headers["HX-Redirect"] = ctx.RedirectUri;
+            ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        }
+        else
+            ctx.Response.Redirect(ctx.RedirectUri);
+        return Task.CompletedTask;
+    };
+})
+.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, x =>
 {
     x.RequireHttpsMetadata = false;
     x.SaveToken = true;
@@ -72,6 +109,14 @@ builder.Services.AddAuthentication(x =>
         ClockSkew = TimeSpan.Zero
     };
 });
+
+builder.Services.AddAntiforgery(o => o.HeaderName = "RequestVerificationToken");
+builder.Services
+    .AddRazorPages(o =>
+    {
+        o.Conventions.AuthorizeFolder("/");
+        o.Conventions.AllowAnonymousToPage("/Login");
+    });
 
 var app = builder.Build();
 
@@ -106,9 +151,12 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapRazorPages();
 
 // SPA fallback: deep links such as /dashboard/invoice-list serve index.html; unknown /api/* paths stay 404
 if (clientAppFiles != null)
     app.MapFallbackToFile("{*path:regex(^(?!api/).*$)}", "index.html", new StaticFileOptions { FileProvider = clientAppFiles });
 
 app.Run();
+
+public partial class Program { }

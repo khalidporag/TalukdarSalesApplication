@@ -5,6 +5,10 @@ VisualStudioVersion = 17.6.33723.286
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TalukdarSales.Web", "TalukdarSales.Web\TalukdarSales.Web.csproj", "{90196B7B-C0A8-40AE-8A08-CAEC812A52BB}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{B56A46B7-E6DA-4B5C-8BD6-1521056A8FF8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TalukdarSales.Tests", "tests\TalukdarSales.Tests\TalukdarSales.Tests.csproj", "{BAB07941-EE49-40C9-B278-9A3AF64A3A3D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,11 +19,18 @@ Global
 		{90196B7B-C0A8-40AE-8A08-CAEC812A52BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90196B7B-C0A8-40AE-8A08-CAEC812A52BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90196B7B-C0A8-40AE-8A08-CAEC812A52BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BAB07941-EE49-40C9-B278-9A3AF64A3A3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BAB07941-EE49-40C9-B278-9A3AF64A3A3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BAB07941-EE49-40C9-B278-9A3AF64A3A3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BAB07941-EE49-40C9-B278-9A3AF64A3A3D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D428179E-ED29-4BAF-A084-8E4AF17BFBF8}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{BAB07941-EE49-40C9-B278-9A3AF64A3A3D} = {B56A46B7-E6DA-4B5C-8BD6-1521056A8FF8}
 	EndGlobalSection
 EndGlobal
