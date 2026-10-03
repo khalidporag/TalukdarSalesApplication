@@ -1,17 +1,59 @@
 @page
 @model TalukdarSales.Web.Pages.Products.IndexModel
-@{ ViewData["Title"] = "Product Setup"; }
-<div class="d-flex flex-wrap gap-2 mb-3">
-    <form id="filter" class="d-flex flex-wrap gap-2 flex-grow-1" hx-get="/Products?handler=List" hx-target="#list"
-          hx-trigger="input changed delay:300ms from:#Name, change from:#TypeId, submit">
-        <input class="form-control w-auto" id="Name" name="Name" value="@Model.Name" placeholder="Product name" autocomplete="off" />
-        <select class="form-select w-auto" id="TypeId" name="TypeId">
-            <option value="">All types</option>
-            @foreach (var t in Model.TypeOptions) { <option value="@t.Value" selected="@(Model.TypeId?.ToString() == t.Value)">@t.Text</option> }
-        </select>
+@{
+    ViewData["Title"] = "Products";
+    var items = Model.Items;
+    var canCategory = Access.For(User).Has(TalukdarSales.Web.Security.Perm.ProductTypes);
+    var typeIndex = Model.TypeOptions.Select(t => t.Value).ToList();
+    string Url(int? typeId, bool keep = false) => $"/Products?name={Uri.EscapeDataString(Model.Name ?? "")}&typeId={typeId}";
+    int Tone(int typeId) { var i = typeIndex.IndexOf(typeId.ToString()); return i < 0 ? 0 : i % 4 + 1; }
+}
+<header class="page-head">
+    <div><h1 class="page-title">Products</h1><div class="page-sub">The catalogue and its prices. Hidden products cannot be ordered.</div></div>
+    <div class="actions"><a class="btn btn-p" href="@Url(Model.TypeId)&new=true">@Icons.Svg("plus", 18, 2.2)Add product</a></div>
+</header>
+
+<form method="get" class="row between wrap" style="gap:12px">
+    <input type="hidden" name="typeId" value="@Model.TypeId" />
+    <div class="chips">
+        <a class="chip @(Model.TypeId == null ? "on" : "")" href="@Url(null)">All</a>
+        @foreach (var t in Model.TypeOptions) { <a class="chip @(Model.TypeId?.ToString() == t.Value ? "on" : "")" href="@Url(int.Parse(t.Value))">@t.Text</a> }
+    </div>
+    <div class="row wrap" style="gap:8px">
+        <input type="search" name="name" value="@Model.Name" placeholder="Search products" aria-label="Search products" style="width:240px" />
+        <button class="btn" aria-label="Search">@Icons.Svg("chevron-right", 18)</button>
+    </div>
+</form>
+@if (canCategory)
+{
+    <form method="post" asp-page-handler="CreateCategory" class="row" style="gap:8px">
+        <input type="hidden" name="typeId" value="@Model.TypeId" />
+        <input name="name" placeholder="New category" maxlength="100" aria-label="New category" style="width:220px" />
+        <button class="btn btn-s">Add category</button>
     </form>
-    <button class="btn btn-success" hx-get="/Products?handler=Create" hx-target="#modal-content">Add Product</button>
-</div>
-<div id="list" hx-get="/Products?handler=List" hx-include="#filter" hx-trigger="refreshList from:body">
-    <partial name="_List" model="Model" />
+}
+
+<div class="row top wrap" style="gap:22px">
+    <section class="card flush grow" style="flex:1 1 560px;min-width:0">
+        @if (!items.Items.Any()) { <div class="empty">No products found.</div> }
+        @foreach (var g in items.Items)
+        {
+            <div class="list-row @(Model.EditId == g.Id ? "focus" : "")">
+                <span class="tile s cat-@Tone(g.GoodTypeId)">@if (!string.IsNullOrEmpty(g.LogoName)) { <img src="/images/products/@g.LogoName" alt="" onerror="this.remove()" /> } else { @Fmt.Initials(g.Name) }</span>
+                <div class="grow" style="min-width:0"><b>@g.Name</b><div class="lbl">@(Model.TypeNames.TryGetValue(g.GoodTypeId, out var tn) ? tn : "Other") · per @g.UOM</div></div>
+                <span class="num strong" style="width:90px;text-align:right">৳ @Fmt.Money(g.UnitPrice)</span>
+                <form method="post" asp-page-handler="Toggle" asp-route-id="@g.Id" asp-route-typeId="@Model.TypeId" style="display:flex;align-items:center;gap:8px">
+                    <span class="lbl" style="width:62px">@(g.IsActive ? "Available" : "Hidden")</span>
+                    <button class="switch sm" role="switch" aria-checked="@(g.IsActive ? "true" : "false")" aria-label="Available for orders: @g.Name"></button>
+                </form>
+                <a class="btn btn-s" href="@Url(Model.TypeId)&editId=@g.Id">Edit</a>
+            </div>
+        }
+        <partial name="_Pager" model='(items.Page, items.TotalPages, Url(Model.TypeId), "")' />
+    </section>
+
+    @if (Model.Mode != null)
+    {
+        <aside class="card panel" id="panel"><partial name="_Form" model="Model" /></aside>
+    }
 </div>

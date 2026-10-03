@@ -1,6 +1,0 @@
-@model TalukdarSales.Web.Pages.Roles.IndexModel
-<form method="post" hx-post="/Roles?handler=CreateRole" hx-target="#modal-content">
-    <div class="modal-header"><h5 class="modal-title">Create Role</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-    <div class="modal-body"><label class="form-label">Role name *</label><input class="form-control" asp-for="Role.Name" /><span class="text-danger small" asp-validation-for="Role.Name"></span></div>
-    <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-success">Save</button></div>
-</form>

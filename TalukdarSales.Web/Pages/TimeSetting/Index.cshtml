@@ -1,14 +1,42 @@
 @page
 @model TalukdarSales.Web.Pages.TimeSetting.IndexModel
-@{ ViewData["Title"] = "Time Setting"; }
-@if (TempData["Saved"] is string saved) { <div class="alert alert-success py-2">@saved</div> }
-<div class="card" style="max-width:420px">
-    <div class="card-body">
-        <p class="text-muted">Requisitions can only be submitted between these times (server time).</p>
-        <form method="post">
-            <div class="mb-3"><label class="form-label">From</label><input class="form-control" type="time" asp-for="Input.From" /><span class="text-danger small" asp-validation-for="Input.From"></span></div>
-            <div class="mb-3"><label class="form-label">To</label><input class="form-control" type="time" asp-for="Input.To" /><span class="text-danger small" asp-validation-for="Input.To"></span></div>
-            <button class="btn btn-success" type="submit">Save</button>
-        </form>
+@{
+    ViewData["Title"] = "Order window";
+    double Pos(string t) => TimeSpan.TryParse(t, out var x) ? x.TotalMinutes / 1440 * 100 : 0;
+    var from = Pos(Model.Input.From); var to = Pos(Model.Input.To);
+    var crosses = to < from;
+    var now = DateTime.Now.TimeOfDay.TotalMinutes / 1440 * 100;
+    var hours = TimeSpan.TryParse(Model.Input.From, out var a) && TimeSpan.TryParse(Model.Input.To, out var b) ? ((b - a).TotalHours + (b < a ? 24 : 0)) : 0;
+}
+<header class="page-head">
+    <div><h1 class="page-title">Order window</h1><div class="page-sub">Orders can only be placed between these times, every day</div></div>
+</header>
+
+<section class="card col" style="gap:22px;max-width:980px">
+    <div class="row between wrap">
+        <span class="pill @(Model.OpenNow ? "good" : "warn")" style="min-height:34px;padding:0 14px">@if (Model.OpenNow) { <i class="dot round" style="background:var(--s4)"></i> }@(Model.OpenNow ? "Open now · closes in " + Model.LeftText : "Closed right now")</span>
+        <span class="lbl">Server time: @DateTime.Now.ToString("ddd d MMM, h:mm tt")</span>
     </div>
-</div>
+
+    <div class="col" style="gap:8px">
+        <div class="timeline" role="img" aria-label="Order window on a 24 hour timeline">
+            @if (!crosses) { <div class="win" style="left:@Charts.N(from)%;width:@Charts.N(to - from)%">Open · @Charts.N(hours) hours</div> }
+            else { <div class="win" style="left:@Charts.N(from)%;width:@Charts.N(100 - from)%"></div><div class="win" style="left:0;width:@Charts.N(to)%">Open · @Charts.N(hours) hours</div> }
+            <div class="now" style="left:@Charts.N(now)%"></div>
+        </div>
+        <div class="row between" style="font-size:12px;color:var(--ink-3)"><span>12 AM</span><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>12 AM</span></div>
+        <div class="lbl"><span style="display:inline-block;width:3px;height:12px;background:var(--maroon);vertical-align:-2px;margin-right:6px"></span>Now</div>
+    </div>
+
+    <form method="post" class="col" style="gap:22px">
+        <div class="row wrap" style="gap:24px;align-items:flex-end">
+            <div class="field"><label for="from">Opens at</label><input id="from" type="time" asp-for="Input.From" class="timebox" /><span class="err" asp-validation-for="Input.From"></span></div>
+            <div class="field"><label for="to">Closes at</label><input id="to" type="time" asp-for="Input.To" class="timebox" /><span class="err" asp-validation-for="Input.To"></span></div>
+            <div class="note grow" style="flex:1 1 240px">Closing after midnight works too. For example 22:00 to 02:00 stays open overnight.</div>
+        </div>
+        <div class="row" style="justify-content:flex-end;gap:10px"><a class="btn" href="/TimeSetting">Reset</a><button class="btn btn-p">Save window</button></div>
+    </form>
+</section>
+<section class="card row between wrap" style="max-width:980px;padding:18px 24px">
+    <div><div class="ct">What happens when it is closed</div><div class="lbl">Staff see “Orders are closed right now”. Existing orders can still be invoiced and collected.</div></div>
+</section>

@@ -31,6 +31,12 @@ namespace TalukdarSales.Web.Pages.Users
         [BindProperty(SupportsGet = true)] public int? TypeId { get; set; }
         [BindProperty(SupportsGet = true, Name = "p")] public int PageNo { get; set; } = 1;
 
+        [BindProperty(SupportsGet = true)] public int? EditId { get; set; }
+        [BindProperty(SupportsGet = true)] public bool New { get; set; }
+        /// <summary>"create", "edit" or null: which form the side panel shows.</summary>
+        public string Mode { get; private set; }
+        public Models.User EditUser { get; private set; }
+
         public Paged<UserDto> Users { get; private set; }
         public List<SelectListItem> UserTypeOptions { get; private set; }
         public List<SelectListItem> RoleOptions { get; private set; }
@@ -68,22 +74,24 @@ namespace TalukdarSales.Web.Pages.Users
             public int? RoleId { get; set; }
         }
 
-        public void OnGet()
+        public IActionResult OnGet()
         {
             LoadOptions();
             LoadUsers();
-        }
-
-        public IActionResult OnGetList()
-        {
-            LoadUsers();
-            return Partial("_UserList", this);
-        }
-
-        public IActionResult OnGetCreate()
-        {
-            LoadOptions();
-            return Partial("_CreateForm", this);
+            if (EditId != null)
+            {
+                var user = _users.Get(EditId.Value);
+                if (user == null) return NotFound();
+                Edit = new EditInput
+                {
+                    Id = user.Id, FirstName = user.FirstName, LastName = user.LastName, MaxCreditLimit = user.MaxCreditLimit,
+                    RoleId = CanAssignRoles ? _users.CurrentRoleId(user.Id) ?? 0 : null
+                };
+                EditUser = user;
+                Mode = "edit";
+            }
+            else if (New) Mode = "create";
+            return Page();
         }
 
         public async Task<IActionResult> OnPostCreateAsync([Bind(Prefix = nameof(Create))] CreateInput input)
@@ -95,10 +103,7 @@ namespace TalukdarSales.Web.Pages.Users
                 ModelState.AddModelError("Create.RoleId", roleError);
 
             if (!ModelState.IsValid)
-            {
-                LoadOptions();
-                return Partial("_CreateForm", this);
-            }
+                return Redisplay("create");
 
             var dto = new CreateUserDto
             {
@@ -120,28 +125,11 @@ namespace TalukdarSales.Web.Pages.Users
             if (!ok)
             {
                 ModelState.AddModelError(string.Empty, message);
-                LoadOptions();
-                return Partial("_CreateForm", this);
+                return Redisplay("create");
             }
 
-            Toast(message);
-            CloseModal();
-            RefreshList();
-            return new EmptyResult();
-        }
-
-        public IActionResult OnGetEdit(int id)
-        {
-            var user = _users.Get(id);
-            if (user == null)
-                return NotFound();
-            Edit = new EditInput
-            {
-                Id = user.Id, FirstName = user.FirstName, LastName = user.LastName, MaxCreditLimit = user.MaxCreditLimit,
-                RoleId = CanAssignRoles ? _users.CurrentRoleId(user.Id) ?? 0 : null
-            };
-            LoadOptions();
-            return Partial("_EditForm", this);
+            TempData["Flash"] = message;
+            return RedirectToPage("Index");
         }
 
         public IActionResult OnPostEdit([Bind(Prefix = nameof(Edit))] EditInput input)
@@ -149,10 +137,7 @@ namespace TalukdarSales.Web.Pages.Users
             Edit = input ?? new EditInput();
 
             if (!ModelState.IsValid)
-            {
-                LoadOptions();
-                return Partial("_EditForm", this);
-            }
+                return Redisplay("edit");
 
             if (Edit.RoleId != null)
             {
@@ -160,8 +145,7 @@ namespace TalukdarSales.Web.Pages.Users
                 if (!roleOk)
                 {
                     ModelState.AddModelError("Edit.RoleId", roleError);
-                    LoadOptions();
-                    return Partial("_EditForm", this);
+                    return Redisplay("edit");
                 }
             }
 
@@ -175,10 +159,17 @@ namespace TalukdarSales.Web.Pages.Users
             if (!updated)
                 return NotFound();
 
-            Toast("User Updated!");
-            CloseModal();
-            RefreshList();
-            return new EmptyResult();
+            TempData["Flash"] = "Customer updated.";
+            return RedirectToPage("Index");
+        }
+
+        private IActionResult Redisplay(string mode)
+        {
+            Mode = mode;
+            LoadOptions();
+            LoadUsers();
+            if (mode == "edit") EditUser = _users.Get(Edit.Id);
+            return Page();
         }
 
         private void LoadUsers()

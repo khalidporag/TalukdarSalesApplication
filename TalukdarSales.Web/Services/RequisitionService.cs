@@ -20,6 +20,9 @@ namespace TalukdarSales.Web.Services
 
     public record OrderBoard(Paged<OrderRow> Page, int Waiting, int Invoiced);
 
+    public record ProductionItem(int FinishedGoodId, string ProductName, string Category, double Quantity);
+    public record ProductionPlan(List<ProductionItem> Items, int Orders, int Customers);
+
     public record ProductTotal(int FinishedGoodId, string ProductName, double TotalQuantity);
 
     public class RequisitionService
@@ -90,6 +93,20 @@ namespace TalukdarSales.Web.Services
                     t?.Items ?? 0, Money.Round(t?.Total ?? 0), inv?.Id, inv?.InvoiceSerialNo);
             }).ToList();
             return new OrderBoard(new Paged<OrderRow> { Items = rows, Page = paged.Page, PageSize = paged.PageSize, Total = paged.Total }, waiting, invoiced);
+        }
+
+        /// <summary>The day's quantities per product with their category, plus how many orders and customers they come from.</summary>
+        public ProductionPlan PlanForDay(DateTime day, IFinishedGoodTypeRepository types)
+        {
+            var start = day.Date; var end = start.AddDays(1);
+            var totals = ProductTotalsForDay(day);
+            var ids = totals.Select(t => t.FinishedGoodId).ToList();
+            var goodType = _goods.GetAll().Where(g => ids.Contains(g.Id)).Select(g => new { g.Id, g.GoodTypeId }).ToList().ToDictionary(g => g.Id, g => g.GoodTypeId);
+            var typeName = types.GetAll().Select(t => new { t.Id, t.Name }).ToList().ToDictionary(t => t.Id, t => t.Name);
+            var items = totals.Select(t => new ProductionItem(t.FinishedGoodId, t.ProductName,
+                goodType.TryGetValue(t.FinishedGoodId, out var ty) && typeName.TryGetValue(ty, out var n) ? n : "Other", t.TotalQuantity)).ToList();
+            var day_ = _requisitions.GetAll().Where(r => r.CreatedDateTime >= start && r.CreatedDateTime < end);
+            return new ProductionPlan(items, day_.Count(), day_.Select(r => r.UserId).Distinct().Count());
         }
 
         public int OrderCountForDay(DateTime day)

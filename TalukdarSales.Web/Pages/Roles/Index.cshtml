@@ -1,10 +1,60 @@
 @page
 @model TalukdarSales.Web.Pages.Roles.IndexModel
-@{ ViewData["Title"] = "Role Management"; }
-<div class="d-flex gap-2 mb-3">
-    <button class="btn btn-success" hx-get="/Roles?handler=CreateRole" hx-target="#modal-content">Create Role</button>
-</div>
-<p class="text-muted small">A user's role decides which screens and actions they can use. Assign a role to a user from User Management. The <strong>Administrator</strong> role always has full access.</p>
-<div id="list" hx-get="/Roles?handler=List" hx-trigger="refreshList from:body">
-    <partial name="_List" model="Model" />
+@using TalukdarSales.Web.Security
+@{
+    ViewData["Title"] = "Roles";
+    var sel = Model.Selected;
+    var selIsAdmin = sel != null && AccessService.IsAdministratorRole(sel.Name);
+    var actor = Model.Actor;
+}
+<header class="page-head">
+    <div><h1 class="page-title">Roles</h1><div class="page-sub">Choose what each role can see and do</div></div>
+</header>
+
+<div class="row top wrap" style="gap:22px">
+    <section class="card flush" style="flex:0 1 320px;min-width:280px">
+        @foreach (var r in Model.Roles)
+        {
+            var isAdmin = AccessService.IsAdministratorRole(r.Name);
+            <a class="list-row @(sel?.Id == r.Id ? "focus" : "")" href="/Roles?role=@r.Id">
+                <span class="grow"><b>@r.Name</b><div class="lbl">@(isAdmin ? "Built-in · all access" : Model.RoleKeys[r.Id].Count + " permissions")</div></span>
+                @Icons.Svg("chevron-right", 16)
+            </a>
+        }
+        @if (!Model.Roles.Any()) { <div class="empty">No roles yet.</div> }
+        <form method="post" asp-page-handler="CreateRole" class="row" style="gap:8px;padding:14px 16px;border-top:1px solid var(--line)">
+            <input name="name" placeholder="New role name" maxlength="100" aria-label="New role name" class="grow" style="min-width:0;width:auto" />
+            <button class="btn btn-p btn-s">Add</button>
+        </form>
+    </section>
+
+    <section class="card grow" style="flex:1 1 480px;min-width:0">
+        @if (sel == null) { <div class="empty-dash">Add a role to start.</div> }
+        else if (selIsAdmin)
+        {
+            <div class="ct">@sel.Name</div>
+            <div class="note good" style="margin-top:12px">The Administrator role always has full access. It cannot be edited.</div>
+        }
+        else
+        {
+            <form method="post" asp-page-handler="Assign" class="col" style="gap:18px">
+                <input type="hidden" name="Assign.RoleId" value="@sel.Id" />
+                <div class="row between wrap"><div><div class="ct">@sel.Name</div><div class="lbl">@Model.SelectedKeys.Count of @Perm.Catalog.Count permissions on</div></div><button class="btn btn-p">Save permissions</button></div>
+                @foreach (var group in Perm.Catalog.GroupBy(p => p.Group))
+                {
+                    <div>
+                        <div class="sec-label" style="margin-bottom:6px">@group.Key</div>
+                        @foreach (var p in group)
+                        {
+                            var can = actor.IsAdmin || actor.Keys.Contains(p.Key);
+                            <label class="perm-row">
+                                <span class="grow">@p.Name@if (!can) { <span class="lbl"> · you do not hold this permission</span> }</span>
+                                <input type="checkbox" class="swc" name="Assign.Keys" value="@p.Key" @(Model.SelectedKeys.Contains(p.Key) ? "checked" : null) @(can ? null : "disabled") />
+                            </label>
+                        }
+                    </div>
+                }
+            </form>
+        }
+    </section>
 </div>

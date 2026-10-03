@@ -1,0 +1,47 @@
+@model TalukdarSales.Web.Pages.Users.IndexModel
+@if (Model.Mode == "edit")
+{
+    <form method="post" asp-page-handler="Edit" class="col" style="gap:14px">
+        <input type="hidden" asp-for="Edit.Id" />
+        <div class="row between"><div class="ct">Edit customer</div><a class="link" href="/Users">Close</a></div>
+        @if (Model.EditUser != null) { <div class="lbl">@Model.EditUser.Username · @Model.EditUser.SequencialUserId · owes ৳ @Fmt.Int(Model.EditUser.DueAmount)</div> }
+        <div asp-validation-summary="ModelOnly" class="note bad"></div>
+        <div class="field"><label asp-for="Edit.FirstName">First name *</label><input asp-for="Edit.FirstName" /><span class="err" asp-validation-for="Edit.FirstName"></span></div>
+        <div class="field"><label asp-for="Edit.LastName">Last name</label><input asp-for="Edit.LastName" /></div>
+        <div class="field"><label asp-for="Edit.MaxCreditLimit">Max credit limit (৳)</label><input type="number" step="0.01" min="0" asp-for="Edit.MaxCreditLimit" /><span class="err" asp-validation-for="Edit.MaxCreditLimit"></span></div>
+        @if (Model.Edit.RoleId != null)
+        {
+            <div class="field"><label asp-for="Edit.RoleId">Role</label><select asp-for="Edit.RoleId" asp-items="Model.RoleOptions"><option value="0">None</option></select><span class="err" asp-validation-for="Edit.RoleId"></span></div>
+        }
+        <button class="btn btn-p btn-lg btn-block">Save changes</button>
+    </form>
+}
+else
+{
+    <form method="post" enctype="multipart/form-data" asp-page-handler="Create" class="col" style="gap:14px">
+        <div class="row between"><div class="ct">New customer</div><a class="link" href="/Users">Close</a></div>
+        <div asp-validation-summary="ModelOnly" class="note bad"></div>
+        <div class="field"><label asp-for="Create.UserTypeId">Customer group *</label><select asp-for="Create.UserTypeId" asp-items="Model.UserTypeOptions"><option value="0">Select…</option></select><span class="err" asp-validation-for="Create.UserTypeId"></span></div>
+        @if (Model.CanAssignRoles)
+        {
+            <div class="field"><label asp-for="Create.RoleId">Role</label><select asp-for="Create.RoleId" asp-items="Model.RoleOptions"><option value="0">None</option></select><span class="err" asp-validation-for="Create.RoleId"></span></div>
+        }
+        <div class="fields">
+            <div class="field"><label asp-for="Create.FirstName">First name *</label><input asp-for="Create.FirstName" /><span class="err" asp-validation-for="Create.FirstName"></span></div>
+            <div class="field"><label asp-for="Create.LastName">Last name</label><input asp-for="Create.LastName" /></div>
+        </div>
+        <div class="field"><label asp-for="Create.PhoneNumber">Phone * <span class="faint">(first password)</span></label><input asp-for="Create.PhoneNumber" /><span class="err" asp-validation-for="Create.PhoneNumber"></span></div>
+        <div class="field"><label asp-for="Create.Address">Address</label><input asp-for="Create.Address" /></div>
+        <div class="fields">
+            <div class="field"><label asp-for="Create.MaxCreditLimit">Credit limit (৳)</label><input type="number" step="0.01" min="0" asp-for="Create.MaxCreditLimit" /></div>
+            <div class="field"><label asp-for="Create.MaxCreditDays">Credit days</label><input type="number" min="0" asp-for="Create.MaxCreditDays" /></div>
+        </div>
+        <div class="fields">
+            <div class="field"><label asp-for="Create.ContactPersonName">Contact person</label><input asp-for="Create.ContactPersonName" /></div>
+            <div class="field"><label asp-for="Create.ContactPersonPhone">Contact phone</label><input asp-for="Create.ContactPersonPhone" /></div>
+        </div>
+        <div class="field"><label asp-for="Create.Image">Photo</label><input type="file" asp-for="Create.Image" accept="image/*" /></div>
+        <label class="check"><input type="checkbox" asp-for="Create.IsPayRollUser" /> Payroll user</label>
+        <button class="btn btn-p btn-lg btn-block">Create customer</button>
+    </form>
+}

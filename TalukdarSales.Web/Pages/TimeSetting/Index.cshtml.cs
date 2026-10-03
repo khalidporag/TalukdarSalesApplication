@@ -11,6 +11,9 @@ namespace TalukdarSales.Web.Pages.TimeSetting
         private readonly ITimeSettingRepository _settings;
         public IndexModel(ITimeSettingRepository settings) => _settings = settings;
 
+        public bool OpenNow { get; private set; }
+        public string LeftText { get; private set; }
+
         [BindProperty] public InputModel Input { get; set; } = new();
 
         public class InputModel
@@ -24,12 +27,27 @@ namespace TalukdarSales.Web.Pages.TimeSetting
             var current = _settings.GetAll().OrderByDescending(n => n.CreatedOn).FirstOrDefault();
             if (current != null)
                 Input = new InputModel { From = Normalize(current.From), To = Normalize(current.To) };
+            Status();
+        }
+
+        private void Status()
+        {
+            OpenNow = Services.RequisitionService.IsWithinWindow(Input.From, Input.To, DateTime.Now.TimeOfDay);
+            if (OpenNow && TimeSpan.TryParse(Input.To, out var end))
+            {
+                var left = end - DateTime.Now.TimeOfDay;
+                if (left < TimeSpan.Zero) left += TimeSpan.FromDays(1);
+                LeftText = left.TotalHours >= 1 ? $"{(int)left.TotalHours}h {left.Minutes}m" : $"{left.Minutes}m";
+            }
         }
 
         public IActionResult OnPost()
         {
             if (!ModelState.IsValid)
+            {
+                Status();
                 return Page();
+            }
 
             var current = _settings.GetAll().OrderByDescending(n => n.CreatedOn).FirstOrDefault();
             if (current == null)
@@ -43,7 +61,7 @@ namespace TalukdarSales.Web.Pages.TimeSetting
                 _settings.Update(current);
             }
             _settings.Commit();
-            TempData["Saved"] = "Time Setting Updated!";
+            TempData["Flash"] = "Order window saved.";
             return RedirectToPage();
         }
 

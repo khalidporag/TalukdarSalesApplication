@@ -95,12 +95,9 @@ namespace TalukdarSales.Web.Security
             new("/Reports/Index", "Export", Reports),
             new("/Dashboard/Index", null, Dashboard),
 
-            new("/ProductTypes/Index", null, ProductTypes),
             new("/Products/Index", null, Products),
+            new("/Products/Index", "CreateCategory", ProductTypes),
             new("/TimeSetting/Index", null, TimeSetting),
-
-            // dropdown helper used by the requisition, invoice and collection screens
-            new("/Lookup", null, RequisitionCreate, RequisitionView, InvoiceCreate, InvoiceView, CollectionView),
         };
 
         public static Permission Find(string key) => Catalog.FirstOrDefault(p => p.Key == key);

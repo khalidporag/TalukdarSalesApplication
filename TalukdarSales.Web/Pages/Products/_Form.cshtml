@@ -1,0 +1,29 @@
+@model TalukdarSales.Web.Pages.Products.IndexModel
+@if (Model.Mode == "edit")
+{
+    <form method="post" asp-page-handler="Edit" class="col" style="gap:14px">
+        <input type="hidden" asp-for="Edit.Id" /><input type="hidden" asp-for="Edit.Name" />
+        <div class="row between"><div class="ct">@Model.Edit.Name</div><a class="link" href="/Products">Close</a></div>
+        <div asp-validation-summary="ModelOnly" class="note bad"></div>
+        <div class="field"><label asp-for="Edit.UnitPrice">Unit price (৳)</label><input type="number" step="0.01" min="0" asp-for="Edit.UnitPrice" /><span class="err" asp-validation-for="Edit.UnitPrice"></span></div>
+        <div class="field"><label asp-for="Edit.Description">Description *</label><textarea rows="3" asp-for="Edit.Description"></textarea><span class="err" asp-validation-for="Edit.Description"></span></div>
+        <label class="check"><input type="checkbox" asp-for="Edit.IsActive" /> Available for orders</label>
+        <button class="btn btn-p btn-lg btn-block">Save changes</button>
+    </form>
+}
+else
+{
+    <form method="post" enctype="multipart/form-data" asp-page-handler="Create" class="col" style="gap:14px">
+        <div class="row between"><div class="ct">Add product</div><a class="link" href="/Products">Close</a></div>
+        <div asp-validation-summary="ModelOnly" class="note bad"></div>
+        <div class="field"><label asp-for="Create.Name">Name *</label><input asp-for="Create.Name" /><span class="err" asp-validation-for="Create.Name"></span></div>
+        <div class="field"><label asp-for="Create.GoodTypeId">Category *</label><select asp-for="Create.GoodTypeId" asp-items="Model.TypeOptions"><option value="0">Select…</option></select><span class="err" asp-validation-for="Create.GoodTypeId"></span></div>
+        <div class="fields">
+            <div class="field"><label asp-for="Create.UOM">Unit *</label><input asp-for="Create.UOM" placeholder="pk" /><span class="err" asp-validation-for="Create.UOM"></span></div>
+            <div class="field"><label asp-for="Create.UnitPrice">Unit price (৳) *</label><input type="number" step="0.01" min="0" asp-for="Create.UnitPrice" /><span class="err" asp-validation-for="Create.UnitPrice"></span></div>
+        </div>
+        <div class="field"><label asp-for="Create.Description">Description *</label><textarea rows="3" asp-for="Create.Description"></textarea><span class="err" asp-validation-for="Create.Description"></span></div>
+        <div class="field"><label asp-for="Create.Image">Image</label><input type="file" accept="image/*" asp-for="Create.Image" /><span class="err" asp-validation-for="Create.Image"></span></div>
+        <button class="btn btn-p btn-lg btn-block">Add product</button>
+    </form>
+}
