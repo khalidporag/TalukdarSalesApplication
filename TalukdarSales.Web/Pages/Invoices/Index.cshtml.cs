@@ -98,7 +98,7 @@ namespace TalukdarSales.Web.Pages.Invoices
             if (detail == null)
                 return false;
             CollectInvoice = detail.Header;
-            UserDue = _invoices.List(detail.Header.UserId, null, null).Rows.Sum(r => r.Due);
+            UserDue = _invoices.OutstandingFor(detail.Header.UserId);
             return true;
         }
 

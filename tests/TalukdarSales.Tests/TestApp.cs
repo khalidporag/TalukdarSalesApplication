@@ -15,19 +15,30 @@ namespace TalukdarSales.Tests
     /// <summary>Runs the real app in-process against an in-memory database.</summary>
     public class TestApp : WebApplicationFactory<Program>
     {
-        private readonly string _dbName = Guid.NewGuid().ToString();
+        // A relational provider (not EF's InMemory) so queries that EF cannot translate to SQL fail in the tests too.
+        private readonly Microsoft.Data.Sqlite.SqliteConnection _connection = new("DataSource=:memory:");
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseEnvironment("Development");
+
+            _connection.Open();
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlite(_connection).Options;
+            using (var schema = new ApplicationDbContext(options))
+                schema.Database.EnsureCreated();
+
             builder.ConfigureServices(services =>
             {
                 services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
                 services.RemoveAll<ApplicationDbContext>();
-                services.AddDbContext<ApplicationDbContext>(o => o
-                    .UseInMemoryDatabase(_dbName)
-                    .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning)));
+                services.AddDbContext<ApplicationDbContext>(o => o.UseSqlite(_connection));
             });
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing) _connection.Dispose();
+            base.Dispose(disposing);
         }
 
         public void Seed(Action<ApplicationDbContext> action)
@@ -84,6 +95,12 @@ namespace TalukdarSales.Tests
         {
             using var scope = Services.CreateScope();
             return action(scope.ServiceProvider);
+        }
+
+        public async Task<T> RunAsync<T>(Func<IServiceProvider, Task<T>> action)
+        {
+            using var scope = Services.CreateScope();
+            return await action(scope.ServiceProvider);
         }
 
         public int SeedGood(string name, double price, bool active = true)

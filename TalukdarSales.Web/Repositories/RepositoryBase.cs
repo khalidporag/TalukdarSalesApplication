@@ -24,9 +24,9 @@ namespace TalukdarSales.Web.Repositories
             _context = context;
         }
         #endregion
-        public virtual IEnumerable<T> GetAll()
+        public virtual IQueryable<T> GetAll()
         {
-            return _context.Set<T>().Where(x => x.IsDeleted != true).AsEnumerable();
+            return _context.Set<T>().Where(x => !x.IsDeleted);
         }
 
         public virtual int Count()
@@ -34,14 +34,14 @@ namespace TalukdarSales.Web.Repositories
             return _context.Set<T>().Count();
         }
 
-        public virtual IEnumerable<T> AllIncluding(params Expression<Func<T, object>>[] includeProperties)
+        public virtual IQueryable<T> AllIncluding(params Expression<Func<T, object>>[] includeProperties)
         {
             IQueryable<T> query = _context.Set<T>();
             foreach (var includeProperty in includeProperties)
             {
                 query = query.Include(includeProperty);
             }
-            return query.AsEnumerable();
+            return query;
         }
 
         public T GetSingle(int id)
@@ -65,7 +65,7 @@ namespace TalukdarSales.Web.Repositories
             return query.Where(predicate).FirstOrDefault();
         }
 
-        public virtual IEnumerable<T> FindBy(Expression<Func<T, bool>> predicate)
+        public virtual IQueryable<T> FindBy(Expression<Func<T, bool>> predicate)
         {
             return _context.Set<T>().Where(predicate);
         }

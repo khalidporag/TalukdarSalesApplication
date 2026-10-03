@@ -45,7 +45,7 @@ namespace TalukdarSales.Web.Pages.Notices
                 ModelState.AddModelError("Create.Image", "Invalid image. Allowed: jpg, jpeg, png, gif, webp up to 5 MB.");
 
             var title = Create.Title?.Trim();
-            if (!string.IsNullOrEmpty(title) && _notices.FindBy(x => x.Title == title && !x.IsDeleted).Any())
+            if (!string.IsNullOrEmpty(title) && _notices.GetAll().Any(x => x.Title == title))
                 ModelState.AddModelError("Create.Title", "Title already exists. Please try another title.");
 
             if (!ModelState.IsValid)

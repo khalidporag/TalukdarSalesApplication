@@ -64,16 +64,8 @@ namespace TalukdarSales.Web.Pages.Requisitions
 
         private void Load()
         {
-            var all = _requisitions.List(Active, UserId, Serial, From, To)
-                .Where(r => TypeId == null || UserId != null || UserBelongsToType(r.UserId, TypeId.Value));
-            Rows = Paged<RequisitionRow>.Create(all, PageNo, PageSize);
-        }
-
-        private Dictionary<int, int> _userTypeByUser;
-        private bool UserBelongsToType(int userId, int typeId)
-        {
-            _userTypeByUser ??= _users.GetAll().ToDictionary(u => u.Id, u => u.UserTypeId);
-            return _userTypeByUser.TryGetValue(userId, out var t) && t == typeId;
+            // a specific user already implies their group, so the group filter only applies when no user is picked
+            Rows = _requisitions.Page(Active, UserId, UserId == null ? TypeId : null, Serial, From, To, PageNo, PageSize);
         }
 
         private void LoadOptions()

@@ -5,13 +5,15 @@ namespace TalukdarSales.Web.Interfaces
 {
     public interface IRepositoryBase<T> where T : class, IEntityBase, new()
     {
-        IEnumerable<T> AllIncluding(params Expression<Func<T, object>>[] includeProperties);
-        IEnumerable<T> GetAll();
+        IQueryable<T> AllIncluding(params Expression<Func<T, object>>[] includeProperties);
+        /// <summary>Not-deleted rows. Deferred: compose filters, ordering, paging and projections on it so they run in SQL.</summary>
+        IQueryable<T> GetAll();
         int Count();
         T GetSingle(int id);
         T GetSingle(Expression<Func<T, bool>> predicate);
         T GetSingle(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includeProperties);
-        IEnumerable<T> FindBy(Expression<Func<T, bool>> predicate);
+        /// <summary>Rows matching the predicate (deleted rows included, as before). Deferred.</summary>
+        IQueryable<T> FindBy(Expression<Func<T, bool>> predicate);
         void Add(T entity);
         void AddRange(List<T> entities);
         void Update(T entity);

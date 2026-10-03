@@ -1,5 +1,6 @@
 using TalukdarSales.Web.Context;
 using TalukdarSales.Web.Helpers;
+using TalukdarSales.Web.Infrastructure;
 using TalukdarSales.Web.Interfaces;
 using TalukdarSales.Web.Models;
 using TalukdarSales.Web.Models.Dto;
@@ -29,43 +30,51 @@ namespace TalukdarSales.Web.Services
             _images = images;
         }
 
-        public List<UserDto> Search(int? userTypeId, string name)
+        /// <summary>One page of users, newest first. Filtering, counting and paging all run in SQL.</summary>
+        public Paged<UserDto> Search(int? userTypeId, string name, int page, int pageSize)
         {
-            IEnumerable<User> list = _users.GetAll().OrderByDescending(n => n.CreatedOn);
+            var q = _users.GetAll();
             if (userTypeId != null)
-                list = list.Where(n => n.UserTypeId == userTypeId);
+                q = q.Where(n => n.UserTypeId == userTypeId);
             if (!string.IsNullOrWhiteSpace(name))
             {
-                var term = name.Trim().ToLowerInvariant();
-                list = list.Where(n =>
-                    (n.FirstName ?? "").ToLowerInvariant().Contains(term) ||
-                    (n.LastName ?? "").ToLowerInvariant().Contains(term) ||
-                    (n.PhoneNumber ?? "").ToLowerInvariant().Contains(term) ||
-                    (n.Username ?? "").ToLowerInvariant().Contains(term));
+                var term = name.Trim().ToLower();
+                q = q.Where(n =>
+                    n.FirstName.ToLower().Contains(term) ||
+                    n.LastName.ToLower().Contains(term) ||
+                    n.PhoneNumber.ToLower().Contains(term) ||
+                    n.Username.ToLower().Contains(term));
             }
 
+            var paged = Paged<User>.Create(q.OrderByDescending(n => n.CreatedOn).ThenByDescending(n => n.Id), page, pageSize);
             var types = _userTypes.GetAll().ToDictionary(n => n.Id);
-            return list.Select(n => new UserDto
+            return new Paged<UserDto>
             {
-                Id = n.Id,
-                CreatedOn = n.CreatedOn,
-                DeletedOn = n.DeletedOn,
-                SequencialUserId = n.SequencialUserId,
-                UserTypeId = n.UserTypeId,
-                UserTypeName = types.TryGetValue(n.UserTypeId, out var t) ? t.TypeName : "",
-                FirstName = n.FirstName,
-                LastName = n.LastName,
-                ImageName = n.ImageName,
-                PhoneNumber = n.PhoneNumber,
-                DueAmount = n.DueAmount,
-                Username = n.Username,
-                MaxCreditDays = n.MaxCreditDays,
-                MaxCreditLimit = n.MaxCreditLimit,
-                Address = n.Address,
-                ContactPersonName = n.ContactPersonName,
-                ContactPersonPhone = n.ContactPersonPhone,
-                IsPayRollUser = n.IsPayRollUser
-            }).ToList();
+                Page = paged.Page,
+                PageSize = paged.PageSize,
+                Total = paged.Total,
+                Items = paged.Items.Select(n => new UserDto
+                {
+                    Id = n.Id,
+                    CreatedOn = n.CreatedOn,
+                    DeletedOn = n.DeletedOn,
+                    SequencialUserId = n.SequencialUserId,
+                    UserTypeId = n.UserTypeId,
+                    UserTypeName = types.TryGetValue(n.UserTypeId, out var t) ? t.TypeName : "",
+                    FirstName = n.FirstName,
+                    LastName = n.LastName,
+                    ImageName = n.ImageName,
+                    PhoneNumber = n.PhoneNumber,
+                    DueAmount = n.DueAmount,
+                    Username = n.Username,
+                    MaxCreditDays = n.MaxCreditDays,
+                    MaxCreditLimit = n.MaxCreditLimit,
+                    Address = n.Address,
+                    ContactPersonName = n.ContactPersonName,
+                    ContactPersonPhone = n.ContactPersonPhone,
+                    IsPayRollUser = n.IsPayRollUser
+                }).ToList()
+            };
         }
 
         public User Get(int id) => _users.GetSingle(id);
@@ -129,14 +138,14 @@ namespace TalukdarSales.Web.Services
             return true;
         }
 
-        /// <summary>Role name(s) per user id, for display.</summary>
-        public Dictionary<int, string> RoleNames()
+        /// <summary>Role name(s) for the given users, for display.</summary>
+        public Dictionary<int, string> RoleNames(IEnumerable<int> userIds)
         {
-            var roles = _db.ApplicationRoles.Where(r => !r.IsDeleted).ToDictionary(r => r.Id, r => r.Name);
-            return _db.UserRoleMappings.Where(m => !m.IsDeleted).AsEnumerable()
-                .Where(m => roles.ContainsKey(m.RoleId))
-                .GroupBy(m => m.UserId)
-                .ToDictionary(g => g.Key, g => string.Join(", ", g.Select(m => roles[m.RoleId])));
+            var ids = userIds.ToList();
+            var rows = _roleMappings.GetAll().Where(m => ids.Contains(m.UserId))
+                .Join(_db.ApplicationRoles.Where(r => !r.IsDeleted), m => m.RoleId, r => r.Id, (m, r) => new { m.UserId, r.Name })
+                .ToList();
+            return rows.GroupBy(x => x.UserId).ToDictionary(g => g.Key, g => string.Join(", ", g.Select(x => x.Name)));
         }
 
         public int? CurrentRoleId(int userId) =>
@@ -206,13 +215,13 @@ namespace TalukdarSales.Web.Services
         // Next number based on the highest issued id (including deleted users), not on the row count.
         private string NextUserNumber()
         {
-            var max = _db.Users
+            // ids are fixed-width (1981-0001); order by length first so 1981-10000 sorts after 1981-9999. Includes deleted users.
+            var last = _db.Users
+                .Where(u => u.SequencialUserId != null && u.SequencialUserId.StartsWith(UserIdPrefix))
+                .OrderByDescending(u => u.SequencialUserId.Length).ThenByDescending(u => u.SequencialUserId)
                 .Select(u => u.SequencialUserId)
-                .AsEnumerable()
-                .Where(id => id != null && id.StartsWith(UserIdPrefix))
-                .Select(id => int.TryParse(id.Substring(UserIdPrefix.Length), out var n) ? n : 0)
-                .DefaultIfEmpty(0)
-                .Max();
+                .FirstOrDefault();
+            var max = last != null && int.TryParse(last.Substring(UserIdPrefix.Length), out var n) ? n : 0;
             return (max + 1).ToString("D4");
         }
     }

@@ -183,8 +183,8 @@ namespace TalukdarSales.Web.Pages.Users
 
         private void LoadUsers()
         {
-            Users = Paged<UserDto>.Create(_users.Search(TypeId, Name), PageNo, PageSize);
-            RoleByUser = _users.RoleNames();
+            Users = _users.Search(TypeId, Name, PageNo, PageSize);
+            RoleByUser = _users.RoleNames(Users.Items.Select(u => u.Id));
         }
 
         private void LoadOptions()
