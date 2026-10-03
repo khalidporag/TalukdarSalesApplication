@@ -1,0 +1,23 @@
+@model TalukdarSales.Web.Pages.Requisitions.CreateModel
+@if (!Model.Products.Any())
+{
+    <div class="text-muted">Select a product type to enter quantities.</div>
+}
+else
+{
+    <div class="card-table">
+        <table class="table align-middle mb-0">
+            <thead><tr><th>Product</th><th class="text-end">Price</th><th style="width:160px">Quantity</th></tr></thead>
+            <tbody>
+            @foreach (var p in Model.Products)
+            {
+                <tr>
+                    <td>@p.Name <span class="text-muted small">(@p.UOM)</span></td>
+                    <td class="text-end">@p.UnitPrice.ToString("N2")</td>
+                    <td><input class="form-control form-control-sm" type="number" min="0" step="any" name="Qty[@p.Id]" value="@(Model.Qty.TryGetValue(p.Id, out var q) ? q : null)" /></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

@@ -1,0 +1,25 @@
+@page
+@model TalukdarSales.Web.Pages.Collections.IndexModel
+@{ ViewData["Title"] = "Collection History"; }
+<form id="filter" class="row g-2 mb-3" hx-get="/Collections?handler=List" hx-target="#list" hx-trigger="change from:#UserId, change from:#From, change from:#To, submit">
+    <input type="hidden" name="InvoiceId" value="@Model.InvoiceId" />
+    <div class="col-auto">
+        <select class="form-select" id="TypeId" name="TypeId" hx-get="/Lookup?handler=Users" hx-target="#UserId" hx-trigger="change"
+                hx-vals='js:{typeId: document.getElementById("TypeId").value}'>
+            <option value="">All groups</option>
+            @foreach (var t in Model.TypeOptions) { <option value="@t.Value" selected="@(Model.TypeId?.ToString() == t.Value)">@t.Text</option> }
+        </select>
+    </div>
+    <div class="col-auto">
+        <select class="form-select" id="UserId" name="UserId">
+            <option value="">All users</option>
+            @foreach (var u in Model.UserOptions) { <option value="@u.Value" selected="@(Model.UserId?.ToString() == u.Value)">@u.Text</option> }
+        </select>
+    </div>
+    <div class="col-auto"><input class="form-control" type="date" id="From" name="From" value="@Model.From?.ToString("yyyy-MM-dd")" title="From" /></div>
+    <div class="col-auto"><input class="form-control" type="date" id="To" name="To" value="@Model.To?.ToString("yyyy-MM-dd")" title="To" /></div>
+    <div class="col-auto"><a class="btn btn-light" href="/Collections">Reset</a></div>
+    <div class="col-auto"><a class="btn btn-outline-success" href="#" onclick="this.href='/Collections?handler=Export&'+new URLSearchParams(new FormData(document.getElementById('filter'))).toString()">Export to Excel</a></div>
+</form>
+@if (Model.InvoiceId != null) { <div class="alert alert-info py-2">Showing collections for one invoice. <a href="/Collections">Show all</a></div> }
+<div id="list"><partial name="_List" model="Model" /></div>

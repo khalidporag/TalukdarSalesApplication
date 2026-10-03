@@ -1,0 +1,30 @@
+@page
+@model TalukdarSales.Web.Pages.Invoices.IndexModel
+@{ ViewData["Title"] = "Invoice List"; }
+@if (TempData["Success"] is string ok) { <div class="alert alert-success py-2">@ok</div> }
+<form id="filter" class="row g-2 mb-3" hx-get="/Invoices?handler=List" hx-target="#list"
+      hx-trigger="change from:#UserId, change from:#From, change from:#To, submit">
+    <input type="hidden" name="Filtered" value="true" />
+    <div class="col-auto">
+        <select class="form-select" id="TypeId" name="TypeId" hx-get="/Lookup?handler=Users" hx-target="#UserId" hx-trigger="change"
+                hx-vals='js:{typeId: document.getElementById("TypeId").value}'>
+            <option value="">All groups</option>
+            @foreach (var t in Model.TypeOptions) { <option value="@t.Value" selected="@(Model.TypeId?.ToString() == t.Value)">@t.Text</option> }
+        </select>
+    </div>
+    <div class="col-auto">
+        <select class="form-select" id="UserId" name="UserId">
+            <option value="">All users</option>
+            @foreach (var u in Model.UserOptions) { <option value="@u.Value" selected="@(Model.UserId?.ToString() == u.Value)">@u.Text</option> }
+        </select>
+    </div>
+    <div class="col-auto"><input class="form-control" type="date" id="From" name="From" value="@Model.From?.ToString("yyyy-MM-dd")" title="From" /></div>
+    <div class="col-auto"><input class="form-control" type="date" id="To" name="To" value="@Model.To?.ToString("yyyy-MM-dd")" title="To" /></div>
+    <div class="col-auto"><a class="btn btn-light" href="/Invoices">Reset</a></div>
+    <div class="col-auto"><a class="btn btn-outline-success" id="export"
+        href="#" onclick="this.href='/Invoices?handler=Export&'+new URLSearchParams(new FormData(document.getElementById('filter'))).toString()">Export to Excel</a></div>
+    <div class="col text-end"><a class="btn btn-success" href="/Invoices/Create">Invoice Form</a></div>
+</form>
+<div id="list" hx-get="/Invoices?handler=List" hx-include="#filter" hx-trigger="refreshList from:body">
+    <partial name="_List" model="Model" />
+</div>

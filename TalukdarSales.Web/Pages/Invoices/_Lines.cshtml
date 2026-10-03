@@ -1,0 +1,25 @@
+@model TalukdarSales.Web.Pages.Invoices.CreateModel
+@if (!Model.Lines.Any())
+{
+    <div class="text-muted">Select a requisition to adjust quantities.</div>
+}
+else
+{
+    <div class="card-table">
+        <table class="table align-middle mb-0">
+            <thead><tr><th>Product</th><th class="text-end">Requisition qty</th><th style="width:160px">Invoice qty</th><th class="text-end">Price</th></tr></thead>
+            <tbody>
+            @foreach (var l in Model.Lines)
+            {
+                <tr>
+                    <td>@l.ProductName</td>
+                    <td class="text-end">@l.Quantity</td>
+                    <td><input class="form-control form-control-sm" type="number" min="0" step="any" name="Qty[@l.FinishedGoodId]" value="@(Model.Qty.TryGetValue(l.FinishedGoodId, out var q) && q != null ? q : l.Quantity)" /></td>
+                    <td class="text-end">@l.Price.ToString("N2")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <button class="btn btn-success mt-3" type="submit">Create Invoice</button>
+}

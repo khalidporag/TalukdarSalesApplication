@@ -1,0 +1,21 @@
+@page
+@model TalukdarSales.Web.Pages.Requisitions.DetailsModel
+@{ ViewData["Title"] = "Requisition " + Model.Header.Serial; }
+<div class="mb-3 d-flex justify-content-between">
+    <div><strong>@Model.Header.UserName</strong> &middot; @Model.Header.CreatedDateTime.ToString("dd MMM yyyy HH:mm") &middot;
+        @if (Model.Header.IsActive) { <span class="badge text-bg-success">Active</span> } else { <span class="badge text-bg-secondary">Invoiced</span> }</div>
+    <a class="btn btn-light btn-sm" href="/Requisitions">Back</a>
+</div>
+<div class="card-table">
+    <table class="table mb-0">
+        <thead><tr><th>#</th><th>Item</th><th class="text-end">Quantity</th><th class="text-end">Price</th><th class="text-end">Total</th></tr></thead>
+        <tbody>
+        @{ var i = 1; }
+        @foreach (var l in Model.Lines)
+        {
+            <tr><td>@(i++)</td><td>@l.ProductName</td><td class="text-end">@l.Quantity</td><td class="text-end">@l.Price.ToString("N2")</td><td class="text-end">@l.Total.ToString("N2")</td></tr>
+        }
+        </tbody>
+        <tfoot><tr><th colspan="4" class="text-end">Total</th><th class="text-end">@Model.Lines.Sum(l => l.Total).ToString("N2")</th></tr></tfoot>
+    </table>
+</div>

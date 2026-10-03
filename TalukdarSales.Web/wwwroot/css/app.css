@@ -17,3 +17,9 @@ body { background: #f5f6f8; }
 .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f5f6f8 url('/img/login-bg.png') center/cover no-repeat; }
 .login-card { width: 100%; max-width: 380px; }
 @media (max-width: 768px) { .app-sidebar { display: none; } }
+@media print {
+  .app-sidebar, .app-header, .no-print, .toast-container { display: none !important; }
+  .app-content { padding: 0; }
+  body { background: #fff; }
+  .invoice-sheet { border: 0; }
+}

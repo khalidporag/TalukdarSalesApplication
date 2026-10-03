@@ -1,0 +1,37 @@
+@page
+@model TalukdarSales.Web.Pages.Requisitions.CreateModel
+@{ ViewData["Title"] = "Requisition Form"; }
+@if (!Model.IsOpen)
+{
+    <div class="alert alert-warning">Requisitions are closed right now. Allowed time: <strong>@Model.WindowText</strong>.</div>
+}
+@if (!string.IsNullOrEmpty(Model.Error)) { <div class="alert alert-danger">@Model.Error</div> }
+<form method="post">
+    <div class="row g-2 mb-3">
+        <div class="col-md-3">
+            <label class="form-label">User group</label>
+            <select class="form-select" asp-for="UserTypeId" asp-items="Model.UserTypeOptions"
+                    hx-get="/Lookup?handler=Users&placeholder=Select user" hx-target="#UserId" hx-trigger="change"
+                    hx-vals='js:{typeId: document.getElementById("UserTypeId").value}'>
+                <option value="">All groups</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">User *</label>
+            <select class="form-select" asp-for="UserId">
+                <option value="">Select user</option>
+                @foreach (var u in Model.UserOptions) { <option value="@u.Value" selected="@(Model.UserId?.ToString() == u.Value)">@u.Text</option> }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Product type</label>
+            <select class="form-select" asp-for="GoodTypeId" asp-items="Model.GoodTypeOptions"
+                    hx-get="/Requisitions/Create?handler=Products" hx-target="#products" hx-trigger="change"
+                    hx-vals='js:{goodTypeId: document.getElementById("GoodTypeId").value}'>
+                <option value="">Select product type</option>
+            </select>
+        </div>
+    </div>
+    <div id="products"><partial name="_Products" model="Model" /></div>
+    <button class="btn btn-success mt-3" type="submit" disabled="@(!Model.IsOpen)">Submit Requisition</button>
+</form>

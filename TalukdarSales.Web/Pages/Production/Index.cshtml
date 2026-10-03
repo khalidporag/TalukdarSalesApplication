@@ -1,0 +1,17 @@
+@page
+@model TalukdarSales.Web.Pages.Production.IndexModel
+@{ ViewData["Title"] = "Production Planning"; }
+<form class="d-flex gap-2 mb-3" method="get">
+    <input class="form-control w-auto" type="date" name="Date" value="@Model.Date?.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
+    <span class="align-self-center text-muted">Total quantity requisitioned per product on this day</span>
+</form>
+<div class="card-table">
+    <table class="table mb-0">
+        <thead><tr><th style="width:60px">#</th><th>Product</th><th class="text-end">Total quantity</th></tr></thead>
+        <tbody>
+        @{ var i = 1; }
+        @foreach (var t in Model.Totals) { <tr><td>@(i++)</td><td>@t.ProductName</td><td class="text-end">@t.TotalQuantity</td></tr> }
+        @if (!Model.Totals.Any()) { <tr><td colspan="3" class="text-muted">No requisitions for this day.</td></tr> }
+        </tbody>
+    </table>
+</div>
