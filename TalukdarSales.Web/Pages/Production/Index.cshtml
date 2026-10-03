@@ -1,17 +1,63 @@
 @page
 @model TalukdarSales.Web.Pages.Production.IndexModel
-@{ ViewData["Title"] = "Production Planning"; }
-<form class="d-flex gap-2 mb-3" method="get">
-    <input class="form-control w-auto" type="date" name="Date" value="@Model.Date?.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
-    <span class="align-self-center text-muted">Total quantity requisitioned per product on this day</span>
-</form>
-<div class="card-table">
-    <table class="table mb-0">
-        <thead><tr><th style="width:60px">#</th><th>Product</th><th class="text-end">Total quantity</th></tr></thead>
-        <tbody>
-        @{ var i = 1; }
-        @foreach (var t in Model.Totals) { <tr><td>@(i++)</td><td>@t.ProductName</td><td class="text-end">@t.TotalQuantity</td></tr> }
-        @if (!Model.Totals.Any()) { <tr><td colspan="3" class="text-muted">No requisitions for this day.</td></tr> }
-        </tbody>
-    </table>
+@{
+    ViewData["Title"] = "Production plan";
+    var d = Model.Date.Value;
+    var plan = Model.Plan;
+    var total = plan.Items.Sum(i => i.Quantity);
+    var groups = plan.Items.GroupBy(i => i.Category).Select(g => (Name: g.Key, Total: g.Sum(i => i.Quantity), Items: g.OrderByDescending(i => i.Quantity).ToList())).OrderByDescending(g => g.Total).ToList();
+    var max = plan.Items.Select(i => i.Quantity).DefaultIfEmpty(1).Max();
+    var live = d.Date == DateTime.Today && Model.WindowOpen;
+    string Day(DateTime x) => x.ToString("yyyy-MM-dd");
+}
+<header class="page-head">
+    <div><h1 class="page-title">Production plan</h1><div class="page-sub">What to make, from the orders received for the day</div></div>
+    <div class="actions">
+        <div class="row" style="gap:4px;padding:4px;border-radius:12px;background:#fff;border:1px solid var(--line)">
+            <a href="?date=@Day(d.AddDays(-1))" aria-label="Previous day" class="daynav">@Icons.Svg("chevron-left", 18)</a>
+            <form method="get" style="display:inline"><input type="date" name="date" value="@Day(d)" onchange="this.form.submit()" aria-label="Date" style="border:0;background:transparent;min-height:40px;width:auto;font-weight:600" /></form>
+            <a href="?date=@Day(d.AddDays(1))" aria-label="Next day" class="daynav">@Icons.Svg("chevron-right", 18)</a>
+        </div>
+        <button class="btn" onclick="window.print()">@Icons.Svg("print", 18)Print sheet</button>
+        <a class="btn" href="?handler=Export&date=@Day(d)">@Icons.Svg("download", 18)Excel</a>
+    </div>
+</header>
+
+<section class="kpis">
+    <div class="card kpi small"><div class="lbl">Packs to make</div><div class="v">@Fmt.Int(total)</div>@if (live) { <span class="pill good live" style="align-self:flex-start"><i class="dot"></i>Live · orders still arriving</span> }</div>
+    <div class="card kpi small"><div class="lbl">Orders</div><div class="v">@plan.Orders</div><div class="lbl">From @plan.Customers @(plan.Customers == 1 ? "customer" : "customers")</div></div>
+    <div class="card kpi small"><div class="lbl">Products</div><div class="v">@plan.Items.Count</div><div class="lbl">in @groups.Count @(groups.Count == 1 ? "category" : "categories")</div></div>
+    <div class="card kpi small butter"><div class="lbl">Order desk closes</div><div class="v" style="color:var(--maroon)">@Model.CloseText</div><div class="lbl">@(Model.WindowOpen ? "Orders are open" : "Orders are closed")</div></div>
+</section>
+
+<div class="row top wrap" style="gap:22px">
+    <section class="col grow" style="flex:2 1 560px;min-width:0;gap:18px">
+        @if (groups.Count == 0) { <div class="card empty">No orders for this day.</div> }
+        @for (var gi = 0; gi < groups.Count; gi++)
+        {
+            var g = groups[gi]; var color = Charts.CategoryColors[Math.Min(gi, 4)];
+            <div class="card flush">
+                <div class="list-head"><span class="row" style="gap:10px"><i class="dot" style="background:@color"></i><span class="ct">@g.Name</span></span><span class="grow"></span><span class="num strong">@Fmt.Int(g.Total) packs</span></div>
+                @foreach (var p in g.Items)
+                {
+                    <div class="list-row">
+                        <div style="width:200px;flex:none;font-weight:500">@p.ProductName</div>
+                        <div class="meter thick violet grow"><i style="width:@Math.Round(p.Quantity / max * 100)%;background:@color"></i></div>
+                        <div class="num strong" style="width:70px;text-align:right">@Fmt.Int(p.Quantity)</div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+    <aside class="card panel">
+        <div><div class="ct">Share by category</div><div class="lbl">Of @Fmt.Int(total) packs</div></div>
+        @if (groups.Count > 0)
+        {
+            <div class="stackbar">@for (var i = 0; i < groups.Count; i++) { <i style="flex:@Charts.N(groups[i].Total);background:@Charts.CategoryColors[Math.Min(i, 4)]"></i> }</div>
+            @for (var i = 0; i < groups.Count; i++)
+            {
+                <div class="row between"><span class="row" style="gap:8px"><i class="dot" style="background:@Charts.CategoryColors[Math.Min(i, 4)]"></i>@groups[i].Name</span><span><span class="num strong">@Fmt.Int(groups[i].Total)</span> <span class="lbl">· @Math.Round(groups[i].Total / total * 100)%</span></span></div>
+            }
+        }
+    </aside>
 </div>

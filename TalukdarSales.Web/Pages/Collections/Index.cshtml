@@ -1,25 +1,74 @@
 @page
 @model TalukdarSales.Web.Pages.Collections.IndexModel
-@{ ViewData["Title"] = "Collection History"; }
-<form id="filter" class="row g-2 mb-3" hx-get="/Collections?handler=List" hx-target="#list" hx-trigger="change from:#UserId, change from:#From, change from:#To, submit">
-    <input type="hidden" name="InvoiceId" value="@Model.InvoiceId" />
-    <div class="col-auto">
-        <select class="form-select" id="TypeId" name="TypeId" hx-get="/Lookup?handler=Users" hx-target="#UserId" hx-trigger="change"
-                hx-vals='js:{typeId: document.getElementById("TypeId").value}'>
-            <option value="">All groups</option>
-            @foreach (var t in Model.TypeOptions) { <option value="@t.Value" selected="@(Model.TypeId?.ToString() == t.Value)">@t.Text</option> }
-        </select>
+@{
+    ViewData["Title"] = "Collections";
+    var methods = new[] { "Cash", "bKash", "Bank", "Cheque" };
+    var colors = new[] { "#1F9E96", "#E5412D", "#7B4BB8", "#C98A12", "#B6A9BD" };
+    var byMethod = Model.Rows.Where(r => r.Amount > 0).GroupBy(r => r.PaymentMethod ?? "Other")
+        .Select(g => (Name: g.Key, Amount: g.Sum(r => r.Amount))).OrderByDescending(x => x.Amount).ToList();
+    var max = Charts.NiceMax(Model.Last14.Select(x => x.Amount).DefaultIfEmpty(0).Max());
+    string Url(string method = null, int? days = null) => $"/Collections?days={days ?? Model.Days}&method={method ?? Model.Method}&q={Uri.EscapeDataString(Model.Q ?? "")}";
+}
+<header class="page-head">
+    <div><h1 class="page-title">Collections</h1><div class="page-sub">Every payment received, newest first</div></div>
+    <div class="actions">
+        <a class="btn" href="@(Url())&handler=Export">@Icons.Svg("download", 18)Export Excel</a>
+        <a class="btn btn-p" href="/Invoices?status=due">Collect a payment</a>
     </div>
-    <div class="col-auto">
-        <select class="form-select" id="UserId" name="UserId">
-            <option value="">All users</option>
-            @foreach (var u in Model.UserOptions) { <option value="@u.Value" selected="@(Model.UserId?.ToString() == u.Value)">@u.Text</option> }
-        </select>
+</header>
+
+<form method="get" class="row between wrap" style="gap:12px">
+    <input type="hidden" name="days" value="@Model.Days" />
+    <div class="seg" role="group" aria-label="Period">
+        @foreach (var (d, label) in new[] { (1, "Today"), (7, "7 days"), (30, "30 days"), (0, "All") })
+        { <a href="@Url(days: d)" class="@(Model.Days == d ? "on" : "")">@label</a> }
     </div>
-    <div class="col-auto"><input class="form-control" type="date" id="From" name="From" value="@Model.From?.ToString("yyyy-MM-dd")" title="From" /></div>
-    <div class="col-auto"><input class="form-control" type="date" id="To" name="To" value="@Model.To?.ToString("yyyy-MM-dd")" title="To" /></div>
-    <div class="col-auto"><a class="btn btn-light" href="/Collections">Reset</a></div>
-    <div class="col-auto"><a class="btn btn-outline-success" href="#" onclick="this.href='/Collections?handler=Export&'+new URLSearchParams(new FormData(document.getElementById('filter'))).toString()">Export to Excel</a></div>
+    <div class="row wrap" style="gap:8px">
+        <div class="chips">
+            <a class="chip @(string.IsNullOrEmpty(Model.Method) ? "on" : "")" href="@Url("")">All methods</a>
+            @foreach (var m in methods) { <a class="chip @(Model.Method == m ? "on" : "")" href="@Url(m)">@m</a> }
+        </div>
+        <input type="search" name="q" value="@Model.Q" placeholder="Search customer or invoice" aria-label="Search collections" />
+    </div>
 </form>
-@if (Model.InvoiceId != null) { <div class="alert alert-info py-2">Showing collections for one invoice. <a href="/Collections">Show all</a></div> }
-<div id="list"><partial name="_List" model="Model" /></div>
+
+<section class="row top wrap" style="gap:20px">
+    <div class="card kpi" style="flex:1 1 300px">
+        <div class="lbl">Collected</div>
+        <div class="v">৳ @Fmt.Int(Model.Total)</div>
+        <div class="lbl">@Model.Rows.Count(r => r.Amount > 0) payments</div>
+        @if (byMethod.Count > 0)
+        {
+            <div class="stackbar" style="margin-top:6px">@for (var i = 0; i < byMethod.Count; i++) { <i style="flex:@Charts.N(byMethod[i].Amount);background:@colors[Math.Min(i, 4)]"></i> }</div>
+            <div class="legend">@for (var i = 0; i < byMethod.Count; i++) { <span><i class="dot" style="background:@colors[Math.Min(i, 4)]"></i>@byMethod[i].Name · ৳ @Fmt.Int(byMethod[i].Amount)</span> }</div>
+        }
+    </div>
+    <div class="card" style="flex:2 1 460px;min-width:0">
+        <div class="ct">Last 14 days</div><div class="lbl" style="margin-bottom:10px">Collected per day</div>
+        <div class="cols" style="height:120px;padding:0 4px">
+            @foreach (var (day, amount) in Model.Last14)
+            {
+                var h = Math.Round(amount / max * 100);
+                <div class="g" title="@day.ToString("ddd, d MMM"): ৳ @Fmt.Int(amount)"><i style="height:@h%;background:#1F9E96"></i></div>
+            }
+        </div>
+        <div class="xlabels"><span>@Model.Last14.First().Day.ToString("d MMM")</span><span style="text-align:right">@Model.Last14.Last().Day.ToString("d MMM")</span></div>
+    </div>
+</section>
+
+<section class="card flush">
+    @if (Model.Rows.Count == 0) { <div class="empty">No collections found.</div> }
+    @foreach (var group in Model.Rows.GroupBy(r => r.Time.Date))
+    {
+        <div class="list-head"><b>@(group.Key == DateTime.Today ? "Today" : group.Key == DateTime.Today.AddDays(-1) ? "Yesterday" : group.Key.ToString("dddd, d MMMM"))</b><span class="grow"></span><span class="num strong">৳ @Fmt.Int(group.Where(r => r.Amount > 0).Sum(r => r.Amount))</span></div>
+        @foreach (var r in group)
+        {
+            <div class="list-row">
+                <span class="avatar-s">@Fmt.Initials(r.UserName)</span>
+                <div class="grow" style="min-width:0"><b>@r.UserName</b><div class="lbl">@r.InvoiceNumber · @r.Time.ToString("h:mm tt")</div></div>
+                <span class="pill neutral">@r.PaymentMethod</span>
+                <span class="num strong" style="width:110px;text-align:right">৳ @Fmt.Money(r.Amount)</span>
+            </div>
+        }
+    }
+</section>

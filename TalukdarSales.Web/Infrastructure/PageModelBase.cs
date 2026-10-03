@@ -21,27 +21,5 @@ namespace TalukdarSales.Web.Infrastructure
                 toast = new { message, success }
             });
         }
-
-        /// <summary>Close the currently open modal on the client.</summary>
-        protected void CloseModal()
-        {
-            var existing = Response.Headers["HX-Trigger"].ToString();
-            var payload = string.IsNullOrEmpty(existing)
-                ? new Dictionary<string, object>()
-                : JsonSerializer.Deserialize<Dictionary<string, object>>(existing);
-            payload["closeModal"] = true;
-            Response.Headers["HX-Trigger"] = JsonSerializer.Serialize(payload);
-        }
-
-        /// <summary>Ask htmx to re-fetch a list after a mutation.</summary>
-        protected void RefreshList()
-        {
-            var existing = Response.Headers["HX-Trigger"].ToString();
-            var payload = string.IsNullOrEmpty(existing)
-                ? new Dictionary<string, object>()
-                : JsonSerializer.Deserialize<Dictionary<string, object>>(existing);
-            payload["refreshList"] = true;
-            Response.Headers["HX-Trigger"] = JsonSerializer.Serialize(payload);
-        }
     }
 }

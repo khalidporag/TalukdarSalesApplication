@@ -1,6 +1,0 @@
-@model TalukdarSales.Web.Pages.IndexModel
-<div class="modal-header"><h5 class="modal-title">@Model.Selected.Title</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-<div class="modal-body">
-    @if (!string.IsNullOrEmpty(Model.Selected.LogoName)) { <img src="/images/notices/@Model.Selected.LogoName" class="img-fluid mb-3 rounded" alt="" /> }
-    <p style="white-space:pre-line">@Model.Selected.Description</p>
-</div>

@@ -1,5 +1,6 @@
 using TalukdarSales.Web.Context;
 using TalukdarSales.Web.Helpers;
+using TalukdarSales.Web.Infrastructure;
 using TalukdarSales.Web.Interfaces;
 using TalukdarSales.Web.Models;
 
@@ -29,7 +30,15 @@ namespace TalukdarSales.Web.Services
 
     public record InvoiceDetail(InvoiceRow Header, string UserSequentialId, double Quantity, List<InvoiceLineView> Lines);
 
-    public record CollectionRow(int Id, int InvoiceId, string InvoiceNumber, int UserId, double Amount, string PaymentMethod, DateTime Time);
+    public record InvoiceBoard(Paged<InvoiceRow> Page, double Billed, double Collected,
+        int All, int Unpaid, int Partial, int Paid)
+    {
+        public double Due => Billed - Collected;
+    }
+
+    public record OpenInvoice(int Id, string Number, DateTime Created, double Due);
+
+    public record CollectionRow(int Id, int InvoiceId, string InvoiceNumber, int UserId, double Amount, string PaymentMethod, DateTime Time, string UserName = "");
 
     public class InvoiceService
     {
@@ -171,6 +180,42 @@ namespace TalukdarSales.Web.Services
             return new InvoiceList(ToRows(q.OrderByDescending(i => i.CreatedDateTime).ThenByDescending(i => i.Id)));
         }
 
+        /// <summary>Invoices for the list: status is all, unpaid, partial or paid; days 0 means any date.</summary>
+        public InvoiceBoard Board(string status, string search, int days, int page, int pageSize)
+        {
+            var q = _invoices.GetAll();
+            if (days > 0) { var since = DateTime.Today.AddDays(-(days - 1)); q = q.Where(i => i.CreatedDateTime >= since); }
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var t = search.Trim().ToLower();
+                var users = _users.GetAll();
+                q = q.Where(i => (i.InvoiceSerialNo != null && i.InvoiceSerialNo.ToLower().Contains(t)) ||
+                    users.Any(u => u.Id == i.UserId && (u.FirstName + " " + u.LastName).ToLower().Contains(t)));
+            }
+            var billed = q.Sum(i => (double?)i.TotalPrice) ?? 0;
+            var collected = q.Sum(i => (double?)i.CollectionAmount) ?? 0;
+            var unpaid = q.Count(i => i.CollectionAmount <= 0.005);
+            var paid = q.Count(i => i.TotalPrice - i.CollectionAmount <= 0.005 && i.CollectionAmount > 0.005);
+            var all = q.Count();
+            var shown = status switch
+            {
+                "unpaid" => q.Where(i => i.CollectionAmount <= 0.005),
+                "partial" => q.Where(i => i.CollectionAmount > 0.005 && i.TotalPrice - i.CollectionAmount > 0.005),
+                "paid" => q.Where(i => i.TotalPrice - i.CollectionAmount <= 0.005 && i.CollectionAmount > 0.005),
+                "due" => q.Where(i => i.TotalPrice - i.CollectionAmount > 0.005),
+                _ => q
+            };
+            var paged = Paged<SalesInvoice>.Create(shown.OrderByDescending(i => i.CreatedDateTime).ThenByDescending(i => i.Id), page, pageSize);
+            var board = new Paged<InvoiceRow> { Items = ToRows(paged.Items), Page = paged.Page, PageSize = paged.PageSize, Total = paged.Total };
+            return new InvoiceBoard(board, billed, collected, all, unpaid, all - unpaid - paid, paid);
+        }
+
+        /// <summary>Invoices the customer still owes on, oldest first (the order a payment clears them).</summary>
+        public List<OpenInvoice> OpenInvoices(int userId) =>
+            _invoices.GetAll().Where(i => i.UserId == userId && i.TotalPrice - i.CollectionAmount > 0.005)
+                .OrderBy(i => i.CreatedDateTime).ThenBy(i => i.Id).ToList()
+                .Select(i => new OpenInvoice(i.Id, i.InvoiceSerialNo, i.CreatedDateTime, Money.Round(i.TotalPrice - i.CollectionAmount))).ToList();
+
         /// <summary>What the customer still owes across all invoices (summed in SQL).</summary>
         public double OutstandingFor(int userId) =>
             _invoices.GetAll().Where(i => i.UserId == userId).Sum(i => i.TotalPrice - i.CollectionAmount);
@@ -259,9 +304,12 @@ namespace TalukdarSales.Web.Services
             var items = q.OrderByDescending(c => c.CreatedOn).ThenByDescending(c => c.Id).ToList();
             var invoiceIds = items.Select(c => c.SalesInvoiceId).Distinct().ToList();
             var invoices = _invoices.GetAll().Where(i => invoiceIds.Contains(i.Id)).ToDictionary(i => i.Id);
+            var userIds = items.Select(c => c.UserId).Distinct().ToList();
+            var names = _users.GetAll().Where(u => userIds.Contains(u.Id)).Select(u => new { u.Id, u.FirstName, u.LastName }).ToList()
+                .ToDictionary(u => u.Id, u => $"{u.FirstName} {u.LastName}".Trim());
             var rows = items.Select(c => new CollectionRow(c.Id, c.SalesInvoiceId,
                 invoices.TryGetValue(c.SalesInvoiceId, out var i) ? i.InvoiceSerialNo : "",
-                c.UserId, c.CollectionAmount, c.PaymentMethod, c.CreatedOn)).ToList();
+                c.UserId, c.CollectionAmount, c.PaymentMethod, c.CreatedOn, names.TryGetValue(c.UserId, out var n) ? n : "")).ToList();
             return (rows, rows.Where(r => r.Amount > 0).Sum(r => r.Amount));
         }
     }

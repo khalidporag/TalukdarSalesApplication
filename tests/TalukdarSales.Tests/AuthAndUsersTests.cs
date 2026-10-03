@@ -46,12 +46,11 @@ namespace TalukdarSales.Tests
             var page = await client.GetStringAsync("/Users");
             Assert.Contains("Ada Lovelace", page);
 
-            var hit = await client.GetStringAsync("/Users?handler=List&Name=lovel");
+            var hit = await client.GetStringAsync("/Users?name=lovel");
             Assert.Contains("Ada Lovelace", hit);
-            Assert.DoesNotContain("<html", hit);          // fragment only
 
-            var miss = await client.GetStringAsync("/Users?handler=List&Name=zzz");
-            Assert.Contains("No users found", miss);
+            var miss = await client.GetStringAsync("/Users?name=zzz");
+            Assert.Contains("No customers found", miss);
         }
 
         [Fact]
@@ -64,12 +63,12 @@ namespace TalukdarSales.Tests
         }
 
         [Fact]
-        public async Task Create_user_via_htmx_form_adds_user_and_signals_close()
+        public async Task Create_user_form_adds_user_and_redirects_with_a_toast()
         {
             var client = _app.NewClient();
             await TestApp.Login(client, "admin", "secret123");
             _app.Seed(db => db.UserTypes.Add(new UserType { TypeName = "Distributor", CreatedOn = DateTime.Now }));
-            var token = await TestApp.Antiforgery(client, "/Users");
+            var token = await TestApp.Antiforgery(client, "/Users?new=true");
 
             var form = new MultipartFormDataContent
             {
@@ -81,18 +80,11 @@ namespace TalukdarSales.Tests
                 { new StringContent("5"), "Create.MaxCreditDays" },
                 { new StringContent(token), "__RequestVerificationToken" }
             };
-            var req = new HttpRequestMessage(HttpMethod.Post, "/Users?handler=Create") { Content = form };
-            req.Headers.Add("HX-Request", "true");
-            var res = await client.SendAsync(req);
+            var res = await client.PostAsync("/Users?handler=Create", form);
 
-            Assert.Equal(HttpStatusCode.OK, res.StatusCode);
-            var trigger = string.Join(",", res.Headers.GetValues("HX-Trigger"));
-            Assert.Contains("closeModal", trigger);
-            Assert.Contains("refreshList", trigger);
-            Assert.Contains("User Added", trigger);
-
-            var list = await client.GetStringAsync("/Users?handler=List&Name=hopper");
-            Assert.Contains("Grace Hopper", list);
+            Assert.Equal(HttpStatusCode.Redirect, res.StatusCode);
+            Assert.Contains("User Added", await client.FlashAfter(res));
+            Assert.Contains("Grace Hopper", await client.GetStringAsync("/Users?name=hopper"));
         }
 
         [Fact]
@@ -100,14 +92,12 @@ namespace TalukdarSales.Tests
         {
             var client = _app.NewClient();
             await TestApp.Login(client, "admin", "secret123");
-            var token = await TestApp.Antiforgery(client, "/Users");
+            var token = await TestApp.Antiforgery(client, "/Users?new=true");
             var form = new MultipartFormDataContent { { new StringContent(token), "__RequestVerificationToken" } };
-            var req = new HttpRequestMessage(HttpMethod.Post, "/Users?handler=Create") { Content = form };
-            req.Headers.Add("HX-Request", "true");
-            var res = await client.SendAsync(req);
+            var res = await client.PostAsync("/Users?handler=Create", form);
             var body = await res.Content.ReadAsStringAsync();
             Assert.Equal(HttpStatusCode.OK, res.StatusCode);
-            Assert.Contains("Create User", body);
+            Assert.Contains("New customer", body);
             Assert.Contains("field-validation-error", body);
         }
 

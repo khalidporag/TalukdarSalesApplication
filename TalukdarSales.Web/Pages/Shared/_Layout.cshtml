@@ -1,95 +1,91 @@
 @using System.Security.Claims
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@inject TalukdarSales.Web.Services.RequisitionService Reqs
 @{
     var token = Antiforgery.GetAndStoreTokens(Context).RequestToken;
     var path = Context.Request.Path.Value ?? "/";
     bool Active(params string[] prefixes) => prefixes.Any(p => path.Equals(p, StringComparison.OrdinalIgnoreCase) || (p != "/" && path.StartsWith(p + "/", StringComparison.OrdinalIgnoreCase)));
-    string Cls(params string[] prefixes) => Active(prefixes) ? "nav-link active" : "nav-link";
-    var displayName = User.FindFirstValue(ClaimTypes.GivenName) ?? User.Identity?.Name;
     var access = Access.For(User);
     bool Can(string key) => access.Has(key);
+    var displayName = User.FindFirstValue(ClaimTypes.GivenName) ?? User.Identity?.Name ?? "";
+    var waiting = Can(Perm.RequisitionView) ? Reqs.WaitingCount() : 0;
+    var home = Can(Perm.Dashboard) ? "/Dashboard" : "/";
+    var role = access.IsAdmin ? "Administrator" : string.Join(", ", access.RoleNames);
+
+    // (label, href, permission, icon, active prefixes, badge)
+    var groups = new (string Label, (string Text, string Href, string Perm, string Icon, string[] On, int Badge)[] Items)[]
+    {
+        ("Overview", new[]
+        {
+            ("Dashboard", "/Dashboard", Perm.Dashboard, "dashboard", new[] { "/Dashboard" }, 0),
+            ("KPI report", "/Reports", Perm.Reports, "reports", new[] { "/Reports" }, 0),
+            ("Notices", "/", null, "notices", new[] { "/" }, 0),
+        }),
+        ("Sell", new[]
+        {
+            ("New order", "/Requisitions/Create", Perm.RequisitionCreate, "new-order", new[] { "/Requisitions/Create" }, 0),
+            ("Orders to invoice", "/Requisitions", Perm.RequisitionView, "orders", new[] { "/Requisitions" }, waiting),
+            ("Invoices", "/Invoices", Perm.InvoiceView, "invoices", new[] { "/Invoices" }, 0),
+            ("Collections", "/Collections", Perm.CollectionView, "collections", new[] { "/Collections" }, 0),
+        }),
+        ("Operate", new[]
+        {
+            ("Production plan", "/Production", Perm.Production, "production", new[] { "/Production" }, 0),
+            ("Products", "/Products", Perm.Products, "products", new[] { "/Products" }, 0),
+            ("Customers", "/Users", Perm.Users, "customers", new[] { "/Users" }, 0),
+        }),
+        ("Admin", new[]
+        {
+            ("Roles", "/Roles", Perm.Roles, "roles", new[] { "/Roles" }, 0),
+            ("Order window", "/TimeSetting", Perm.TimeSetting, "clock", new[] { "/TimeSetting" }, 0),
+        }),
+    };
 }
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@(ViewData["Title"] ?? "Talukder Foods") - Talukder Foods</title>
-    <link rel="icon" href="~/img/logo-small.jpg" />
-    <link rel="stylesheet" href="~/lib/bootstrap/bootstrap.min.css" />
+    <title>@(ViewData["Title"] ?? "Talukder Foods") · Talukder Foods</title>
+    <link rel="icon" href="~/img/logo-purple.jpg" />
+    <link rel="preload" href="~/fonts/rubik-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
 </head>
-<body hx-headers='{"RequestVerificationToken": "@token"}' hx-ext="">
-<div class="app-shell">
-    <aside class="app-sidebar">
-        <a class="brand" href="/">
-            <img src="~/img/logo-small.jpg" alt="" /> <span>Talukder Foods</span>
-        </a>
-        <nav class="nav flex-column">
-            <a class="@Cls("/")" href="/">Notices</a>
-            @if (Can(Perm.Dashboard)) { <a class="@Cls("/Dashboard")" href="/Dashboard">Dashboard</a> }
-
-            @if (Can(Perm.Users) || Can(Perm.Roles))
+<body hx-headers='{"RequestVerificationToken": "@token"}'>
+<div class="shell">
+    <aside class="side">
+        <a class="logo-tile" href="@home" aria-label="Talukder Foods home"><img src="~/img/logo-purple.jpg" alt="Talukder Foods" /></a>
+        <nav class="nav" aria-label="Main">
+            @foreach (var g in groups)
             {
-                <div class="nav-group">User Administration</div>
-                @if (Can(Perm.Users)) { <a class="@Cls("/Users")" href="/Users">User Management</a> }
-                @if (Can(Perm.Roles)) { <a class="@Cls("/Roles")" href="/Roles">Role Management</a> }
-            }
-
-            @if (Can(Perm.RequisitionCreate) || Can(Perm.RequisitionView))
-            {
-                <div class="nav-group">Sales Requisition</div>
-                @if (Can(Perm.RequisitionCreate)) { <a class="@Cls("/Requisitions/Create")" href="/Requisitions/Create">Requisition Form</a> }
-                @if (Can(Perm.RequisitionView)) { <a class="@Cls("/Requisitions")" href="/Requisitions">Requisition List</a> }
-            }
-
-            @if (Can(Perm.InvoiceCreate) || Can(Perm.InvoiceView) || Can(Perm.CollectionView))
-            {
-                <div class="nav-group">Sales Invoice</div>
-                @if (Can(Perm.InvoiceCreate)) { <a class="@Cls("/Invoices/Create")" href="/Invoices/Create">Invoice Form</a> }
-                @if (Can(Perm.InvoiceView)) { <a class="@Cls("/Invoices")" href="/Invoices">Invoice List</a> }
-                @if (Can(Perm.CollectionView)) { <a class="@Cls("/Collections")" href="/Collections">Collection History</a> }
-            }
-
-            @if (Can(Perm.Production) || Can(Perm.Notices) || Can(Perm.Reports))
-            {
-                <div class="nav-group">Operations</div>
-                @if (Can(Perm.Production)) { <a class="@Cls("/Production")" href="/Production">Production Planning</a> }
-                @if (Can(Perm.Notices)) { <a class="@Cls("/Notices")" href="/Notices">Manage Notices</a> }
-                @if (Can(Perm.Reports)) { <a class="@Cls("/Reports")" href="/Reports">Reports</a> }
-            }
-
-            @if (Can(Perm.ProductTypes) || Can(Perm.Products) || Can(Perm.TimeSetting))
-            {
-                <div class="nav-group">Settings</div>
-                @if (Can(Perm.ProductTypes)) { <a class="@Cls("/ProductTypes")" href="/ProductTypes">Product Type Setup</a> }
-                @if (Can(Perm.Products)) { <a class="@Cls("/Products")" href="/Products">Product Setup</a> }
-                @if (Can(Perm.TimeSetting)) { <a class="@Cls("/TimeSetting")" href="/TimeSetting">Time Setting</a> }
+                var items = g.Items.Where(i => i.Perm == null || Can(i.Perm)).ToList();
+                if (items.Count == 0) { continue; }
+                <div class="nav-group">
+                    <div class="nav-label">@g.Label</div>
+                    @foreach (var i in items)
+                    {
+                        <a href="@i.Href" class="@(Active(i.On) && !(i.Href == "/Requisitions" && Active("/Requisitions/Create")) ? "on" : "")">
+                            @Icons.Svg(i.Icon)
+                            <span class="grow">@i.Text</span>
+                            @if (i.Badge > 0) { <span class="badge">@i.Badge</span> }
+                        </a>
+                    }
+                </div>
             }
         </nav>
+        <div class="me">
+            <div class="avatar">@Fmt.Initials(displayName)</div>
+            <div class="who"><b>@displayName</b><small>@role</small></div>
+            <form method="post" action="/Logout"><button aria-label="Sign out" title="Sign out">@Icons.Svg("logout", 18)</button></form>
+        </div>
     </aside>
-
-    <div class="app-main">
-        <header class="app-header">
-            <h1 class="h5 mb-0">@ViewData["Title"]</h1>
-            <div class="d-flex align-items-center gap-3">
-                <span>@displayName</span>
-                <form method="post" action="/Logout"><button class="btn btn-sm btn-outline-secondary">Logout</button></form>
-            </div>
-        </header>
-        <main class="app-content">
-            @RenderBody()
-        </main>
-    </div>
+    <main class="content">
+        @RenderBody()
+    </main>
 </div>
-
-<div class="modal fade" id="app-modal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg"><div class="modal-content" id="modal-content"></div></div>
-</div>
-<div class="toast-container position-fixed top-0 end-0 p-3" id="toasts"></div>
-
+@if (TempData["Flash"] is string flash && flash.Length > 0) { <span data-flash="@flash" hidden></span> }
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
 <script src="~/lib/htmx/htmx.min.js"></script>
-<script src="~/lib/bootstrap/bootstrap.bundle.min.js"></script>
 <script src="~/js/app.js" asp-append-version="true"></script>
 @await RenderSectionAsync("Scripts", required: false)
 </body>

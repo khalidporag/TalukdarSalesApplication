@@ -1,0 +1,9 @@
+@page
+@model TalukdarSales.Web.Pages.ErrorModel
+@{ ViewData["Title"] = "Something went wrong"; }
+<div class="card" style="max-width:520px;margin:40px auto;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;padding:32px">
+    <div style="width:64px;height:64px;border-radius:20px;background:var(--bad-bg);color:#B3231C;display:flex;align-items:center;justify-content:center">@Icons.Svg("alert", 30, 1.6)</div>
+    <h2 style="font-size:20px">Something went wrong</h2>
+    <p class="muted" style="margin:0">We could not complete that. Your data is safe. Try again in a moment.</p>
+    <div class="row"><a class="btn btn-p" href="javascript:history.back()">Go back</a><a class="btn" href="/">Home</a></div>
+</div>

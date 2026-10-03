@@ -1,24 +1,208 @@
 @page
 @model TalukdarSales.Web.Pages.Reports.IndexModel
-@{ ViewData["Title"] = "Reports"; }
-<p class="text-muted">Each report defaults to the last month. Pick a date range to change it.</p>
-<div class="row g-3">
-@foreach (var (kind, title) in TalukdarSales.Web.Pages.Reports.IndexModel.Panels)
-{
-    <div class="col-xl-6">
-        <div class="card h-100">
-            <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-                <strong>@title</strong>
-                <form class="d-flex gap-1 align-items-center" id="f-@kind" hx-get="/Reports?handler=Panel&kind=@kind" hx-target="#p-@kind" hx-trigger="change">
-                    <input class="form-control form-control-sm" type="date" name="From" title="From" />
-                    <input class="form-control form-control-sm" type="date" name="To" title="To" />
-                    <a class="btn btn-sm btn-outline-success" href="#" onclick="this.href='/Reports?handler=Export&kind=@kind&'+new URLSearchParams(new FormData(document.getElementById('f-@kind'))).toString()">Excel</a>
-                </form>
+@using TalukdarSales.Web.Infrastructure
+@using TalukdarSales.Web.Services
+@{
+    ViewData["Title"] = "KPI report";
+    var d = Model.Data;
+    var p = d.Period;
+    string Pct(double part, double total) => total <= 0 ? "0" : Math.Round(Math.Min(100, part / total * 100)).ToString();
+    (string Html, bool Good) Delta(double cur, double prev, bool upIsGood = true)
+    {
+        var c = Charts.Change(cur, prev);
+        if (c == null) return ("", true);
+        var good = c.Value.Flat || c.Value.Up == upIsGood;
+        return ($"<span class=\"delta {(good ? "up-good" : "up-bad")}\">{c.Value.Text}</span>", good);
+    }
+    var salesTarget = Model.MonthlySalesTarget * p.Days / 30.0;
+    var weeksB = d.Weeks.Select(w => w.Billed).ToArray();
+    var weeksC = d.Weeks.Select(w => w.Collected).ToArray();
+    var rates = d.Weeks.Select(w => w.Billed <= 0 ? 0 : Math.Min(100, w.Collected / w.Billed * 100)).ToArray();
+    var billedDays = d.Days.Select(x => x.Billed).ToArray();
+    var series = new List<LineSeries> { new("This period", "#E5412D", billedDays, true) };
+    if (Model.ShowCompare) series.Add(new("Previous", "#B6A9BD", d.PrevBilledDays.ToArray()));
+    var chart = new LineChart("trend", "Line chart of daily sales" + (Model.ShowCompare ? " compared with the previous period" : ""), d.Days.Select(x => x.Date).ToList(), series);
+    var monthPct = Model.MonthlySalesTarget <= 0 ? 0 : Model.MonthBilled / Model.MonthlySalesTarget * 100;
+    const double circ = 2 * Math.PI * 78;
+    var daysLeft = DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month) - DateTime.Now.Day;
+    var remaining = Math.Max(0, Model.MonthlySalesTarget - Model.MonthBilled);
+    var wmax = Charts.NiceMax(weeksB.Concat(weeksC).DefaultIfEmpty(0).Max());
+    var weekdayNames = new[] { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+    var wdMax = Math.Max(1, d.OrdersByWeekday.Max());
+    var maxProd = d.Products.Select(x => x.Quantity).DefaultIfEmpty(1).Max();
+    var catMax = d.Categories.Select(c => c.Amount).DefaultIfEmpty(1).Max();
+    var ageTotal = d.Aging.Sum(a => a.Amount);
+    string Rx(int i) => Charts.N(36 + (rates.Length <= 1 ? 0 : i * 314.0 / (rates.Length - 1)));
+    string Ry(double r) => Charts.N(170 - r * 1.5);
+    var kpis = new List<(string Label, string Value, string Delta, string Meter, string Note, string Spark)>
+    {
+        ("Sales billed", "৳ " + Fmt.Int(d.Billed), Delta(d.Billed, d.PrevBilled).Html, Pct(d.Billed, salesTarget), $"{Pct(d.Billed, salesTarget)}% of ৳ {Fmt.Int(salesTarget)} target", Charts.Sparkline(weeksB, 72, 26, 3)),
+        ("Collected", "৳ " + Fmt.Int(d.Collected), Delta(d.Collected, d.PrevCollected).Html, Pct(d.Collected, d.Billed), $"{Pct(d.Collected, d.Billed)}% of billed", Charts.Sparkline(weeksC, 72, 26, 3)),
+        ("Orders", Fmt.Int(d.Orders), Delta(d.Orders, d.PrevOrders).Html, Model.DailyOrdersTarget > 0 ? Pct(d.Orders, Model.DailyOrdersTarget * p.Days) : null,
+            Model.DailyOrdersTarget > 0 ? $"{Pct(d.Orders, Model.DailyOrdersTarget * p.Days)}% of {Fmt.Int(Model.DailyOrdersTarget * p.Days)} target" : $"{Charts.N(p.Days == 0 ? 0 : (double)d.Orders / p.Days)} per day", null),
+        ("Average order", "৳ " + Fmt.Int(d.AverageOrder), Delta(d.AverageOrder, d.PrevAverageOrder).Html, null, "Billed ÷ orders", null),
+        ("Active customers", Fmt.Int(d.ActiveCustomers), Delta(d.ActiveCustomers, d.PrevActiveCustomers).Html, Pct(d.ActiveCustomers, d.TotalCustomers), $"{d.ActiveCustomers} of {d.TotalCustomers} customers ordered", null),
+        ("Collection rate", Math.Round(d.CollectionRate) + "%", Delta(d.CollectionRate, d.PrevCollectionRate).Html, Pct(d.CollectionRate, Model.CollectionRateTarget), $"Target {Charts.N(Model.CollectionRateTarget)}%", Charts.Sparkline(rates, 72, 26, 3)),
+    };
+}
+<header class="page-head">
+    <div><h1 class="page-title">KPI report</h1><div class="page-sub">How sales, collections and products are performing against target</div></div>
+    <form method="get" class="actions">
+        <div class="seg" role="group" aria-label="Period">
+            @foreach (var (key, label) in Period.Choices.Where(c => c.Key != "today"))
+            {
+                <a href="?p=@key&compare=@Model.ShowCompare.ToString().ToLower()" class="@(p.Key == key ? "on" : "")">@label</a>
+            }
+        </div>
+        <input type="hidden" name="p" value="@p.Key" />
+        <label class="check"><input type="checkbox" name="compare" value="true" @(Model.ShowCompare ? "checked" : null) onchange="this.form.submit()" /> Compare to previous period</label>
+        <a class="btn" href="?handler=Export&p=@p.Key">@Icons.Svg("download", 18)Export Excel</a>
+    </form>
+</header>
+
+<section class="kpis" aria-label="Key performance indicators">
+    @foreach (var k in kpis)
+    {
+        <div class="card kpi small">
+            <div class="lbl">@k.Label</div>
+            <div class="v">@k.Value</div>
+            <div class="row between">@Html.Raw(k.Delta)
+                @if (k.Spark != null) { <svg class="spark" width="72" height="26" viewBox="0 0 72 26" role="img" aria-label="Weekly trend"><path d="@k.Spark" fill="none" stroke="#7B4BB8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg> }
             </div>
-            <div class="card-body p-0" id="p-@kind" hx-get="/Reports?handler=Panel&kind=@kind" hx-trigger="load">
-                <div class="p-3 text-muted">Loading…</div>
+            <div class="col" style="gap:4px">
+                @if (k.Meter != null) { <div class="meter violet"><i style="width:@k.Meter%"></i></div> }
+                <div class="lbl" style="font-size:12px">@k.Note</div>
             </div>
         </div>
+    }
+</section>
+
+<section class="row top wrap" style="gap:20px">
+    <div class="card" style="min-width:0;flex:2 1 560px">
+        <div class="row between wrap">
+            <div><div class="ct">Sales trend</div><div class="lbl">Daily billed amount@(Model.ShowCompare ? ", this period vs previous" : "")</div></div>
+            <div class="legend"><span><i class="key-line" style="background:#E5412D"></i>This period</span>@if (Model.ShowCompare) { <span><i class="key-line" style="background:#B6A9BD"></i>Previous period</span> }</div>
+        </div>
+        <partial name="_LineChart" model="chart" />
     </div>
-}
-</div>
+    <div class="card col" style="flex:1 1 320px;align-items:center;text-align:center;gap:16px">
+        <div style="align-self:flex-start;text-align:left"><div class="ct">Monthly target</div><div class="lbl">Sales ৳ @Fmt.Int(Model.MonthlySalesTarget) · @DateTime.Now.ToString("MMMM")</div></div>
+        <div class="gauge">
+            <svg viewBox="0 0 190 190" width="190" height="190" role="img" aria-label="@Math.Round(monthPct) percent of monthly target reached">
+                <g transform="rotate(-90 95 95)" fill="none" stroke-width="16" stroke-linecap="round">
+                    <circle cx="95" cy="95" r="78" stroke="#FBEFC2"></circle>
+                    <circle cx="95" cy="95" r="78" stroke="#E5412D" stroke-dasharray="@Charts.N(Math.Min(100, monthPct) / 100 * circ) @Charts.N(circ)"></circle>
+                </g>
+            </svg>
+            <div class="mid"><div class="num" style="font-size:40px;font-weight:700;color:var(--maroon)">@Math.Round(monthPct)%</div><div class="lbl">of target</div></div>
+        </div>
+        <div class="col" style="gap:6px;width:100%;text-align:left;font-size:14px">
+            <div class="row between"><span class="muted">Billed so far</span><span class="num strong">৳ @Fmt.Int(Model.MonthBilled)</span></div>
+            <div class="row between"><span class="muted">Still to go</span><span class="num strong">৳ @Fmt.Int(remaining)</span></div>
+            @if (daysLeft > 0) { <div class="row between"><span class="muted">Needed per day (@daysLeft days left)</span><span class="num strong">৳ @Fmt.Int(remaining / daysLeft)</span></div> }
+        </div>
+    </div>
+</section>
+
+<section class="row top wrap" style="gap:20px">
+    <div class="card" style="flex:1 1 360px">
+        <div class="ct">Billed vs collected by week</div><div class="lbl">৳ thousands</div>
+        <div class="legend" style="margin:10px 0"><span><i class="dot" style="background:#E5412D"></i>Billed</span><span><i class="dot" style="background:#1F9E96"></i>Collected</span></div>
+        <div class="cols" style="height:190px;padding:0 6px">
+            <span class="gl" style="top:0"></span><span class="gl" style="top:33%"></span><span class="gl" style="top:66%"></span>
+            @foreach (var w in d.Weeks)
+            {
+                var hb = Math.Round(w.Billed / wmax * 100); var hc = Math.Round(w.Collected / wmax * 100);
+                <div class="g" title="Week of @w.Start.ToString("d MMM"): billed ৳ @Fmt.Int(w.Billed), collected ৳ @Fmt.Int(w.Collected)">
+                    <i style="height:@hb%;background:#E5412D"></i><i style="height:@hc%;background:#1F9E96"></i>
+                    @if (d.Weeks.Count <= 6) { <span class="vl" style="bottom:calc(@hb% + 4px)">@Charts.Short(w.Billed)</span> }
+                </div>
+            }
+        </div>
+        <div class="xlabels">@foreach (var w in d.Weeks) { <span>@w.Start.ToString("d MMM")</span> }</div>
+    </div>
+
+    <div class="card" style="flex:1 1 360px">
+        <div class="ct">Collection rate</div><div class="lbl">Collected as % of billed, per week · target @Charts.N(Model.CollectionRateTarget)%</div>
+        <svg viewBox="0 0 360 200" width="100%" role="img" aria-label="Weekly collection rate against target" style="display:block;margin-top:8px">
+            <g stroke="#EFE5CB" stroke-width="1">@foreach (var t in new[] { 0, 25, 50, 75, 100 }) { <line x1="36" y1="@Ry(t)" x2="350" y2="@Ry(t)"></line> }</g>
+            <g font-size="12" fill="#8F8294" text-anchor="end">@foreach (var t in new[] { 0, 25, 50, 75, 100 }) { @Html.Raw($"<text x=\"30\" y=\"{Charts.N(170 - t * 1.5 + 4)}\">{t}%</text>") }</g>
+            <line x1="36" y1="@Ry(Model.CollectionRateTarget)" x2="350" y2="@Ry(Model.CollectionRateTarget)" stroke="#7F1628" stroke-width="1.5"></line>
+            @Html.Raw($"<text x=\"40\" y=\"{Charts.N(170 - Model.CollectionRateTarget * 1.5 + 16)}\" text-anchor=\"start\" font-size=\"12\" font-weight=\"600\" fill=\"#7F1628\">Target {Charts.N(Model.CollectionRateTarget)}%</text>")
+            <path d="@string.Join(' ', rates.Select((r, i) => (i == 0 ? "M" : "L") + Rx(i) + " " + Ry(r)))" fill="none" stroke="#1F9E96" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path>
+            @for (var i = 0; i < rates.Length; i++) { <circle cx="@Rx(i)" cy="@Ry(rates[i])" r="@(i == rates.Length - 1 ? "4.5" : "3.5")" fill="#1F9E96" stroke="#fff" stroke-width="2"><title>Week of @d.Weeks[i].Start.ToString("d MMM"): @Math.Round(rates[i])%</title></circle> }
+            @if (rates.Length > 0) { @Html.Raw($"<text x=\"{Rx(rates.Length - 1)}\" y=\"{Charts.N(170 - rates[^1] * 1.5 - 12)}\" text-anchor=\"end\" font-size=\"13\" font-weight=\"700\" fill=\"#2B1233\">{Math.Round(rates[^1])}%</text>") }
+        </svg>
+    </div>
+
+    <div class="card" style="flex:1 1 320px">
+        <div class="ct">Money owed, by age</div><div class="lbl">Outstanding today · ৳ @Fmt.Int(ageTotal)</div>
+        @if (ageTotal <= 0) { <div class="muted" style="margin-top:14px">Nothing outstanding.</div> }
+        else
+        {
+            <div class="stackbar" style="margin:16px 0">@for (var i = 0; i < d.Aging.Count; i++) { if (d.Aging[i].Amount > 0) { <i style="flex:@Charts.N(d.Aging[i].Amount);background:@Charts.AgeColors[i]"></i> } }</div>
+            @for (var i = 0; i < d.Aging.Count; i++)
+            {
+                <div class="row between" style="margin-bottom:10px"><span class="row" style="gap:8px"><i class="dot" style="background:@Charts.AgeColors[i]"></i>@d.Aging[i].Name</span><span class="num strong">৳ @Fmt.Int(d.Aging[i].Amount)</span></div>
+            }
+        }
+    </div>
+</section>
+
+<section class="row top wrap" style="gap:20px">
+    <div class="card" style="flex:1.2 1 380px">
+        <div class="ct">Top products</div><div class="lbl" style="margin-bottom:14px">Packs sold, @p.Label</div>
+        @if (d.Products.Count == 0) { <div class="muted">No products sold in this period.</div> }
+        @foreach (var x in d.Products.Take(6))
+        {
+            var c = Charts.Change(x.Quantity, x.PrevQuantity);
+            <div class="bar-row" style="margin-bottom:14px">
+                <div class="top-line"><span>@x.Name</span><span class="row" style="gap:10px"><span class="num strong">@Fmt.Int(x.Quantity)</span>@if (c != null) { <span class="delta @(c.Value.Up ? "up-good" : "up-bad")">@c.Value.Text</span> }</span></div>
+                <div class="meter thick violet"><i style="width:@Pct(x.Quantity, maxProd)%"></i></div>
+            </div>
+        }
+    </div>
+
+    <div class="card" style="flex:1 1 320px">
+        <div class="ct">Orders by weekday</div><div class="lbl">Friday is the weekly closure</div>
+        <div class="cols" style="height:170px;margin-top:14px;padding:0 6px">
+            @for (var i = 0; i < 7; i++)
+            {
+                var h = Math.Round(d.OrdersByWeekday[i] / (double)wdMax * 100);
+                <div class="g" title="@weekdayNames[i]: @d.OrdersByWeekday[i] orders"><i style="height:@h%;background:@(i == 5 ? "#D9CFE3" : "#7B4BB8")"></i>
+                    @if (d.OrdersByWeekday[i] == wdMax || i == 5) { <span class="vl" style="bottom:calc(@h% + 4px)">@d.OrdersByWeekday[i]</span> }</div>
+            }
+        </div>
+        <div class="xlabels">@foreach (var n in weekdayNames) { <span>@n</span> }</div>
+    </div>
+
+    <div class="card" style="flex:1 1 320px">
+        <div class="ct">Category performance</div><div class="lbl" style="margin-bottom:14px">Billed amount and change</div>
+        @if (d.Categories.Count == 0) { <div class="muted">No sales in this period.</div> }
+        @for (var i = 0; i < d.Categories.Count; i++)
+        {
+            var c = d.Categories[i]; var ch = Charts.Change(c.Amount, c.PrevAmount);
+            <div class="bar-row" style="margin-bottom:14px">
+                <div class="top-line"><span class="row" style="gap:8px"><i class="dot" style="background:@Charts.CategoryColors[Math.Min(i, 4)]"></i>@c.Name</span><span class="row" style="gap:10px"><span class="num strong">৳ @Fmt.Int(c.Amount)</span>@if (ch != null) { <span class="delta @(ch.Value.Up ? "up-good" : "up-bad")">@ch.Value.Text</span> }</span></div>
+                <div class="meter thick"><i style="width:@Pct(c.Amount, catMax)%;background:@Charts.CategoryColors[Math.Min(i, 4)]"></i></div>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="card flush">
+    <details>
+        <summary class="row between" style="padding:16px 20px;cursor:pointer"><span class="ct">Data table</span><span class="lbl">Daily figures behind the charts</span></summary>
+        <div class="tbl-wrap">
+            <table class="tbl">
+                <thead><tr><th>Date</th><th class="r">Billed</th><th class="r">Collected</th></tr></thead>
+                <tbody>
+                @foreach (var x in d.Days.AsEnumerable().Reverse())
+                {
+                    <tr><td>@x.Date.ToString("ddd, d MMM yyyy")</td><td class="r num">৳ @Fmt.Int(x.Billed)</td><td class="r num">৳ @Fmt.Int(x.Collected)</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </details>
+</section>

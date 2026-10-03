@@ -6,73 +6,88 @@ using TalukdarSales.Web.Services;
 
 namespace TalukdarSales.Web.Pages.Requisitions
 {
+    public record OrderPanel(OrderRow Header, List<RequisitionDetailRow> Lines);
+
     public class IndexModel : PageModelBase
     {
         private const int PageSize = 25;
         private readonly RequisitionService _requisitions;
         private readonly InvoiceService _invoices;
         private readonly IUserTypeRepository _userTypes;
-        private readonly IUserRepository _users;
+        private readonly ISalesInvoiceRepository _invoiceRepo;
 
-        public IndexModel(RequisitionService requisitions, InvoiceService invoices, IUserTypeRepository userTypes, IUserRepository users)
+        public IndexModel(RequisitionService requisitions, InvoiceService invoices, IUserTypeRepository userTypes, ISalesInvoiceRepository invoiceRepo)
         {
-            _requisitions = requisitions;
-            _invoices = invoices;
-            _userTypes = userTypes;
-            _users = users;
+            _requisitions = requisitions; _invoices = invoices; _userTypes = userTypes; _invoiceRepo = invoiceRepo;
         }
 
-        [BindProperty(SupportsGet = true)] public bool Active { get; set; } = true;
+        [BindProperty(SupportsGet = true)] public string Tab { get; set; } = "waiting";
+        [BindProperty(SupportsGet = true)] public string Q { get; set; }
         [BindProperty(SupportsGet = true)] public int? TypeId { get; set; }
-        [BindProperty(SupportsGet = true)] public int? UserId { get; set; }
-        [BindProperty(SupportsGet = true)] public string Serial { get; set; }
-        [BindProperty(SupportsGet = true)] public DateTime? From { get; set; }
-        [BindProperty(SupportsGet = true)] public DateTime? To { get; set; }
+        [BindProperty(SupportsGet = true)] public int Days { get; set; }
+        [BindProperty(SupportsGet = true)] public int? Id { get; set; }
         [BindProperty(SupportsGet = true, Name = "p")] public int PageNo { get; set; } = 1;
 
-        public Paged<RequisitionRow> Rows { get; private set; }
+        public OrderBoard Board { get; private set; }
         public List<SelectListItem> TypeOptions { get; private set; }
-        public List<SelectListItem> UserOptions { get; private set; }
+        public OrderPanel Panel { get; private set; }
 
         public void OnGet()
         {
-            LoadOptions();
-            Load();
+            Tab = Tab is "invoiced" or "all" ? Tab : "waiting";
+            Board = _requisitions.Board(Tab, Q, TypeId, Days, PageNo, PageSize);
+            TypeOptions = _userTypes.GetAll().Select(t => new SelectListItem(t.TypeName, t.Id.ToString())).ToList();
+            if (Id != null) Panel = LoadPanel(Id.Value);
         }
 
-        public IActionResult OnGetList()
+        public IActionResult OnGetPanel(int id)
         {
-            Load();
-            return Partial("_List", this);
+            Panel = LoadPanel(id);
+            return Panel == null ? NotFound() : Partial("_Panel", Panel);
         }
 
-        // Approve = turn the ticked active requisitions into invoices
-        public IActionResult OnPostApprove(List<int> ids)
+        // One tap: invoice the order exactly as it was placed.
+        public IActionResult OnPostInvoice(int id) => Done(_invoices.CreateFromRequisitions(new[] { id }));
+
+        public IActionResult OnPostBulk(List<int> ids)
         {
             if (ids == null || ids.Count == 0)
             {
-                Toast("Select at least one requisition.", false);
+                TempData["Flash"] = "Select at least one order.";
+                return Back();
             }
-            else
-            {
-                var (ok, error, created) = _invoices.CreateFromRequisitions(ids);
-                Toast(ok ? $"{created.Count} invoice(s) created." : error, ok);
-            }
-            Load();
-            return Partial("_List", this);
+            return Done(_invoices.CreateFromRequisitions(ids));
         }
 
-        private void Load()
+        // Invoice with quantities adjusted in the panel.
+        public IActionResult OnPostCreate(int id)
         {
-            // a specific user already implies their group, so the group filter only applies when no user is picked
-            Rows = _requisitions.Page(Active, UserId, UserId == null ? TypeId : null, Serial, From, To, PageNo, PageSize);
+            var lines = QtyForm.Read(Request.Form).Where(kv => kv.Value > 0).Select(kv => new InvoiceLine(kv.Key, kv.Value.Value)).ToList();
+            var (ok, error, invoice) = _invoices.CreateForRequisition(id, lines);
+            TempData["Flash"] = ok ? $"{invoice.InvoiceSerialNo} created." : error;
+            return ok ? Back() : Back(id);
         }
 
-        private void LoadOptions()
+        private IActionResult Done((bool Ok, string Error, List<Models.SalesInvoice> Invoices) r)
         {
-            TypeOptions = _userTypes.GetAll().Select(t => new SelectListItem(t.TypeName, t.Id.ToString())).ToList();
-            UserOptions = _users.GetAll().Where(u => TypeId == null || u.UserTypeId == TypeId)
-                .OrderBy(u => u.FirstName).Select(u => new SelectListItem($"{u.FirstName} {u.LastName} ({u.Username})", u.Id.ToString())).ToList();
+            TempData["Flash"] = r.Ok
+                ? (r.Invoices.Count == 1 ? $"{r.Invoices[0].InvoiceSerialNo} created." : $"{r.Invoices.Count} invoices created.")
+                : r.Error;
+            return Back();
+        }
+
+        private IActionResult Back(int? id = null) =>
+            RedirectToPage("Index", new { Tab, Q, TypeId, Days, Id = id });
+
+        private OrderPanel LoadPanel(int id)
+        {
+            var got = _requisitions.Get(id);
+            if (got == null) return null;
+            var (h, lines) = got.Value;
+            var inv = _invoiceRepo.GetAll().Where(i => i.SalesRequisitionId == id).Select(i => new { i.Id, i.InvoiceSerialNo }).FirstOrDefault();
+            var row = new OrderRow(h.Id, h.Serial, h.UserId, h.UserName, h.CreatedDateTime, h.IsActive, lines.Count,
+                lines.Sum(l => l.Total), inv?.Id, inv?.InvoiceSerialNo);
+            return new OrderPanel(row, lines);
         }
     }
 }

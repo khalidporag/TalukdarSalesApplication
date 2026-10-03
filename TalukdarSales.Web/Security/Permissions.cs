@@ -15,6 +15,8 @@ namespace TalukdarSales.Web.Security
     public static class Perm
     {
         public const string AdministratorRole = "Administrator";
+        /// <summary>Rule marker: any signed-in user.</summary>
+        public const string Anyone = "*";
 
         public const string Dashboard = "Dashboard";
         public const string Users = "Users";
@@ -61,39 +63,41 @@ namespace TalukdarSales.Web.Security
         /// <summary>Pages any signed-in user may open (no permission needed).</summary>
         public static readonly IReadOnlySet<string> OpenPages = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "/Index", "/Login", "/Logout", "/AccessDenied"
+            "/Login", "/Logout", "/AccessDenied", "/Error"
         };
 
         // Deny by default: a page with no rule here is forbidden to everyone except Administrators.
         public static readonly IReadOnlyList<PathRule> Rules = new List<PathRule>
         {
+            // the notice feed is for everyone; managing notices needs a permission
+            new("/Index", null, Anyone),
+            new("/Index", "Save", Notices),
+            new("/Index", "Remove", Notices),
+
             new("/Users/Index", null, Users),
             new("/Roles/Index", null, Roles),
 
             new("/Requisitions/Create", null, RequisitionCreate),
             new("/Requisitions/Index", null, RequisitionView),
-            new("/Requisitions/Index", "Approve", RequisitionApprove),
-            new("/Requisitions/Details", null, RequisitionView),
+            new("/Requisitions/Index", "Panel", RequisitionView),
+            new("/Requisitions/Index", "Invoice", RequisitionApprove),
+            new("/Requisitions/Index", "Bulk", RequisitionApprove),
+            new("/Requisitions/Index", "Create", InvoiceCreate),
 
-            new("/Invoices/Create", null, InvoiceCreate),
             new("/Invoices/Index", null, InvoiceView),
+            new("/Invoices/Index", "Panel", InvoiceCollect),
             new("/Invoices/Index", "Collect", InvoiceCollect),
             new("/Invoices/Details", null, InvoiceView),
             new("/Collections/Index", null, CollectionView),
 
             new("/Production/Index", null, Production),
-            new("/Notices/Index", null, Notices),
             new("/Reports/Index", null, Reports),
-            // the dashboard widgets are loaded from the reports endpoint
-            new("/Reports/Index", "Panel", Reports, Dashboard),
+            new("/Reports/Index", "Export", Reports),
             new("/Dashboard/Index", null, Dashboard),
 
-            new("/ProductTypes/Index", null, ProductTypes),
             new("/Products/Index", null, Products),
+            new("/Products/Index", "CreateCategory", ProductTypes),
             new("/TimeSetting/Index", null, TimeSetting),
-
-            // dropdown helper used by the requisition, invoice and collection screens
-            new("/Lookup", null, RequisitionCreate, RequisitionView, InvoiceCreate, InvoiceView, CollectionView),
         };
 
         public static Permission Find(string key) => Catalog.FirstOrDefault(p => p.Key == key);

@@ -1,0 +1,57 @@
+@model TalukdarSales.Web.Pages.Requisitions.OrderPanel
+@{
+    var h = Model.Header;
+    var canInvoice = Access.For(User).Has(TalukdarSales.Web.Security.Perm.InvoiceCreate) && h.IsActive;
+}
+<form method="post" asp-page="/Requisitions/Index" asp-page-handler="Create" asp-route-id="@h.Id" class="col" style="gap:14px" id="panel-form">
+    <div class="row between top" style="gap:10px">
+        <div><div class="ct">@h.Serial</div><div class="lbl">@h.Customer · @h.Created.ToString("d MMM, h:mm tt")</div></div>
+        <span class="pill @(h.IsActive ? "warn" : "good")">@(h.IsActive ? "Waiting" : "Invoiced")</span>
+    </div>
+    <div>
+        <div class="lbl row" style="gap:10px;padding-bottom:6px;border-bottom:1px solid var(--line)"><span class="grow">Product</span><span style="width:@(canInvoice ? 118 : 50)px;text-align:center">Qty</span><span style="width:74px;text-align:right">Amount</span></div>
+        @foreach (var l in Model.Lines)
+        {
+            <div class="row line-edit" style="gap:10px;padding:10px 0;border-bottom:1px solid #F3EBD6" data-price="@l.Price" data-orig="@l.Quantity">
+                <div class="grow" style="min-width:0"><div style="font-weight:500;line-height:1.25">@l.ProductName</div><div class="lbl">৳ @Fmt.Money(l.Price) each</div></div>
+                @if (canInvoice)
+                {
+                    <div class="row" style="gap:2px;width:118px;justify-content:center">
+                        <button type="button" class="step s dec" aria-label="Decrease">−</button>
+                        <input class="qty num" name="Qty[@l.FinishedGoodId]" type="number" min="0" step="any" value="@Fmt.Money(l.Quantity).Replace(",", "")" aria-label="Quantity of @l.ProductName" style="width:44px;text-align:center;border:0;background:transparent;font-weight:600;padding:0;min-height:36px" />
+                        <button type="button" class="step s inc" aria-label="Increase">+</button>
+                    </div>
+                }
+                else { <div class="num strong" style="width:50px;text-align:center">@Fmt.Int(l.Quantity)</div> }
+                <div class="num strong amount" style="width:74px;text-align:right">৳ @Fmt.Int(l.Total)</div>
+            </div>
+        }
+    </div>
+    <div class="row between"><span class="muted">Invoice total</span><span class="num" style="font-size:26px;font-weight:700;color:var(--maroon)" id="panel-total">৳ @Fmt.Int(h.Total)</span></div>
+    <div class="pill warn" id="panel-changed" hidden style="border-radius:10px;padding:8px 12px;white-space:normal">Quantities differ from the order. The invoice uses what you set here.</div>
+    @if (canInvoice) { <button class="btn btn-p btn-lg btn-block">Create invoice · <span id="panel-total2">৳ @Fmt.Int(h.Total)</span></button> }
+    else if (h.InvoiceId != null) { <a class="btn btn-lg btn-block" href="/Invoices/Details?id=@h.InvoiceId">Print invoice @h.InvoiceNo</a> }
+</form>
+<script>
+(function () {
+  const form = document.getElementById('panel-form'); if (!form) return;
+  function fmt(n) { n = Math.round(n); const s = String(n), l = s.slice(-3), r = s.slice(0, -3).replace(/\B(?=(\d{2})+(?!\d))/g, ','); return r ? r + ',' + l : l; }
+  function recalc() {
+    let total = 0, changed = false;
+    form.querySelectorAll('.line-edit').forEach(row => {
+      const input = row.querySelector('.qty'); if (!input) return;
+      const q = parseFloat(input.value) || 0, p = parseFloat(row.dataset.price);
+      if (q !== parseFloat(row.dataset.orig)) changed = true;
+      total += q * p; row.querySelector('.amount').textContent = '৳ ' + fmt(q * p);
+    });
+    document.getElementById('panel-total').textContent = '৳ ' + fmt(total);
+    const t2 = document.getElementById('panel-total2'); if (t2) t2.textContent = '৳ ' + fmt(total);
+    document.getElementById('panel-changed').hidden = !changed;
+  }
+  form.addEventListener('click', e => {
+    const b = e.target.closest('.inc,.dec'); if (!b) return;
+    const input = b.parentElement.querySelector('.qty'); input.value = Math.max(0, (parseFloat(input.value) || 0) + (b.classList.contains('inc') ? 1 : -1)); recalc();
+  });
+  form.addEventListener('input', recalc);
+})();
+</script>

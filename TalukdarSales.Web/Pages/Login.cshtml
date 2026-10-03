@@ -8,38 +8,36 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Login - Talukder Foods</title>
-    <link rel="icon" href="~/img/logo-small.jpg" />
-    <link rel="stylesheet" href="~/lib/bootstrap/bootstrap.min.css" />
+    <title>Sign in · Talukder Foods</title>
+    <link rel="icon" href="~/img/logo-purple.jpg" />
     <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
 </head>
 <body>
-<div class="login-wrap">
-    <div class="card login-card shadow-sm">
-        <div class="card-body p-4">
-            <div class="text-center mb-3">
-                <img src="~/img/logo.jpeg" alt="" style="height:64px" />
-                <h1 class="h4 mt-2">Welcome Back!</h1>
-                <p class="text-muted mb-0">Login to continue</p>
+<div class="auth">
+    <div class="auth-hero"><div><img src="~/img/logo-yellow.png" alt="Talukder Foods" /></div></div>
+    <main class="auth-form">
+        <form method="post">
+            <div>
+                <h1 class="page-title" style="font-size:34px">Welcome back</h1>
+                <div class="page-sub">Sign in to take orders, invoice and collect.</div>
             </div>
             @if (!string.IsNullOrEmpty(Model.Error))
             {
-                <div class="alert alert-danger py-2">@Model.Error</div>
+                <div class="note bad" role="alert">@Model.Error</div>
             }
-            <form method="post">
-                <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
-                <div class="mb-3">
-                    <label class="form-label" for="Username">Username</label>
-                    <input class="form-control" id="Username" name="Username" value="@Model.Username" autocomplete="username" autofocus required />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label" for="Password">Password</label>
-                    <input class="form-control" id="Password" name="Password" type="password" autocomplete="current-password" required />
-                </div>
-                <button class="btn btn-success w-100" type="submit">Login</button>
-            </form>
-        </div>
-    </div>
+            <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+            <div class="field">
+                <label for="Username">Username</label>
+                <input id="Username" name="Username" value="@Model.Username" autocomplete="username" autofocus required />
+            </div>
+            <div class="field">
+                <label for="Password">Password</label>
+                <input id="Password" name="Password" type="password" autocomplete="current-password" required />
+            </div>
+            <button class="btn btn-p btn-lg btn-block" type="submit">Sign in</button>
+            <div class="faint" style="text-align:center;font-size:13.5px">Forgot your password? Ask an administrator to reset it.</div>
+        </form>
+    </main>
 </div>
 </body>
 </html>

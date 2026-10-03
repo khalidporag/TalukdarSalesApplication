@@ -1,30 +1,78 @@
 @page
 @model TalukdarSales.Web.Pages.Invoices.IndexModel
-@{ ViewData["Title"] = "Invoice List"; }
-@if (TempData["Success"] is string ok) { <div class="alert alert-success py-2">@ok</div> }
-<form id="filter" class="row g-2 mb-3" hx-get="/Invoices?handler=List" hx-target="#list"
-      hx-trigger="change from:#UserId, change from:#From, change from:#To, submit">
-    <input type="hidden" name="Filtered" value="true" />
-    <div class="col-auto">
-        <select class="form-select" id="TypeId" name="TypeId" hx-get="/Lookup?handler=Users" hx-target="#UserId" hx-trigger="change"
-                hx-vals='js:{typeId: document.getElementById("TypeId").value}'>
-            <option value="">All groups</option>
-            @foreach (var t in Model.TypeOptions) { <option value="@t.Value" selected="@(Model.TypeId?.ToString() == t.Value)">@t.Text</option> }
-        </select>
+@{
+    ViewData["Title"] = "Invoices";
+    var b = Model.Board;
+    var canCollect = Access.For(User).Has(TalukdarSales.Web.Security.Perm.InvoiceCollect);
+    string Url(string status = null) => $"/Invoices?status={status ?? Model.Status}&q={Uri.EscapeDataString(Model.Q ?? "")}&days={Model.Days}";
+    var rate = b.Billed <= 0 ? 0 : Math.Round(b.Collected / b.Billed * 100);
+}
+<header class="page-head">
+    <div><h1 class="page-title">Invoices</h1><div class="page-sub">Collect a payment against a customer. It clears their oldest invoices first.</div></div>
+    <div class="actions">
+        <a class="btn" href="?handler=Export&status=@Model.Status&q=@Uri.EscapeDataString(Model.Q ?? "")&days=@Model.Days">@Icons.Svg("download", 18)Export Excel</a>
+        @if (Access.For(User).Has(TalukdarSales.Web.Security.Perm.RequisitionView)) { <a class="btn btn-p" href="/Requisitions">Invoice waiting orders</a> }
     </div>
-    <div class="col-auto">
-        <select class="form-select" id="UserId" name="UserId">
-            <option value="">All users</option>
-            @foreach (var u in Model.UserOptions) { <option value="@u.Value" selected="@(Model.UserId?.ToString() == u.Value)">@u.Text</option> }
-        </select>
+</header>
+
+<section class="kpis" aria-label="Totals">
+    <div class="card kpi small"><div class="lbl">Billed</div><div class="v">৳ @Fmt.Int(b.Billed)</div></div>
+    <div class="card kpi small"><div class="lbl">Collected</div><div class="v">৳ @Fmt.Int(b.Collected)</div><div class="meter good"><i style="width:@rate%"></i></div></div>
+    <div class="card kpi small alert"><div class="lbl">Still to collect</div><div class="v" style="color:#B3231C">৳ @Fmt.Int(b.Due)</div></div>
+</section>
+
+<form method="get" class="row between wrap" style="gap:12px">
+    <input type="hidden" name="status" value="@Model.Status" />
+    <div class="seg" role="group" aria-label="Payment status">
+        <a href="@Url("all")" class="@(Model.Status == "all" ? "on" : "")">All <span class="faint">@b.All</span></a>
+        <a href="@Url("unpaid")" class="@(Model.Status == "unpaid" ? "on" : "")">Unpaid <span class="faint">@b.Unpaid</span></a>
+        <a href="@Url("partial")" class="@(Model.Status == "partial" ? "on" : "")">Partly paid <span class="faint">@b.Partial</span></a>
+        <a href="@Url("paid")" class="@(Model.Status == "paid" ? "on" : "")">Paid <span class="faint">@b.Paid</span></a>
     </div>
-    <div class="col-auto"><input class="form-control" type="date" id="From" name="From" value="@Model.From?.ToString("yyyy-MM-dd")" title="From" /></div>
-    <div class="col-auto"><input class="form-control" type="date" id="To" name="To" value="@Model.To?.ToString("yyyy-MM-dd")" title="To" /></div>
-    <div class="col-auto"><a class="btn btn-light" href="/Invoices">Reset</a></div>
-    <div class="col-auto"><a class="btn btn-outline-success" id="export"
-        href="#" onclick="this.href='/Invoices?handler=Export&'+new URLSearchParams(new FormData(document.getElementById('filter'))).toString()">Export to Excel</a></div>
-    @if (Access.For(User).Has(Perm.InvoiceCreate)) { <div class="col text-end"><a class="btn btn-success" href="/Invoices/Create">Invoice Form</a></div> }
+    <div class="row wrap" style="gap:8px">
+        <input type="search" name="q" value="@Model.Q" placeholder="Search invoice or customer" aria-label="Search invoices" />
+        <select name="days" aria-label="Period" onchange="this.form.submit()">
+            <option value="1" selected="@(Model.Days == 1)">Today</option>
+            <option value="7" selected="@(Model.Days == 7)">Last 7 days</option>
+            <option value="30" selected="@(Model.Days == 30)">Last 30 days</option>
+            <option value="0" selected="@(Model.Days == 0)">Any date</option>
+        </select>
+        <button class="btn" aria-label="Search">@Icons.Svg("chevron-right", 18)</button>
+    </div>
 </form>
-<div id="list" hx-get="/Invoices?handler=List" hx-include="#filter" hx-trigger="refreshList from:body">
-    <partial name="_List" model="Model" />
+
+<div class="row top wrap" style="gap:22px">
+    <section class="card flush grow" style="flex:1 1 600px;min-width:0">
+        <div class="tbl-wrap">
+        <table class="tbl" style="min-width:560px">
+            <thead><tr><th>Invoice</th><th>Customer</th><th class="r">Total</th><th style="width:150px">Paid</th><th class="r">Due</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var r in b.Page.Items)
+            {
+                var pct = r.Total <= 0 ? 0 : Math.Round(r.Collected / r.Total * 100);
+                var (label, tone) = r.Collected <= 0.005 ? ("Unpaid", "bad") : r.Due > 0.005 ? ("Partly paid", "warn") : ("Paid", "good");
+                <tr class="@(Model.Id == r.Id ? "focus" : "")">
+                    <td><div class="strong">@r.Number</div><div class="lbl">@r.CreatedDateTime.ToString("d MMM")</div></td>
+                    <td class="wrap">@r.UserName</td>
+                    <td class="r num">৳ @Fmt.Int(r.Total)</td>
+                    <td><div class="meter good"><i style="width:@pct%"></i></div><div class="lbl" style="margin-top:4px">৳ @Fmt.Int(r.Collected)</div></td>
+                    <td class="r num strong">৳ @Fmt.Int(r.Due)</td>
+                    <td><span class="pill @tone">@label</span></td>
+                    <td style="text-align:right;white-space:nowrap">
+                        @if (r.Due > 0.005 && canCollect) { <a class="btn btn-s btn-o" href="@Url()&id=@r.Id" hx-get="/Invoices?handler=Panel&id=@r.Id" hx-target="#panel" hx-push-url="false">Collect</a> }
+                        <a class="btn btn-s" href="/Invoices/Details?id=@r.Id" aria-label="Print @r.Number">Print</a>
+                    </td>
+                </tr>
+            }
+            @if (b.Page.Items.Count == 0) { <tr><td colspan="7"><div class="empty">No invoices match.</div></td></tr> }
+            </tbody>
+        </table>
+        </div>
+        <partial name="_Pager" model='(b.Page.Page, b.Page.TotalPages, Url(), "")' />
+    </section>
+
+    <aside class="card panel" id="panel">
+        @if (Model.Panel != null) { <partial name="_Collect" model="Model.Panel" /> }
+        else { <div class="empty-dash">@(canCollect ? "Choose Collect on an invoice to take a payment." : "Open an invoice to print it.")</div> }
+    </aside>
 </div>

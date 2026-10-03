@@ -53,19 +53,49 @@ namespace TalukdarSales.Web.Pages.Products
             public bool IsActive { get; set; }
         }
 
-        public void OnGet() { LoadOptions(); Load(); }
+        [BindProperty(SupportsGet = true)] public int? EditId { get; set; }
+        [BindProperty(SupportsGet = true)] public bool New { get; set; }
+        public string Mode { get; private set; }
 
-        public IActionResult OnGetList()
+        public IActionResult OnGet()
         {
-            LoadOptions();
-            Load();
-            return Partial("_List", this);
+            LoadOptions(); Load();
+            if (EditId != null)
+            {
+                var g = _goods.GetSingle(EditId.Value);
+                if (g == null) return NotFound();
+                Edit = new EditInput { Id = g.Id, Name = g.Name, Description = g.Description, UnitPrice = g.UnitPrice, IsActive = g.IsActive };
+                Mode = "edit";
+            }
+            else if (New) Mode = "create";
+            return Page();
         }
 
-        public IActionResult OnGetCreate()
+        public IActionResult OnPostCreateCategory(string name)
         {
-            LoadOptions();
-            return Partial("_CreateForm", this);
+            name = (name ?? "").Trim();
+            if (name.Length == 0 || name.Length > 100)
+                TempData["Flash"] = "Enter a category name.";
+            else if (_types.GetAll().Any(t => t.Name.ToLower() == name.ToLower()))
+                TempData["Flash"] = "This category already exists.";
+            else
+            {
+                _types.Add(new FinishGoodType { Name = name });
+                _types.Commit();
+                TempData["Flash"] = "Category added.";
+            }
+            return RedirectToPage("Index", new { TypeId, Name });
+        }
+
+        public IActionResult OnPostToggle(int id)
+        {
+            var g = _goods.GetSingle(id);
+            if (g == null) return NotFound();
+            g.IsActive = !g.IsActive;
+            _goods.Update(g);
+            _goods.Commit();
+            TempData["Flash"] = g.IsActive ? $"{g.Name} is available again." : $"{g.Name} is hidden from new orders.";
+            return RedirectToPage("Index", new { TypeId, Name, p = PageNo });
         }
 
         public async Task<IActionResult> OnPostCreateAsync([Bind(Prefix = nameof(Create))] CreateInput input)
@@ -74,10 +104,7 @@ namespace TalukdarSales.Web.Pages.Products
             if (!ImageStore.IsValid(Create.Image))
                 ModelState.AddModelError("Create.Image", "Invalid image. Allowed: jpg, jpeg, png, gif, webp up to 5 MB.");
             if (!ModelState.IsValid)
-            {
-                LoadOptions();
-                return Partial("_CreateForm", this);
-            }
+                return Redisplay("create");
 
             _goods.Add(new FinishedGood
             {
@@ -90,27 +117,15 @@ namespace TalukdarSales.Web.Pages.Products
                 IsActive = true
             });
             _goods.Commit();
-
-            Toast("Finish Good Added!");
-            CloseModal();
-            RefreshList();
-            return new EmptyResult();
-        }
-
-        public IActionResult OnGetEdit(int id)
-        {
-            var g = _goods.GetSingle(id);
-            if (g == null)
-                return NotFound();
-            Edit = new EditInput { Id = g.Id, Name = g.Name, Description = g.Description, UnitPrice = g.UnitPrice, IsActive = g.IsActive };
-            return Partial("_EditForm", this);
+            TempData["Flash"] = "Product added.";
+            return RedirectToPage("Index");
         }
 
         public IActionResult OnPostEdit([Bind(Prefix = nameof(Edit))] EditInput input)
         {
             Edit = input ?? new EditInput();
             if (!ModelState.IsValid)
-                return Partial("_EditForm", this);
+                return Redisplay("edit");
 
             var g = _goods.GetSingle(Edit.Id);
             if (g == null)
@@ -120,11 +135,15 @@ namespace TalukdarSales.Web.Pages.Products
             g.IsActive = Edit.IsActive;
             _goods.Update(g);
             _goods.Commit();
+            TempData["Flash"] = "Product updated.";
+            return RedirectToPage("Index");
+        }
 
-            Toast("Product Updated!");
-            CloseModal();
-            RefreshList();
-            return new EmptyResult();
+        private IActionResult Redisplay(string mode)
+        {
+            Mode = mode;
+            LoadOptions(); Load();
+            return Page();
         }
 
         private void Load()

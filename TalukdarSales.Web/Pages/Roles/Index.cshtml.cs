@@ -42,48 +42,28 @@ namespace TalukdarSales.Web.Pages.Roles
             public List<string> Keys { get; set; } = new();
         }
 
+        [BindProperty(SupportsGet = true, Name = "role")] public int? SelectedId { get; set; }
+        public ApplicationRole Selected { get; private set; }
+        public HashSet<string> SelectedKeys { get; private set; } = new();
+
         public void OnGet() => Load();
 
-        public IActionResult OnGetList()
+        public IActionResult OnPostCreateRole(string name)
         {
-            Load();
-            return Partial("_List", this);
-        }
-
-        public IActionResult OnGetCreateRole() => Partial("_RoleForm", this);
-
-        public IActionResult OnPostCreateRole([Bind(Prefix = nameof(Role))] RoleInput input)
-        {
-            Role = input ?? new RoleInput();
-            if (!ModelState.IsValid)
-                return Partial("_RoleForm", this);
-
-            var name = Role.Name.Trim();
-            if (_roles.GetAll().Any(r => r.Name.ToLower() == name.ToLower()))
+            name = (name ?? "").Trim();
+            if (name.Length == 0 || name.Length > 100)
+                TempData["Flash"] = "Enter a role name (up to 100 characters).";
+            else if (_roles.GetAll().Any(r => r.Name.ToLower() == name.ToLower()))
+                TempData["Flash"] = "This role already exists. Please try a new role.";
+            else
             {
-                ModelState.AddModelError("Role.Name", "This role already exists. Please try a new role.");
-                return Partial("_RoleForm", this);
+                var role = new ApplicationRole { Name = name };
+                _roles.Add(role);
+                _roles.Commit();
+                TempData["Flash"] = "Role added.";
+                return RedirectToPage("Index", new { role = role.Id });
             }
-            _roles.Add(new ApplicationRole { Name = name });
-            _roles.Commit();
-            Toast("Role Added!");
-            CloseModal();
-            RefreshList();
-            return new EmptyResult();
-        }
-
-        public IActionResult OnGetAssign(int id)
-        {
-            var role = _roles.GetSingle(id);
-            if (role == null)
-                return NotFound();
-            Assign = new AssignInput
-            {
-                RoleId = role.Id,
-                RoleName = role.Name,
-                Keys = GrantedKeys(role.Id).ToList()
-            };
-            return Partial("_AssignForm", this);
+            return RedirectToPage("Index");
         }
 
         /// <summary>
@@ -97,8 +77,8 @@ namespace TalukdarSales.Web.Pages.Roles
                 return NotFound();
             if (AccessService.IsAdministratorRole(role.Name))
             {
-                Toast("The Administrator role always has full access.", false);
-                return new EmptyResult();
+                TempData["Flash"] = "The Administrator role always has full access.";
+                return RedirectToPage("Index", new { role = role.Id });
             }
 
             var actor = Actor;
@@ -129,10 +109,8 @@ namespace TalukdarSales.Web.Pages.Roles
             _permissions.Commit();
             _access.Invalidate();
 
-            Toast("Permissions updated!");
-            CloseModal();
-            RefreshList();
-            return new EmptyResult();
+            TempData["Flash"] = "Permissions saved.";
+            return RedirectToPage("Index", new { role = role.Id });
         }
 
         private HashSet<string> GrantedKeys(int roleId)
@@ -151,6 +129,8 @@ namespace TalukdarSales.Web.Pages.Roles
                 .Join(_modules.GetAll().Where(m => CatalogKeys.Contains(m.Url)), p => p.ModuleId, m => m.Id, (p, m) => new { p.RoleId, Key = m.Url })
                 .ToList();
             RoleKeys = Roles.ToDictionary(r => r.Id, r => grants.Where(g => g.RoleId == r.Id).Select(g => g.Key).ToHashSet());
+            Selected = Roles.FirstOrDefault(r => r.Id == SelectedId) ?? Roles.FirstOrDefault(r => !AccessService.IsAdministratorRole(r.Name)) ?? Roles.FirstOrDefault();
+            SelectedKeys = Selected == null ? new() : RoleKeys[Selected.Id];
         }
     }
 }

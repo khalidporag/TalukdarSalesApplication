@@ -1,3 +1,4 @@
+using TalukdarSales.Web.Helpers;
 using TalukdarSales.Web.Context;
 using TalukdarSales.Web.Infrastructure;
 using TalukdarSales.Web.Interfaces;
@@ -14,6 +15,14 @@ namespace TalukdarSales.Web.Services
         public double Total => Quantity * Price;
     }
 
+    public record OrderRow(int Id, string Serial, int UserId, string Customer, DateTime Created, bool IsActive,
+        int Items, double Total, int? InvoiceId, string InvoiceNo);
+
+    public record OrderBoard(Paged<OrderRow> Page, int Waiting, int Invoiced);
+
+    public record ProductionItem(int FinishedGoodId, string ProductName, string Category, double Quantity);
+    public record ProductionPlan(List<ProductionItem> Items, int Orders, int Customers);
+
     public record ProductTotal(int FinishedGoodId, string ProductName, double TotalQuantity);
 
     public class RequisitionService
@@ -24,10 +33,11 @@ namespace TalukdarSales.Web.Services
         private readonly IFinishedGoodsRepository _goods;
         private readonly IUserRepository _users;
         private readonly ITimeSettingRepository _timeSettings;
+        private readonly ISalesInvoiceRepository _invoices;
 
         public RequisitionService(ApplicationDbContext db, ISalesRequisitionRepository requisitions,
             ISalesRequisitionDetailRepository details, IFinishedGoodsRepository goods,
-            IUserRepository users, ITimeSettingRepository timeSettings)
+            IUserRepository users, ITimeSettingRepository timeSettings, ISalesInvoiceRepository invoices)
         {
             _db = db;
             _requisitions = requisitions;
@@ -35,6 +45,7 @@ namespace TalukdarSales.Web.Services
             _goods = goods;
             _users = users;
             _timeSettings = timeSettings;
+            _invoices = invoices;
         }
 
         /// <summary>True when <paramref name="now"/> is inside the window; supports windows that cross midnight.</summary>
@@ -43,6 +54,65 @@ namespace TalukdarSales.Web.Services
             if (!TimeSpan.TryParse(fromTime, out var from) || !TimeSpan.TryParse(toTime, out var to))
                 return false;
             return from <= to ? (from <= now && now <= to) : (now >= from || now <= to);
+        }
+
+        /// <summary>Orders still waiting for an invoice (drives the sidebar badge).</summary>
+        public int WaitingCount() => _requisitions.GetAll().Count(r => r.IsActive);
+
+        /// <summary>Orders for the board: tab is "waiting" (default), "invoiced" or "all". <paramref name="days"/> 0 means any date.</summary>
+        public OrderBoard Board(string tab, string search, int? userTypeId, int days, int page, int pageSize)
+        {
+            var q = _requisitions.GetAll();
+            if (days > 0) { var since = DateTime.Today.AddDays(-(days - 1)); q = q.Where(r => r.CreatedDateTime >= since); }
+            var users = _users.GetAll();
+            if (userTypeId != null) q = q.Where(r => users.Any(u => u.Id == r.UserId && u.UserTypeId == userTypeId));
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var t = search.Trim().ToLower();
+                q = q.Where(r => (r.RequisitionSerial != null && r.RequisitionSerial.ToLower().Contains(t)) ||
+                    users.Any(u => u.Id == r.UserId && (u.FirstName + " " + u.LastName).ToLower().Contains(t)));
+            }
+            var waiting = q.Count(r => r.IsActive);
+            var invoiced = q.Count(r => !r.IsActive);
+            var shown = tab == "invoiced" ? q.Where(r => !r.IsActive) : tab == "all" ? q : q.Where(r => r.IsActive);
+            shown = tab == "invoiced" || tab == "all" ? shown.OrderByDescending(r => r.CreatedDateTime).ThenByDescending(r => r.Id)
+                : shown.OrderBy(r => r.CreatedDateTime).ThenBy(r => r.Id);
+            var paged = Paged<SalesRequisition>.Create(shown, page, pageSize);
+
+            var ids = paged.Items.Select(r => r.Id).ToList();
+            var totals = _details.GetAll().Where(d => ids.Contains(d.SalesRequisitionId))
+                .GroupBy(d => d.SalesRequisitionId).Select(g => new { Id = g.Key, Items = g.Count(), Total = g.Sum(d => d.Quantity * d.Price) })
+                .ToList().ToDictionary(x => x.Id);
+            var invs = _invoices.GetAll().Where(i => ids.Contains(i.SalesRequisitionId)).Select(i => new { i.Id, i.InvoiceSerialNo, i.SalesRequisitionId }).ToList()
+                .GroupBy(i => i.SalesRequisitionId).ToDictionary(g => g.Key, g => g.First());
+            var names = ToRows(paged.Items).ToDictionary(r => r.Id, r => r.UserName);
+            var rows = paged.Items.Select(r =>
+            {
+                totals.TryGetValue(r.Id, out var t); invs.TryGetValue(r.Id, out var inv);
+                return new OrderRow(r.Id, r.RequisitionSerial, r.UserId, names[r.Id], r.CreatedDateTime, r.IsActive,
+                    t?.Items ?? 0, Money.Round(t?.Total ?? 0), inv?.Id, inv?.InvoiceSerialNo);
+            }).ToList();
+            return new OrderBoard(new Paged<OrderRow> { Items = rows, Page = paged.Page, PageSize = paged.PageSize, Total = paged.Total }, waiting, invoiced);
+        }
+
+        /// <summary>The day's quantities per product with their category, plus how many orders and customers they come from.</summary>
+        public ProductionPlan PlanForDay(DateTime day, IFinishedGoodTypeRepository types)
+        {
+            var start = day.Date; var end = start.AddDays(1);
+            var totals = ProductTotalsForDay(day);
+            var ids = totals.Select(t => t.FinishedGoodId).ToList();
+            var goodType = _goods.GetAll().Where(g => ids.Contains(g.Id)).Select(g => new { g.Id, g.GoodTypeId }).ToList().ToDictionary(g => g.Id, g => g.GoodTypeId);
+            var typeName = types.GetAll().Select(t => new { t.Id, t.Name }).ToList().ToDictionary(t => t.Id, t => t.Name);
+            var items = totals.Select(t => new ProductionItem(t.FinishedGoodId, t.ProductName,
+                goodType.TryGetValue(t.FinishedGoodId, out var ty) && typeName.TryGetValue(ty, out var n) ? n : "Other", t.TotalQuantity)).ToList();
+            var day_ = _requisitions.GetAll().Where(r => r.CreatedDateTime >= start && r.CreatedDateTime < end);
+            return new ProductionPlan(items, day_.Count(), day_.Select(r => r.UserId).Distinct().Count());
+        }
+
+        public int OrderCountForDay(DateTime day)
+        {
+            var start = day.Date; var end = start.AddDays(1);
+            return _requisitions.GetAll().Count(r => r.CreatedDateTime >= start && r.CreatedDateTime < end);
         }
 
         public (string From, string To) GetWindow()
