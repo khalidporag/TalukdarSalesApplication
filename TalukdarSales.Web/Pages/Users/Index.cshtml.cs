@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using TalukdarSales.Web.Infrastructure;
 using TalukdarSales.Web.Interfaces;
 using TalukdarSales.Web.Models.Dto;
+using TalukdarSales.Web.Security;
 using TalukdarSales.Web.Services;
 
 namespace TalukdarSales.Web.Pages.Users
@@ -15,9 +16,11 @@ namespace TalukdarSales.Web.Pages.Users
         private readonly UserService _users;
         private readonly IUserTypeRepository _userTypes;
         private readonly IApplicationRoleRepository _roles;
+        private readonly AccessService _access;
 
-        public IndexModel(UserService users, IUserTypeRepository userTypes, IApplicationRoleRepository roles)
+        public IndexModel(UserService users, IUserTypeRepository userTypes, IApplicationRoleRepository roles, AccessService access)
         {
+            _access = access;
             _users = users;
             _userTypes = userTypes;
             _roles = roles;
@@ -31,6 +34,8 @@ namespace TalukdarSales.Web.Pages.Users
         public Paged<UserDto> Users { get; private set; }
         public List<SelectListItem> UserTypeOptions { get; private set; }
         public List<SelectListItem> RoleOptions { get; private set; }
+        public Dictionary<int, string> RoleByUser { get; private set; } = new();
+        public bool CanAssignRoles => _access.For(User).Has(Perm.Roles);
 
         // Not [BindProperty]: bound per handler via parameters so the two forms never validate each other.
         public CreateInput Create { get; set; } = new();
@@ -59,6 +64,8 @@ namespace TalukdarSales.Web.Pages.Users
             [Required, StringLength(100)] public string FirstName { get; set; }
             [StringLength(100)] public string LastName { get; set; }
             [Range(0, double.MaxValue)] public decimal MaxCreditLimit { get; set; }
+            /// <summary>null = the role field was not shown/posted, leave the role alone; 0 = remove the role.</summary>
+            public int? RoleId { get; set; }
         }
 
         public void OnGet()
@@ -82,6 +89,10 @@ namespace TalukdarSales.Web.Pages.Users
         public async Task<IActionResult> OnPostCreateAsync([Bind(Prefix = nameof(Create))] CreateInput input)
         {
             Create = input ?? new CreateInput();
+
+            var roleError = _users.ValidateRoleChoice(Create.RoleId, _access.For(User));
+            if (roleError != null)
+                ModelState.AddModelError("Create.RoleId", roleError);
 
             if (!ModelState.IsValid)
             {
@@ -124,7 +135,12 @@ namespace TalukdarSales.Web.Pages.Users
             var user = _users.Get(id);
             if (user == null)
                 return NotFound();
-            Edit = new EditInput { Id = user.Id, FirstName = user.FirstName, LastName = user.LastName, MaxCreditLimit = user.MaxCreditLimit };
+            Edit = new EditInput
+            {
+                Id = user.Id, FirstName = user.FirstName, LastName = user.LastName, MaxCreditLimit = user.MaxCreditLimit,
+                RoleId = CanAssignRoles ? _users.CurrentRoleId(user.Id) ?? 0 : null
+            };
+            LoadOptions();
             return Partial("_EditForm", this);
         }
 
@@ -133,7 +149,21 @@ namespace TalukdarSales.Web.Pages.Users
             Edit = input ?? new EditInput();
 
             if (!ModelState.IsValid)
+            {
+                LoadOptions();
                 return Partial("_EditForm", this);
+            }
+
+            if (Edit.RoleId != null)
+            {
+                var (roleOk, roleError) = _users.AssignRole(Edit.Id, Edit.RoleId.Value, _access.For(User));
+                if (!roleOk)
+                {
+                    ModelState.AddModelError("Edit.RoleId", roleError);
+                    LoadOptions();
+                    return Partial("_EditForm", this);
+                }
+            }
 
             var updated = _users.Update(new UpdateUserDto
             {
@@ -154,13 +184,14 @@ namespace TalukdarSales.Web.Pages.Users
         private void LoadUsers()
         {
             Users = Paged<UserDto>.Create(_users.Search(TypeId, Name), PageNo, PageSize);
+            RoleByUser = _users.RoleNames();
         }
 
         private void LoadOptions()
         {
             UserTypeOptions = _userTypes.GetAll()
                 .Select(t => new SelectListItem(t.TypeName, t.Id.ToString())).ToList();
-            RoleOptions = _roles.GetAll()
+            RoleOptions = _users.AssignableRoles(_access.For(User))
                 .Select(r => new SelectListItem(r.Name, r.Id.ToString())).ToList();
         }
     }

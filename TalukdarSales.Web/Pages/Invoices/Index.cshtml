@@ -23,7 +23,7 @@
     <div class="col-auto"><a class="btn btn-light" href="/Invoices">Reset</a></div>
     <div class="col-auto"><a class="btn btn-outline-success" id="export"
         href="#" onclick="this.href='/Invoices?handler=Export&'+new URLSearchParams(new FormData(document.getElementById('filter'))).toString()">Export to Excel</a></div>
-    <div class="col text-end"><a class="btn btn-success" href="/Invoices/Create">Invoice Form</a></div>
+    @if (Access.For(User).Has(Perm.InvoiceCreate)) { <div class="col text-end"><a class="btn btn-success" href="/Invoices/Create">Invoice Form</a></div> }
 </form>
 <div id="list" hx-get="/Invoices?handler=List" hx-include="#filter" hx-trigger="refreshList from:body">
     <partial name="_List" model="Model" />

@@ -6,6 +6,8 @@
     bool Active(params string[] prefixes) => prefixes.Any(p => path.Equals(p, StringComparison.OrdinalIgnoreCase) || (p != "/" && path.StartsWith(p + "/", StringComparison.OrdinalIgnoreCase)));
     string Cls(params string[] prefixes) => Active(prefixes) ? "nav-link active" : "nav-link";
     var displayName = User.FindFirstValue(ClaimTypes.GivenName) ?? User.Identity?.Name;
+    var access = Access.For(User);
+    bool Can(string key) => access.Has(key);
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -25,30 +27,45 @@
         </a>
         <nav class="nav flex-column">
             <a class="@Cls("/")" href="/">Notices</a>
-            <a class="@Cls("/Dashboard")" href="/Dashboard">Dashboard</a>
+            @if (Can(Perm.Dashboard)) { <a class="@Cls("/Dashboard")" href="/Dashboard">Dashboard</a> }
 
-            <div class="nav-group">User Administration</div>
-            <a class="@Cls("/Users")" href="/Users">User Management</a>
-            <a class="@Cls("/Roles")" href="/Roles">Role Management</a>
+            @if (Can(Perm.Users) || Can(Perm.Roles))
+            {
+                <div class="nav-group">User Administration</div>
+                @if (Can(Perm.Users)) { <a class="@Cls("/Users")" href="/Users">User Management</a> }
+                @if (Can(Perm.Roles)) { <a class="@Cls("/Roles")" href="/Roles">Role Management</a> }
+            }
 
-            <div class="nav-group">Sales Requisition</div>
-            <a class="@Cls("/Requisitions/Create")" href="/Requisitions/Create">Requisition Form</a>
-            <a class="@Cls("/Requisitions")" href="/Requisitions">Requisition List</a>
+            @if (Can(Perm.RequisitionCreate) || Can(Perm.RequisitionView))
+            {
+                <div class="nav-group">Sales Requisition</div>
+                @if (Can(Perm.RequisitionCreate)) { <a class="@Cls("/Requisitions/Create")" href="/Requisitions/Create">Requisition Form</a> }
+                @if (Can(Perm.RequisitionView)) { <a class="@Cls("/Requisitions")" href="/Requisitions">Requisition List</a> }
+            }
 
-            <div class="nav-group">Sales Invoice</div>
-            <a class="@Cls("/Invoices/Create")" href="/Invoices/Create">Invoice Form</a>
-            <a class="@Cls("/Invoices")" href="/Invoices">Invoice List</a>
-            <a class="@Cls("/Collections")" href="/Collections">Collection History</a>
+            @if (Can(Perm.InvoiceCreate) || Can(Perm.InvoiceView) || Can(Perm.CollectionView))
+            {
+                <div class="nav-group">Sales Invoice</div>
+                @if (Can(Perm.InvoiceCreate)) { <a class="@Cls("/Invoices/Create")" href="/Invoices/Create">Invoice Form</a> }
+                @if (Can(Perm.InvoiceView)) { <a class="@Cls("/Invoices")" href="/Invoices">Invoice List</a> }
+                @if (Can(Perm.CollectionView)) { <a class="@Cls("/Collections")" href="/Collections">Collection History</a> }
+            }
 
-            <div class="nav-group">Operations</div>
-            <a class="@Cls("/Production")" href="/Production">Production Planning</a>
-            <a class="@Cls("/Notices")" href="/Notices">Notices</a>
-            <a class="@Cls("/Reports")" href="/Reports">Reports</a>
+            @if (Can(Perm.Production) || Can(Perm.Notices) || Can(Perm.Reports))
+            {
+                <div class="nav-group">Operations</div>
+                @if (Can(Perm.Production)) { <a class="@Cls("/Production")" href="/Production">Production Planning</a> }
+                @if (Can(Perm.Notices)) { <a class="@Cls("/Notices")" href="/Notices">Manage Notices</a> }
+                @if (Can(Perm.Reports)) { <a class="@Cls("/Reports")" href="/Reports">Reports</a> }
+            }
 
-            <div class="nav-group">Settings</div>
-            <a class="@Cls("/ProductTypes")" href="/ProductTypes">Product Type Setup</a>
-            <a class="@Cls("/Products")" href="/Products">Product Setup</a>
-            <a class="@Cls("/TimeSetting")" href="/TimeSetting">Time Setting</a>
+            @if (Can(Perm.ProductTypes) || Can(Perm.Products) || Can(Perm.TimeSetting))
+            {
+                <div class="nav-group">Settings</div>
+                @if (Can(Perm.ProductTypes)) { <a class="@Cls("/ProductTypes")" href="/ProductTypes">Product Type Setup</a> }
+                @if (Can(Perm.Products)) { <a class="@Cls("/Products")" href="/Products">Product Setup</a> }
+                @if (Can(Perm.TimeSetting)) { <a class="@Cls("/TimeSetting")" href="/TimeSetting">Time Setting</a> }
+            }
         </nav>
     </aside>
 

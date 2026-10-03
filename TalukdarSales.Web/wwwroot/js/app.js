@@ -27,7 +27,7 @@
 
   // Failed requests: show a toast instead of silently doing nothing.
   document.body.addEventListener('htmx:responseError', function (e) {
-    if (e.detail.xhr.status === 401) return; // redirect handled by HX-Redirect
+    if (e.detail.xhr.status === 401 || e.detail.xhr.status === 403) return; // 401: HX-Redirect; 403: server already sent a toast
     document.body.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Something went wrong (' + e.detail.xhr.status + ').', success: false } }));
   });
 

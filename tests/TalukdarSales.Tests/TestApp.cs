@@ -38,7 +38,8 @@ namespace TalukdarSales.Tests
             db.SaveChanges();
         }
 
-        public int SeedUser(string username = "admin", string password = "secret123", string first = "Ada")
+        /// <summary>Creates a user. By default the user is an Administrator (full access); pass role to use another role instead.</summary>
+        public int SeedUser(string username = "admin", string password = "secret123", string first = "Ada", string role = "Administrator")
         {
             var id = 0;
             Seed(db =>
@@ -53,8 +54,30 @@ namespace TalukdarSales.Tests
                 db.Users.Add(u);
                 db.SaveChanges();
                 id = u.Id;
+                if (role != null)
+                {
+                    var r = db.ApplicationRoles.AsEnumerable().FirstOrDefault(x => string.Equals(x.Name, role, StringComparison.OrdinalIgnoreCase));
+                    if (r == null) { r = new ApplicationRole { Name = role, CreatedOn = DateTime.Now }; db.ApplicationRoles.Add(r); db.SaveChanges(); }
+                    db.UserRoleMappings.Add(new UserRoleMapping { UserId = u.Id, RoleId = r.Id, CreatedOn = DateTime.Now });
+                }
             });
             return id;
+        }
+
+        /// <summary>Creates (or reuses) a role and grants it the given permission keys (replacing earlier grants).</summary>
+        public void SeedRole(string name, params string[] permissionKeys)
+        {
+            Seed(db =>
+            {
+                var r = db.ApplicationRoles.AsEnumerable().FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+                if (r == null) { r = new ApplicationRole { Name = name, CreatedOn = DateTime.Now }; db.ApplicationRoles.Add(r); db.SaveChanges(); }
+                db.RoleWisePermissions.RemoveRange(db.RoleWisePermissions.Where(p => p.RoleId == r.Id));
+                foreach (var key in permissionKeys)
+                {
+                    var m = db.ApplicationModules.First(x => x.Url == key);
+                    db.RoleWisePermissions.Add(new RoleWisePermission { RoleId = r.Id, ModuleId = m.Id, CreatedOn = DateTime.Now });
+                }
+            });
         }
 
         public T Run<T>(Func<IServiceProvider, T> action)

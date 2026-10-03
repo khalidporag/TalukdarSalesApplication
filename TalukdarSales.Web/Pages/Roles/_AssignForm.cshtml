@@ -1,16 +1,22 @@
+@using TalukdarSales.Web.Security
 @model TalukdarSales.Web.Pages.Roles.IndexModel
+@{ var actor = Model.Actor; }
 <form method="post" hx-post="/Roles?handler=Assign" hx-target="#modal-content">
     <input type="hidden" name="Assign.RoleId" value="@Model.Assign.RoleId" />
-    <div class="modal-header"><h5 class="modal-title">Modules for @Model.Assign.RoleName</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-header"><h5 class="modal-title">Permissions for @Model.Assign.RoleName</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body">
-        @foreach (var m in Model.Modules)
+        @foreach (var group in Perm.Catalog.GroupBy(p => p.Group))
         {
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="m@(m.Id)" name="Assign.ModuleIds" value="@m.Id" checked="@Model.Assign.ModuleIds.Contains(m.Id)" />
-                <label class="form-check-label" for="m@(m.Id)">@m.Name</label>
-            </div>
+            <div class="fw-semibold small text-uppercase text-muted mt-2 mb-1">@group.Key</div>
+            foreach (var p in group)
+            {
+                var can = actor.IsAdmin || actor.Keys.Contains(p.Key);
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="k-@p.Key" name="Assign.Keys" value="@p.Key" checked="@Model.Assign.Keys.Contains(p.Key)" disabled="@(!can)" />
+                    <label class="form-check-label" for="k-@p.Key">@p.Name @if (!can) { <span class="text-muted small">(you do not hold this permission)</span> }</label>
+                </div>
+            }
         }
-        @if (!Model.Modules.Any()) { <p class="text-muted mb-0">No modules defined yet. Use "Add Module" first.</p> }
     </div>
     <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-success">Save</button></div>
 </form>

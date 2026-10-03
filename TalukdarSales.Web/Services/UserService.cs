@@ -3,6 +3,7 @@ using TalukdarSales.Web.Helpers;
 using TalukdarSales.Web.Interfaces;
 using TalukdarSales.Web.Models;
 using TalukdarSales.Web.Models.Dto;
+using TalukdarSales.Web.Security;
 
 namespace TalukdarSales.Web.Services
 {
@@ -15,10 +16,12 @@ namespace TalukdarSales.Web.Services
         private readonly IUserRoleMappingRepository _roleMappings;
         private readonly ApplicationDbContext _db;
         private readonly ImageStore _images;
+        private readonly AccessService _access;
 
         public UserService(IUserRepository users, IUserTypeRepository userTypes,
-            IUserRoleMappingRepository roleMappings, ApplicationDbContext db, ImageStore images)
+            IUserRoleMappingRepository roleMappings, ApplicationDbContext db, ImageStore images, AccessService access)
         {
+            _access = access;
             _users = users;
             _userTypes = userTypes;
             _roleMappings = roleMappings;
@@ -124,6 +127,80 @@ namespace TalukdarSales.Web.Services
             _users.Update(user);
             _users.Commit();
             return true;
+        }
+
+        /// <summary>Role name(s) per user id, for display.</summary>
+        public Dictionary<int, string> RoleNames()
+        {
+            var roles = _db.ApplicationRoles.Where(r => !r.IsDeleted).ToDictionary(r => r.Id, r => r.Name);
+            return _db.UserRoleMappings.Where(m => !m.IsDeleted).AsEnumerable()
+                .Where(m => roles.ContainsKey(m.RoleId))
+                .GroupBy(m => m.UserId)
+                .ToDictionary(g => g.Key, g => string.Join(", ", g.Select(m => roles[m.RoleId])));
+        }
+
+        public int? CurrentRoleId(int userId) =>
+            _roleMappings.GetAll().Where(m => m.UserId == userId).Select(m => (int?)m.RoleId).FirstOrDefault();
+
+        /// <summary>Roles the actor may hand out: everything for administrators, everything but Administrator otherwise.</summary>
+        public List<ApplicationRole> AssignableRoles(UserAccess actor) =>
+            actor.Has(Perm.Roles)
+                ? _db.ApplicationRoles.Where(r => !r.IsDeleted).AsEnumerable()
+                    .Where(r => actor.IsAdmin || !AccessService.IsAdministratorRole(r.Name))
+                    .OrderBy(r => r.Name).ToList()
+                : new List<ApplicationRole>();
+
+        /// <summary>Checks the actor may give <paramref name="roleId"/> (0 = no role) to somebody.</summary>
+        public string ValidateRoleChoice(int roleId, UserAccess actor)
+        {
+            if (roleId <= 0)
+                return null;
+            if (!actor.Has(Perm.Roles))
+                return "You do not have permission to assign roles.";
+            var role = _db.ApplicationRoles.FirstOrDefault(r => r.Id == roleId && !r.IsDeleted);
+            if (role == null)
+                return "Role not found.";
+            if (AccessService.IsAdministratorRole(role.Name) && !actor.IsAdmin)
+                return "Only administrators can grant the Administrator role.";
+            return null;
+        }
+
+        /// <summary>Set the user's single role (0 = none) with escalation and lock-out guards.</summary>
+        public (bool Ok, string Error) AssignRole(int userId, int roleId, UserAccess actor)
+        {
+            if (!actor.Has(Perm.Roles))
+                return (false, "You do not have permission to assign roles.");
+            if (_users.GetSingle(userId) == null)
+                return (false, "User not found.");
+            var error = ValidateRoleChoice(roleId, actor);
+            if (error != null)
+                return (false, error);
+
+            var adminRoleIds = _db.ApplicationRoles.Where(r => !r.IsDeleted).AsEnumerable()
+                .Where(r => AccessService.IsAdministratorRole(r.Name)).Select(r => r.Id).ToHashSet();
+            var current = _roleMappings.GetAll().Where(m => m.UserId == userId).ToList();
+            var isAdminNow = current.Any(m => adminRoleIds.Contains(m.RoleId));
+            var staysAdmin = adminRoleIds.Contains(roleId);
+
+            if (isAdminNow && !staysAdmin)
+            {
+                if (!actor.IsAdmin)
+                    return (false, "Only administrators can change an administrator's role.");
+                var admins = _access.AdministratorUserIds();
+                if (admins.Count <= 1 && admins.Contains(userId))
+                    return (false, "This is the last administrator. Make another user an administrator first.");
+            }
+
+            if (current.Count == 1 && current[0].RoleId == roleId)
+                return (true, null);
+
+            foreach (var m in current)
+                _roleMappings.Delete(m);
+            if (roleId > 0)
+                _roleMappings.Add(new UserRoleMapping { UserId = userId, RoleId = roleId });
+            _roleMappings.Commit();
+            _access.Invalidate();
+            return (true, null);
         }
 
         // Next number based on the highest issued id (including deleted users), not on the row count.

@@ -28,7 +28,7 @@
     <div class="col-auto"><input class="form-control" type="date" id="From" name="From" value="@Model.From?.ToString("yyyy-MM-dd")" title="From" /></div>
     <div class="col-auto"><input class="form-control" type="date" id="To" name="To" value="@Model.To?.ToString("yyyy-MM-dd")" title="To" /></div>
     <div class="col-auto"><a class="btn btn-light" href="/Requisitions">Reset</a></div>
-    <div class="col text-end"><a class="btn btn-success" href="/Requisitions/Create">Create New</a></div>
+    @if (Access.For(User).Has(Perm.RequisitionCreate)) { <div class="col text-end"><a class="btn btn-success" href="/Requisitions/Create">Create New</a></div> }
 </form>
 <div id="list" hx-get="/Requisitions?handler=List" hx-include="#filter" hx-trigger="refreshList from:body">
     <partial name="_List" model="Model" />
