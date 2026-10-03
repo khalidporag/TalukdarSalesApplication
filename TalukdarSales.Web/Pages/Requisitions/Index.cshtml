@@ -1,35 +1,101 @@
 @page
 @model TalukdarSales.Web.Pages.Requisitions.IndexModel
-@{ ViewData["Title"] = "Requisition List"; }
-@if (TempData["Success"] is string ok) { <div class="alert alert-success py-2">@ok</div> }
-<form id="filter" class="row g-2 mb-3" hx-get="/Requisitions?handler=List" hx-target="#list"
-      hx-trigger="input changed delay:300ms from:#Serial, change from:#Active, change from:#UserId, change from:#From, change from:#To, submit">
-    <div class="col-auto"><input class="form-control" id="Serial" name="Serial" value="@Model.Serial" placeholder="Requisition no" autocomplete="off" /></div>
-    <div class="col-auto">
-        <select class="form-select" id="Active" name="Active">
-            <option value="true" selected="@Model.Active">Active</option>
-            <option value="false" selected="@(!Model.Active)">Inactive (invoiced)</option>
-        </select>
+@{
+    ViewData["Title"] = "Orders to invoice";
+    var b = Model.Board;
+    string Url(string tab = null) => $"/Requisitions?tab={tab ?? Model.Tab}&q={Uri.EscapeDataString(Model.Q ?? "")}&typeId={Model.TypeId}&days={Model.Days}";
+    var canInvoice = Access.For(User).Has(TalukdarSales.Web.Security.Perm.RequisitionApprove);
+}
+<header class="page-head">
+    <div><h1 class="page-title">Orders to invoice</h1><div class="page-sub">Tick orders and create their invoices in one go, or open one to adjust quantities first.</div></div>
+    <div class="actions"><a class="btn btn-p" href="/Requisitions/Create">@Icons.Svg("plus", 18, 2.2)New order</a></div>
+</header>
+
+<form method="get" class="row between wrap" style="gap:12px">
+    <input type="hidden" name="tab" value="@Model.Tab" />
+    <div class="seg" role="tablist" aria-label="Order status">
+        <a href="@Url("waiting")" class="@(Model.Tab == "waiting" ? "on" : "")">Waiting <span class="faint">@b.Waiting</span></a>
+        <a href="@Url("invoiced")" class="@(Model.Tab == "invoiced" ? "on" : "")">Invoiced <span class="faint">@b.Invoiced</span></a>
+        <a href="@Url("all")" class="@(Model.Tab == "all" ? "on" : "")">All <span class="faint">@(b.Waiting + b.Invoiced)</span></a>
     </div>
-    <div class="col-auto">
-        <select class="form-select" id="TypeId" name="TypeId"
-                hx-get="/Lookup?handler=Users" hx-target="#UserId" hx-trigger="change"
-                hx-vals='js:{typeId: document.getElementById("TypeId").value}'>
+    <div class="row wrap" style="gap:8px">
+        <input type="search" name="q" value="@Model.Q" placeholder="Search order or customer" style="width:240px" aria-label="Search orders" />
+        <select name="typeId" aria-label="Customer group" onchange="this.form.submit()">
             <option value="">All groups</option>
-            @foreach (var t in Model.TypeOptions) { <option value="@t.Value" selected="@(Model.TypeId?.ToString() == t.Value)">@t.Text</option> }
+            @foreach (var t in Model.TypeOptions) { <option value="@t.Value" selected="@(t.Value == Model.TypeId?.ToString())">@t.Text</option> }
         </select>
-    </div>
-    <div class="col-auto">
-        <select class="form-select" id="UserId" name="UserId">
-            <option value="">All users</option>
-            @foreach (var u in Model.UserOptions) { <option value="@u.Value" selected="@(Model.UserId?.ToString() == u.Value)">@u.Text</option> }
+        <select name="days" aria-label="Date" onchange="this.form.submit()">
+            <option value="0" selected="@(Model.Days == 0)">Any date</option>
+            <option value="2" selected="@(Model.Days == 2)">Today and yesterday</option>
+            <option value="7" selected="@(Model.Days == 7)">Last 7 days</option>
+            <option value="30" selected="@(Model.Days == 30)">Last 30 days</option>
         </select>
+        <button class="btn" aria-label="Search">@Icons.Svg("chevron-right", 18)</button>
     </div>
-    <div class="col-auto"><input class="form-control" type="date" id="From" name="From" value="@Model.From?.ToString("yyyy-MM-dd")" title="From" /></div>
-    <div class="col-auto"><input class="form-control" type="date" id="To" name="To" value="@Model.To?.ToString("yyyy-MM-dd")" title="To" /></div>
-    <div class="col-auto"><a class="btn btn-light" href="/Requisitions">Reset</a></div>
-    @if (Access.For(User).Has(Perm.RequisitionCreate)) { <div class="col text-end"><a class="btn btn-success" href="/Requisitions/Create">Create New</a></div> }
 </form>
-<div id="list" hx-get="/Requisitions?handler=List" hx-include="#filter" hx-trigger="refreshList from:body">
-    <partial name="_List" model="Model" />
+
+<div class="row top wrap" style="gap:22px">
+    <section class="col grow" style="flex:1 1 560px;min-width:0;gap:12px">
+        <form method="post" asp-page-handler="Bulk" id="bulk">
+            <input type="hidden" name="tab" value="@Model.Tab" /><input type="hidden" name="q" value="@Model.Q" /><input type="hidden" name="typeId" value="@Model.TypeId" /><input type="hidden" name="days" value="@Model.Days" />
+            <div class="card flush">
+                <div class="list-head">
+                    @if (canInvoice && Model.Tab != "invoiced") { <input type="checkbox" id="all" aria-label="Select all" /> }
+                    <span class="lbl grow">@b.Page.Total orders</span><span class="lbl" style="width:110px;text-align:right">Total</span><span style="width:96px"></span>
+                </div>
+                @if (b.Page.Items.Count == 0) { <div class="empty"><b>Nothing here.</b> @(Model.Tab == "waiting" ? "All caught up." : "No orders match.")</div> }
+                @foreach (var o in b.Page.Items)
+                {
+                    <div class="list-row @(Model.Id == o.Id ? "focus" : "")">
+                        @if (canInvoice && o.IsActive) { <input type="checkbox" name="ids" value="@o.Id" class="pick" data-total="@o.Total" aria-label="Select @o.Serial" /> }
+                        else if (canInvoice && Model.Tab != "invoiced") { <span style="width:18px"></span> }
+                        <a class="grow row" style="gap:14px;min-width:0" href="@Url()&id=@o.Id" hx-get="/Requisitions?handler=Panel&id=@o.Id" hx-target="#panel" hx-swap="innerHTML" hx-push-url="false">
+                            <span class="grow" style="min-width:0">
+                                <span class="row wrap" style="gap:10px"><b>@o.Customer</b><span class="pill @(o.IsActive ? "warn" : "good")">@(o.IsActive ? "Waiting" : "Invoiced")</span></span>
+                                <span class="lbl" style="display:block">@o.Serial · @o.Created.ToString("d MMM, h:mm tt") · @o.Items @(o.Items == 1 ? "item" : "items")</span>
+                            </span>
+                            <span class="num strong" style="width:110px;text-align:right">৳ @Fmt.Int(o.Total)</span>
+                        </a>
+                        <span style="width:96px;display:flex;justify-content:flex-end">
+                            @if (o.IsActive && canInvoice) { <button class="btn btn-s btn-o" formaction="?handler=Invoice&id=@o.Id" formmethod="post" data-confirm="Invoice @o.Serial for ৳ @Fmt.Int(o.Total) exactly as ordered?">Invoice</button> }
+                            else if (o.InvoiceId != null) { <a class="btn btn-s" href="/Invoices/Details?id=@o.InvoiceId">Print</a> }
+                        </span>
+                    </div>
+                }
+                <partial name="_Pager" model='(b.Page.Page, b.Page.TotalPages, Url(), "")' />
+            </div>
+            <div class="actionbar" id="selbar" hidden>
+                <div><b id="sel-count">0 selected</b><span style="color:#E0CCEE"> · <span id="sel-total">৳ 0</span></span></div>
+                <div class="row"><button type="button" class="btn btn-dark" id="sel-clear">Clear</button><button class="btn btn-p" id="sel-go">Create invoices</button></div>
+            </div>
+        </form>
+    </section>
+
+    <aside class="card panel" id="panel">
+        @if (Model.Panel != null) { <partial name="_Panel" model="Model.Panel" /> }
+        else { <div class="empty-dash">Open an order to see its lines and adjust quantities before invoicing.</div> }
+    </aside>
 </div>
+
+@section Scripts {
+<script>
+(function () {
+  const picks = () => Array.from(document.querySelectorAll('.pick'));
+  const bar = document.getElementById('selbar');
+  const ind = n => Math.round(n).toString().replace(/\B(?=(\d{2})+(?!\d)(?<=\d{3,}))/g, ',');
+  function fmt(n) { n = Math.round(n); const s = String(n), l = s.slice(-3), r = s.slice(0, -3).replace(/\B(?=(\d{2})+(?!\d))/g, ','); return r ? r + ',' + l : l; }
+  function update() {
+    const on = picks().filter(c => c.checked);
+    bar.hidden = on.length === 0;
+    document.getElementById('sel-count').textContent = on.length + ' selected';
+    document.getElementById('sel-total').textContent = '৳ ' + fmt(on.reduce((a, c) => a + parseFloat(c.dataset.total), 0));
+    document.getElementById('sel-go').textContent = 'Create ' + on.length + (on.length === 1 ? ' invoice' : ' invoices');
+  }
+  document.addEventListener('change', e => {
+    if (e.target.id === 'all') picks().forEach(c => c.checked = e.target.checked);
+    if (e.target.id === 'all' || e.target.classList.contains('pick')) update();
+  });
+  document.getElementById('sel-clear').addEventListener('click', () => { picks().forEach(c => c.checked = false); const a = document.getElementById('all'); if (a) a.checked = false; update(); });
+})();
+</script>
+}

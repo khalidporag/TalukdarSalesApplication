@@ -83,6 +83,7 @@
         @RenderBody()
     </main>
 </div>
+@if (TempData["Flash"] is string flash && flash.Length > 0) { <span data-flash="@flash" hidden></span> }
 <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
 <script src="~/lib/htmx/htmx.min.js"></script>
 <script src="~/js/app.js" asp-append-version="true"></script>

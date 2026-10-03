@@ -79,10 +79,11 @@ namespace TalukdarSales.Web.Security
 
             new("/Requisitions/Create", null, RequisitionCreate),
             new("/Requisitions/Index", null, RequisitionView),
-            new("/Requisitions/Index", "Approve", RequisitionApprove),
-            new("/Requisitions/Details", null, RequisitionView),
+            new("/Requisitions/Index", "Panel", RequisitionView),
+            new("/Requisitions/Index", "Invoice", RequisitionApprove),
+            new("/Requisitions/Index", "Bulk", RequisitionApprove),
+            new("/Requisitions/Index", "Create", InvoiceCreate),
 
-            new("/Invoices/Create", null, InvoiceCreate),
             new("/Invoices/Index", null, InvoiceView),
             new("/Invoices/Index", "Collect", InvoiceCollect),
             new("/Invoices/Details", null, InvoiceView),

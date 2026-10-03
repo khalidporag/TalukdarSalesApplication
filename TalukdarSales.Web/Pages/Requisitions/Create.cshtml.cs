@@ -1,64 +1,52 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using TalukdarSales.Web.Infrastructure;
 using TalukdarSales.Web.Interfaces;
-using TalukdarSales.Web.Models;
 using TalukdarSales.Web.Services;
 
 namespace TalukdarSales.Web.Pages.Requisitions
 {
+    public record OrderCustomer(int Id, string Name, string Code, string Phone, double Due, double Limit, int CreditDays);
+    public record OrderProduct(int Id, string Name, string Category, int CategoryIndex, double Price, string Uom);
+
     public class CreateModel : PageModelBase
     {
         private readonly RequisitionService _service;
-        private readonly IUserTypeRepository _userTypes;
         private readonly IUserRepository _users;
         private readonly IFinishedGoodTypeRepository _goodTypes;
         private readonly IFinishedGoodsRepository _goods;
+        private readonly ISalesRequisitionRepository _requisitions;
 
-        public CreateModel(RequisitionService service, IUserTypeRepository userTypes, IUserRepository users,
-            IFinishedGoodTypeRepository goodTypes, IFinishedGoodsRepository goods)
+        public CreateModel(RequisitionService service, IUserRepository users, IFinishedGoodTypeRepository goodTypes,
+            IFinishedGoodsRepository goods, ISalesRequisitionRepository requisitions)
         {
-            _service = service;
-            _userTypes = userTypes;
-            _users = users;
-            _goodTypes = goodTypes;
-            _goods = goods;
+            _service = service; _users = users; _goodTypes = goodTypes; _goods = goods; _requisitions = requisitions;
         }
 
-        [BindProperty] public int? UserTypeId { get; set; }
         [BindProperty] public int? UserId { get; set; }
-        [BindProperty] public int? GoodTypeId { get; set; }
-        public Dictionary<int, double?> Qty { get; set; } = new();
+        public Dictionary<int, double?> Qty { get; private set; } = new();
 
         public string Error { get; private set; }
         public string WindowText { get; private set; }
         public bool IsOpen { get; private set; }
-        public List<SelectListItem> UserTypeOptions { get; private set; }
-        public List<SelectListItem> UserOptions { get; private set; }
-        public List<SelectListItem> GoodTypeOptions { get; private set; }
-        public List<FinishedGood> Products { get; set; } = new();
+        public List<OrderCustomer> Customers { get; private set; }
+        public List<OrderCustomer> Recent { get; private set; }
+        public List<string> Categories { get; private set; }
+        public List<OrderProduct> Products { get; private set; }
 
         public void OnGet() => LoadAll();
-
-        // htmx: product table for the chosen product type
-        public IActionResult OnGetProducts(int? goodTypeId)
-        {
-            LoadProducts(goodTypeId);
-            return Partial("_Products", this);
-        }
 
         public IActionResult OnPost()
         {
             Qty = QtyForm.Read(Request.Form);
             if (UserId == null)
-                Error = "Please select a user.";
+                Error = "Choose a customer first.";
             else
             {
                 var lines = Qty.Where(kv => kv.Value > 0).Select(kv => new RequisitionLine(kv.Key, kv.Value.Value)).ToList();
                 var (ok, error, requisition) = _service.Create(UserId.Value, lines);
                 if (ok)
                 {
-                    TempData["Success"] = $"{requisition.RequisitionSerial} created.";
+                    TempData["Flash"] = $"{requisition.RequisitionSerial} sent. It is waiting for an invoice.";
                     return RedirectToPage("/Requisitions/Index");
                 }
                 Error = error;
@@ -71,19 +59,19 @@ namespace TalukdarSales.Web.Pages.Requisitions
         {
             var (from, to) = _service.GetWindow();
             IsOpen = _service.IsOpenNow();
-            WindowText = from == null ? "not configured" : $"{from} - {to}";
-            UserTypeOptions = _userTypes.GetAll().Select(t => new SelectListItem(t.TypeName, t.Id.ToString())).ToList();
-            UserOptions = _users.GetAll().Where(u => UserTypeId == null || u.UserTypeId == UserTypeId)
-                .OrderBy(u => u.FirstName).Select(u => new SelectListItem($"{u.FirstName} {u.LastName} ({u.Username})", u.Id.ToString())).ToList();
-            GoodTypeOptions = _goodTypes.GetAll().OrderBy(t => t.Name).Select(t => new SelectListItem(t.Name, t.Id.ToString())).ToList();
-            LoadProducts(GoodTypeId);
-        }
-
-        private void LoadProducts(int? goodTypeId)
-        {
-            Products = goodTypeId == null
-                ? new List<FinishedGood>()
-                : _goods.GetAll().Where(g => g.IsActive && g.GoodTypeId == goodTypeId).OrderBy(g => g.Name).ToList();
+            WindowText = from == null ? "Order window not configured" : $"Orders open {Dashboard.IndexModel.Clock(from)} to {Dashboard.IndexModel.Clock(to)}";
+            Customers = _users.GetAll().OrderBy(u => u.FirstName).ThenBy(u => u.LastName).ToList()
+                .Select(u => new OrderCustomer(u.Id, $"{u.FirstName} {u.LastName}".Trim(), u.SequencialUserId, u.PhoneNumber, u.DueAmount, u.MaxCreditLimit, u.MaxCreditDays)).ToList();
+            var recentIds = _requisitions.GetAll().OrderByDescending(r => r.CreatedDateTime).Select(r => r.UserId).Take(60).ToList().Distinct().Take(4).ToList();
+            Recent = recentIds.Select(id => Customers.FirstOrDefault(c => c.Id == id)).Where(c => c != null).ToList();
+            var types = _goodTypes.GetAll().OrderBy(t => t.Name).ToList();
+            Categories = types.Select(t => t.Name).ToList();
+            Products = _goods.GetAll().Where(g => g.IsActive).OrderBy(g => g.Name).ToList()
+                .Select(g =>
+                {
+                    var i = types.FindIndex(t => t.Id == g.GoodTypeId);
+                    return new OrderProduct(g.Id, g.Name, i >= 0 ? types[i].Name : "Other", i < 0 ? 0 : i % 4 + 1, g.UnitPrice, g.UOM);
+                }).ToList();
         }
     }
 }
