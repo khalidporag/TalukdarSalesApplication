@@ -1,4 +1,5 @@
 using TalukdarSales.Web.Context;
+using TalukdarSales.Web.Helpers;
 using TalukdarSales.Web.Interfaces;
 using TalukdarSales.Web.Models;
 
@@ -119,7 +120,7 @@ namespace TalukdarSales.Web.Services
                 UserId = requisition.UserId,
                 SalesRequisitionId = requisition.Id,
                 Quantity = lines.Sum(l => l.Quantity),
-                TotalPrice = lines.Sum(l => l.Quantity * l.Price),
+                TotalPrice = Money.Round(lines.Sum(l => l.Quantity * l.Price)),
                 CreatedDateTime = now
             };
             _invoices.Add(invoice);
@@ -137,7 +138,7 @@ namespace TalukdarSales.Web.Services
                 Price = l.Price
             }).ToList());
 
-            user.DueAmount += (decimal)invoice.TotalPrice;
+            user.DueAmount = Money.Round(user.DueAmount + invoice.TotalPrice);
             _users.Update(user);
 
             requisition.IsActive = false;
@@ -200,6 +201,7 @@ namespace TalukdarSales.Web.Services
         /// </summary>
         public (bool Ok, string Error) Collect(int invoiceId, double amount, string paymentMethod)
         {
+            amount = Money.Round(amount);
             if (amount <= 0)
                 return (false, "Invalid collection amount.");
             var invoice = _invoices.GetSingle(invoiceId);
@@ -212,7 +214,7 @@ namespace TalukdarSales.Web.Services
             var outstanding = _invoices.GetAll()
                 .Where(i => i.UserId == invoice.UserId && i.TotalPrice > i.CollectionAmount)
                 .OrderBy(i => i.CreatedDateTime).ThenBy(i => i.Id).ToList();
-            var totalOutstanding = outstanding.Sum(i => i.TotalPrice - i.CollectionAmount);
+            var totalOutstanding = Money.Round(outstanding.Sum(i => i.TotalPrice - i.CollectionAmount));
             if (amount > totalOutstanding + 0.005)
                 return (false, "Collection amount exceeds the outstanding amount.");
 
@@ -223,8 +225,8 @@ namespace TalukdarSales.Web.Services
             {
                 if (remaining <= 0.000001)
                     break;
-                var applied = Math.Min(remaining, inv.TotalPrice - inv.CollectionAmount);
-                inv.CollectionAmount += applied;
+                var applied = Money.Round(Math.Min(remaining, inv.TotalPrice - inv.CollectionAmount));
+                inv.CollectionAmount = Money.Round(inv.CollectionAmount + applied);
                 _invoices.Update(inv);
                 _ledger.Add(new CollectionLedger
                 {
@@ -233,10 +235,10 @@ namespace TalukdarSales.Web.Services
                     CollectionAmount = applied,
                     PaymentMethod = paymentMethod
                 });
-                remaining -= applied;
-                collected += applied;
+                remaining = Money.Round(remaining - applied);
+                collected = Money.Round(collected + applied);
             }
-            user.DueAmount -= (decimal)collected;
+            user.DueAmount = Money.Round(user.DueAmount - collected);
             _users.Update(user);
             _invoices.Commit();
             tx.Commit();

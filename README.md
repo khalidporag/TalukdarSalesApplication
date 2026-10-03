@@ -35,6 +35,12 @@ Point an IIS site at `publish`. Keep `wwwroot/images` and `wwwroot/pdf` (uploade
 Repositories return `IQueryable<T>` (`GetAll()` = not-deleted rows, `FindBy(predicate)`), so filtering, grouping, counting and paging run in SQL. Rules of thumb: compose the query first and materialise last (`ToList()`, `Paged<T>.Create(query, page, size)`); use `ToLower().Contains(...)` for case-insensitive search (not `StringComparison`); look names up with `ids.Contains(x.Id)` instead of loading whole tables.
 Tests run on SQLite and `SqlServerTranslationTests` runs every service entry point on the SQL Server provider (against an unreachable server: EF translates before it connects), so a query EF cannot translate fails the build, not production.
 
+## Money
+All money (prices, invoice totals, collections, customer balance and credit limit) is `double`. `Helpers/Money.Round` rounds to 2 decimals at every write so floating-point noise never reaches a balance; keep using it for any new money arithmetic.
+
+## Database changes
+Migrations are not applied automatically. After deploying, run `dotnet ef database update` (or generate a script with `dotnet ef migrations script`) against the production database; back it up first.
+
 ## Layout
     TalukdarSales.Web/
       Pages/            Razor Pages (one folder per screen; partials are the htmx fragments)

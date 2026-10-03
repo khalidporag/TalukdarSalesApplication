@@ -8,8 +8,8 @@
         public string LastName { get; set; }
         public string ImageName { get; set; }
         public string PhoneNumber { get; set; }
-        public decimal DueAmount { get; set; }
-        public decimal MaxCreditLimit { get; set; }
+        public double DueAmount { get; set; }
+        public double MaxCreditLimit { get; set; }
         public int MaxCreditDays { get; set; }
         public string Address { get; set; }
         public string ContactPersonName { get; set; }

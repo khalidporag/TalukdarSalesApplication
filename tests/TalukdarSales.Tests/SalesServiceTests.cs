@@ -23,7 +23,7 @@ namespace TalukdarSales.Tests
         private static int Invoice(TestApp app, int requisitionId) =>
             app.Run(sp => sp.GetRequiredService<InvoiceService>().CreateFromRequisitions(new[] { requisitionId })).Invoices[0].Id;
 
-        private static decimal Due(TestApp app, int userId) =>
+        private static double Due(TestApp app, int userId) =>
             app.Run(sp => sp.GetRequiredService<ApplicationDbContext>().Users.Single(u => u.Id == userId).DueAmount);
 
         [Theory]
@@ -76,9 +76,9 @@ namespace TalukdarSales.Tests
         {
             var (app, userId, goodId) = Setup(10);
             Invoice(app, Requisition(app, userId, goodId, 10));   // 100
-            Assert.Equal(100m, Due(app, userId));
+            Assert.Equal(100, Due(app, userId));
             Invoice(app, Requisition(app, userId, goodId, 4));    // + 40
-            Assert.Equal(140m, Due(app, userId));
+            Assert.Equal(140, Due(app, userId));
         }
 
         [Fact]
@@ -89,7 +89,7 @@ namespace TalukdarSales.Tests
             Invoice(app, r1);
             var again = app.Run(sp => sp.GetRequiredService<InvoiceService>().CreateFromRequisitions(new[] { r1 }));
             Assert.False(again.Ok);
-            Assert.Equal(10m, Due(app, userId));
+            Assert.Equal(10, Due(app, userId));
         }
 
         [Fact]
@@ -103,13 +103,13 @@ namespace TalukdarSales.Tests
             var after = app.Run(sp => svc(sp.GetRequiredService<InvoiceService>()));
             Assert.Equal(30, after.Collected);
             Assert.Equal(70, after.Due);
-            Assert.Equal(70m, Due(app, userId));
+            Assert.Equal(70, Due(app, userId));
             var (rows, total) = app.Run(sp => sp.GetRequiredService<InvoiceService>().CollectionHistory(null, inv, null, null));
             Assert.Single(rows);
             Assert.Equal(30, total);
 
             Assert.True(app.Run(sp => sp.GetRequiredService<InvoiceService>().Collect(inv, 70, "Cash")).Ok);
-            Assert.Equal(0m, Due(app, userId));
+            Assert.Equal(0, Due(app, userId));
             Assert.Equal(0, app.Run(sp => sp.GetRequiredService<InvoiceService>().Get(inv)).Header.Due);
         }
 
@@ -126,7 +126,7 @@ namespace TalukdarSales.Tests
             var list = app.Run(sp => sp.GetRequiredService<InvoiceService>().List(userId, null, null));
             Assert.Equal(50, list.Rows.Single(r => r.Id == first).Collected);
             Assert.Equal(50, list.Rows.Single(r => r.Id == second).Collected);
-            Assert.Equal(30m, Due(app, userId));
+            Assert.Equal(30, Due(app, userId));
             var (rows, total) = app.Run(sp => sp.GetRequiredService<InvoiceService>().CollectionHistory(userId, null, null, null));
             Assert.Equal(2, rows.Count);
             Assert.Equal(100, total);
@@ -143,7 +143,7 @@ namespace TalukdarSales.Tests
             Assert.False(app.Run(sp => sp.GetRequiredService<InvoiceService>().Collect(inv, -5, "Cash")).Ok);
             Assert.False(app.Run(sp => sp.GetRequiredService<InvoiceService>().Collect(9999, 10, "Cash")).Ok);
 
-            Assert.Equal(100m, Due(app, userId));
+            Assert.Equal(100, Due(app, userId));
             Assert.Empty(app.Run(sp => sp.GetRequiredService<InvoiceService>().CollectionHistory(null, null, null, null)).Rows);
         }
 
@@ -156,7 +156,7 @@ namespace TalukdarSales.Tests
             var made = app.Run(sp => sp.GetRequiredService<InvoiceService>().CreateForRequisition(req, new[] { new InvoiceLine(goodId, 6) }));
             Assert.True(made.Ok);
             Assert.Equal(120, made.Invoice.TotalPrice);       // 6 x 20, not the requisition's 10
-            Assert.Equal(120m, Due(app, userId));
+            Assert.Equal(120, Due(app, userId));
 
             var again = app.Run(sp => sp.GetRequiredService<InvoiceService>().CreateForRequisition(req, new[] { new InvoiceLine(goodId, 1) }));
             Assert.False(again.Ok);
@@ -164,6 +164,36 @@ namespace TalukdarSales.Tests
             var detail = app.Run(sp => sp.GetRequiredService<InvoiceService>().Get(made.Invoice.Id));
             Assert.Equal("Biscuit", detail.Lines.Single().ProductName);
             Assert.Equal(6, detail.Quantity);
+        }
+
+        [Fact]
+        public void Money_stays_exact_to_two_decimals_with_floating_point_unfriendly_amounts()
+        {
+            var (app, userId, goodId) = Setup(0.1);
+            var inv = Invoice(app, Requisition(app, userId, goodId, 3));   // 3 x 0.1 = 0.30000000000000004 in raw double math
+            Assert.Equal(0.3, app.Run(sp => sp.GetRequiredService<InvoiceService>().Get(inv)).Header.Total);
+            Assert.Equal(0.3, Due(app, userId));
+
+            // three payments of 0.1 settle it exactly: no 5E-17 dust left on the invoice or the customer
+            for (var i = 0; i < 3; i++)
+                Assert.True(app.Run(sp => sp.GetRequiredService<InvoiceService>().Collect(inv, 0.1, "Cash")).Ok);
+            var detail = app.Run(sp => sp.GetRequiredService<InvoiceService>().Get(inv));
+            Assert.Equal(0.3, detail.Header.Collected);
+            Assert.Equal(0, detail.Header.Due);
+            Assert.Equal(0, Due(app, userId));
+            Assert.False(app.Run(sp => sp.GetRequiredService<InvoiceService>().Collect(inv, 0.01, "Cash")).Ok);   // nothing left to collect
+        }
+
+        [Fact]
+        public void Invoice_totals_round_to_paisa_and_user_credit_limit_is_a_plain_double()
+        {
+            var (app, userId, goodId) = Setup(33.333);
+            var inv = Invoice(app, Requisition(app, userId, goodId, 3));   // 99.999 -> 100.00
+            Assert.Equal(100.0, app.Run(sp => sp.GetRequiredService<InvoiceService>().Get(inv)).Header.Total);
+            Assert.Equal(100.0, Due(app, userId));
+
+            Assert.True(app.Run(sp => sp.GetRequiredService<UserService>().Update(new TalukdarSales.Web.Models.Dto.UpdateUserDto { Id = userId, FirstName = "Ada", MaxCreditLimit = 12345.67 })));
+            Assert.Equal(12345.67, app.Run(sp => sp.GetRequiredService<ApplicationDbContext>().Users.Single(u => u.Id == userId).MaxCreditLimit));
         }
 
         [Fact]

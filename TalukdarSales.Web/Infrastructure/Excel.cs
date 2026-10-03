@@ -42,7 +42,6 @@ namespace TalukdarSales.Web.Infrastructure
                 {
                     case null: break;
                     case double d: cell.Value = d; cell.Style.NumberFormat.Format = "#,##0.00"; break;
-                    case decimal m: cell.Value = m; cell.Style.NumberFormat.Format = "#,##0.00"; break;
                     case int i: cell.Value = i; break;
                     case DateTime dt: cell.Value = dt; cell.Style.DateFormat.Format = "yyyy-MM-dd HH:mm"; break;
                     default: cell.Value = values[c].ToString(); break;
