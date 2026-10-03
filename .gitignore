@@ -366,7 +366,3 @@ FodyWeavers.xsd
 # Runtime uploads and generated files
 /TalukdarSales.Web/wwwroot/images/
 /TalukdarSales.Web/wwwroot/pdf/
-
-# Angular build output
-/TalukdarSales.Web/ClientApp/dist/
-/TalukdarSales.Web/ClientApp/.angular/

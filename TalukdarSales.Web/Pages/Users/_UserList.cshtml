@@ -9,7 +9,7 @@
         <div class="col-xl-3 col-lg-4 col-md-6">
             <div class="card h-100 text-center">
                 <div class="card-body">
-                    <img src="/images/users/@u.ImageName" onerror="this.onerror=null;this.src='/img/no-user.jpeg'"
+                    <img src="@(string.IsNullOrEmpty(u.ImageName) ? "/img/no-user.jpeg" : "/images/users/" + u.ImageName)" onerror="this.onerror=null;this.src='/img/no-user.jpeg'"
                          class="rounded-circle mb-2" style="width:72px;height:72px;object-fit:cover" alt="" />
                     <h6 class="mb-0">@u.FirstName @u.LastName</h6>
                     <div class="small text-muted">@u.PhoneNumber</div>

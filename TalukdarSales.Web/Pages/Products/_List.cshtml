@@ -6,7 +6,7 @@
         @foreach (var g in Model.Items.Items)
         {
             <tr>
-                <td style="width:56px"><img src="/images/products/@g.LogoName" onerror="this.onerror=null;this.src='/img/no-user.jpeg'" style="width:40px;height:40px;object-fit:cover" class="rounded" alt="" /></td>
+                <td style="width:56px"><img src="@(string.IsNullOrEmpty(g.LogoName) ? "/img/no-user.jpeg" : "/images/products/" + g.LogoName)" onerror="this.onerror=null;this.src='/img/no-user.jpeg'" style="width:40px;height:40px;object-fit:cover" class="rounded" alt="" /></td>
                 <td>@g.Name<div class="small text-muted">@g.Description</div></td>
                 <td>@(Model.TypeNames.TryGetValue(g.GoodTypeId, out var tn) ? tn : "")</td>
                 <td>@g.UOM</td>

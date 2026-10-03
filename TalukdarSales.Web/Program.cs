@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using Project.Run.Repositories;
@@ -141,12 +140,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles(); // uploads, fonts, generated PDFs
 
-// Angular build output (ClientApp/dist/talukdar-sales-ui), served from the same origin as the API
-var clientAppPath = Path.Combine(builder.Environment.ContentRootPath, "ClientApp", "dist", "talukdar-sales-ui");
-var clientAppFiles = Directory.Exists(clientAppPath) ? new PhysicalFileProvider(clientAppPath) : null;
-if (clientAppFiles != null)
-    app.UseStaticFiles(new StaticFileOptions { FileProvider = clientAppFiles });
-
 
 app.UseCors("MyPolicy");
 
@@ -156,10 +149,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapRazorPages();
-
-// SPA fallback: deep links such as /dashboard/invoice-list serve index.html; unknown /api/* paths stay 404
-if (clientAppFiles != null)
-    app.MapFallbackToFile("{*path:regex(^(?!api/).*$)}", "index.html", new StaticFileOptions { FileProvider = clientAppFiles });
 
 app.Run();
 
