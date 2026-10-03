@@ -64,6 +64,9 @@ All money (prices, invoice totals, collections, customer balance and credit limi
 ## Database changes
 The `AuditNotificationsReturnsAttribution` migration adds the audit, notification and credit-note tables and new columns on orders and invoices (all existing rows stay valid). Migrations are not applied automatically. After deploying, run `dotnet ef database update` (or generate a script with `dotnet ef migrations script`) against the production database; back it up first.
 
+## Bakery website
+`bakery-website/` is a separate static site (React, Vite, Tailwind, Framer Motion) with no backend. It is independent of the .NET app. See `bakery-website/README.md`.
+
 ## Layout
     TalukdarSales.Web/
       Pages/            Razor Pages (one folder per screen; partials are the htmx fragments and side panels)
