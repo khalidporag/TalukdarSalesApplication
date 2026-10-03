@@ -1,3 +1,4 @@
+using System.Net;
 using Xunit;
 
 namespace TalukdarSales.Tests
@@ -18,22 +19,22 @@ namespace TalukdarSales.Tests
         public async Task Duplicate_role_is_rejected()
         {
             var c = await LoggedIn();
-            await c.HtmxPost("/Roles", "/Roles?handler=CreateRole", new() { ["Role.Name"] = "Clerk" });
-            var dup = await c.HtmxPost("/Roles", "/Roles?handler=CreateRole", new() { ["Role.Name"] = "clerk" });
-            Assert.Equal("", dup.Trigger());
-            Assert.Contains("already exists", await dup.Content.ReadAsStringAsync());
+            var first = await c.FormPost("/Roles", "/Roles?handler=CreateRole", new() { ["name"] = "Clerk" });
+            Assert.Equal("Role added.", await c.FlashAfter(first));
+            var dup = await c.FormPost("/Roles", "/Roles?handler=CreateRole", new() { ["name"] = "clerk" });
+            Assert.Contains("already exists", await c.FlashAfter(dup));
         }
 
         [Fact]
         public async Task Notice_create_and_duplicate_title()
         {
             var c = await LoggedIn();
-            var ok = await c.HtmxPost("/Notices", "/Notices?handler=Create", new() { ["Create.Title"] = "Eid holiday", ["Create.Description"] = "Closed" });
-            Assert.Contains("closeModal", ok.Trigger());
-            Assert.Contains("Eid holiday", await c.GetStringAsync("/Notices?handler=List"));
+            var ok = await c.FormPost("/", "/?handler=Save", new() { ["Form.Title"] = "Eid holiday", ["Form.Description"] = "Closed" });
+            Assert.Equal(HttpStatusCode.Redirect, ok.StatusCode);
+            Assert.Contains("Eid holiday", await c.GetStringAsync("/"));
 
-            var dup = await c.HtmxPost("/Notices", "/Notices?handler=Create", new() { ["Create.Title"] = "Eid holiday", ["Create.Description"] = "x" });
-            Assert.Equal("", dup.Trigger());
+            var dup = await c.FormPost("/", "/?handler=Save", new() { ["Form.Title"] = "Eid holiday", ["Form.Description"] = "x" });
+            Assert.Equal(HttpStatusCode.OK, dup.StatusCode);
             Assert.Contains("already exists", await dup.Content.ReadAsStringAsync());
         }
 
@@ -49,7 +50,7 @@ namespace TalukdarSales.Tests
             token = await TestApp.Antiforgery(c, "/TimeSetting");
             var ok = await c.PostAsync("/TimeSetting", new FormUrlEncodedContent(new Dictionary<string, string>
                 { ["Input.From"] = "09:30", ["Input.To"] = "18:00", ["__RequestVerificationToken"] = token }));
-            Assert.Equal(System.Net.HttpStatusCode.Redirect, ok.StatusCode);
+            Assert.Equal(HttpStatusCode.Redirect, ok.StatusCode);
             var page = await c.GetStringAsync("/TimeSetting");
             Assert.Contains("value=\"09:30\"", page);
         }

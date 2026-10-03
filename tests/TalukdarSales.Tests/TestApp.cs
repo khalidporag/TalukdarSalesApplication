@@ -155,6 +155,21 @@ namespace TalukdarSales.Tests
             return await client.SendAsync(req);
         }
 
+        /// <summary>Plain (non-htmx) form post with the antiforgery token scraped from <paramref name="pageUrl"/>.</summary>
+        public static async Task<HttpResponseMessage> FormPost(this HttpClient client, string pageUrl, string handlerUrl, Dictionary<string, string> fields)
+        {
+            var all = new Dictionary<string, string>(fields) { ["__RequestVerificationToken"] = await TestApp.Antiforgery(client, pageUrl) };
+            return await client.PostAsync(handlerUrl, new FormUrlEncodedContent(all));
+        }
+
+        /// <summary>The toast text the next page shows after a redirect (the layout renders TempData Flash as data-flash).</summary>
+        public static async Task<string> FlashAfter(this HttpClient client, HttpResponseMessage redirect)
+        {
+            var html = await client.GetStringAsync(redirect.Headers.Location!.OriginalString);
+            var m = System.Text.RegularExpressions.Regex.Match(html, "data-flash=\"([^\"]*)\"");
+            return m.Success ? System.Net.WebUtility.HtmlDecode(m.Groups[1].Value) : "";
+        }
+
         public static string Trigger(this HttpResponseMessage res) =>
             res.Headers.TryGetValues("HX-Trigger", out var v) ? string.Join(",", v) : "";
     }

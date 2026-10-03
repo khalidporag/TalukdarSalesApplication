@@ -49,7 +49,7 @@ namespace TalukdarSales.Tests
                 Assert.True(Perm.Required(page, null) != null, $"page {page} has no permission rule (it would be admin-only)");
             foreach (var rule in Perm.Rules)
                 Assert.Contains(rule.Path, pages);
-            foreach (var key in Perm.Rules.SelectMany(r => r.AnyOf))
+            foreach (var key in Perm.Rules.SelectMany(r => r.AnyOf).Where(k => k != Perm.Anyone))
                 Assert.NotNull(Perm.Find(key));
         }
 
@@ -88,10 +88,11 @@ namespace TalukdarSales.Tests
             var home = await c.GetAsync("/");
             Assert.Equal(HttpStatusCode.OK, home.StatusCode);
             var html = await home.Content.ReadAsStringAsync();
-            Assert.DoesNotContain("User Management", html);
-            Assert.DoesNotContain("Invoice List", html);
+            Assert.Contains("href=\"/\"", html);
+            foreach (var link in new[] { "/Users", "/Roles", "/Invoices", "/Requisitions", "/Reports", "/Dashboard", "/Products" })
+                Assert.DoesNotContain($"href=\"{link}\"", html);
 
-            foreach (var url in new[] { "/Users", "/Roles", "/Invoices", "/Requisitions", "/Reports", "/Dashboard", "/Products", "/Lookup?handler=Users" })
+            foreach (var url in new[] { "/Users", "/Roles", "/Invoices", "/Requisitions", "/Reports", "/Dashboard", "/Products" })
                 Assert.True(Denied(await c.GetAsync(url)), url);
 
             var denied = await c.GetAsync("/AccessDenied");
@@ -112,20 +113,29 @@ namespace TalukdarSales.Tests
             Assert.Contains("permission", res.Trigger());
         }
 
+        private static int SeedInvoice(TestApp app, int userId, double qty = 10)
+        {
+            var good = app.SeedGood("Soap", 10);
+            app.SeedOpenWindow();
+            var reqId = app.Run(sp => sp.GetRequiredService<RequisitionService>().Create(userId, new[] { new RequisitionLine(good, qty) })).Requisition.Id;
+            return app.Run(sp => sp.GetRequiredService<InvoiceService>().CreateFromRequisitions(new[] { reqId })).Invoices[0].Id;
+        }
+
         [Fact]
         public async Task Menu_and_buttons_follow_permissions()
         {
-            var (app, _) = NewApp();
+            var (app, adminId) = NewApp();
+            SeedInvoice(app, adminId);
             app.SeedRole("Viewer", Perm.InvoiceView);
             app.SeedUser("viewer", "pw", "Vic", role: "Viewer");
             var c = await LoginAs(app, "viewer");
 
             var html = await c.GetStringAsync("/Invoices");
-            Assert.Contains("Invoice List", html);
-            Assert.DoesNotContain("User Management", html);
-            Assert.DoesNotContain("Collection History", html);
-            Assert.DoesNotContain("Requisition List", html);
-            Assert.DoesNotContain("Invoice Form", html);
+            Assert.Contains("href=\"/Invoices\"", html);
+            foreach (var link in new[] { "/Users", "/Collections", "/Requisitions", "/Requisitions/Create", "/Roles" })
+                Assert.DoesNotContain($"href=\"{link}\"", html);
+            Assert.Contains("INV - 000001", html);
+            Assert.DoesNotContain("handler=Panel", html);          // no Collect button without the permission
         }
 
         [Fact]
@@ -135,64 +145,70 @@ namespace TalukdarSales.Tests
             var good = app.SeedGood("Soap", 10);
             app.SeedOpenWindow();
             var admin = await LoginAs(app, "admin");
-            await admin.PostAsync("/Requisitions/Create", new FormUrlEncodedContent(new Dictionary<string, string>
-                { ["UserId"] = adminId.ToString(), [$"Qty[{good}]"] = "5", ["__RequestVerificationToken"] = await TestApp.Antiforgery(admin, "/Requisitions/Create") }));
+            await admin.FormPost("/Requisitions/Create", "/Requisitions/Create", new() { ["UserId"] = adminId.ToString(), [$"Qty[{good}]"] = "5" });
 
             app.SeedRole("Clerk", Perm.RequisitionView, Perm.InvoiceView);
             app.SeedUser("clerk", "pw", "Cleo", role: "Clerk");
             var c = await LoginAs(app, "clerk");
 
-            Assert.Equal(HttpStatusCode.OK, (await c.GetAsync("/Requisitions")).StatusCode);
-            var list = await c.GetStringAsync("/Requisitions?handler=List");
-            Assert.DoesNotContain("Approve Selected", list);
+            var board = await c.GetStringAsync("/Requisitions");
+            Assert.Contains("REQ - 000001", board);
+            Assert.DoesNotContain("handler=Invoice&amp;id=1", board);   // no Invoice button
+            Assert.DoesNotContain("handler=Invoice&id=1", board);
 
-            var approve = await c.HtmxPost("/Requisitions", "/Requisitions?handler=Approve", new() { ["ids"] = "1", ["Active"] = "true" });
-            Assert.Equal(HttpStatusCode.Forbidden, approve.StatusCode);
-            Assert.Contains("REQ - 000001", await admin.GetStringAsync("/Requisitions?handler=List"));   // still active: nothing was invoiced
+            var approve = await c.FormPost("/Requisitions", "/Requisitions?handler=Invoice&id=1", new());
+            Assert.True(Denied(approve));
+            Assert.Contains("REQ - 000001", await admin.GetStringAsync("/Requisitions"));   // still waiting: nothing was invoiced
 
-            // after the role gains the permission, the same session may approve (no re-login needed)
+            // after the role gains the permission, the same session may invoice (no re-login needed)
             app.SeedRole("Clerk", Perm.RequisitionView, Perm.InvoiceView, Perm.RequisitionApprove);
-            var ok = await c.HtmxPost("/Requisitions", "/Requisitions?handler=Approve", new() { ["ids"] = "1", ["Active"] = "true" });
-            Assert.Equal(HttpStatusCode.OK, ok.StatusCode);
-            Assert.Contains("invoice(s) created", ok.Trigger());
+            var ok = await c.FormPost("/Requisitions", "/Requisitions?handler=Invoice&id=1", new());
+            Assert.Equal(HttpStatusCode.Redirect, ok.StatusCode);
+            Assert.Contains("created", await c.FlashAfter(ok));
         }
 
         [Fact]
         public async Task Collect_is_denied_without_the_collect_permission_even_when_the_handler_is_spoofed()
         {
             var (app, adminId) = NewApp();
-            var good = app.SeedGood("Soap", 10);
-            app.SeedOpenWindow();
-            var reqId = app.Run(sp => sp.GetRequiredService<RequisitionService>().Create(adminId, new[] { new RequisitionLine(good, 10) })).Requisition.Id;
-            var invId = app.Run(sp => sp.GetRequiredService<InvoiceService>().CreateFromRequisitions(new[] { reqId })).Invoices[0].Id;
+            var invId = SeedInvoice(app, adminId);
 
             app.SeedRole("Viewer", Perm.InvoiceView);
             app.SeedUser("viewer", "pw", "Vic", role: "Viewer");
             var c = await LoginAs(app, "viewer");
 
-            Assert.True(Denied(await c.GetAsync($"/Invoices?handler=Collect&id={invId}")));
-            var direct = await c.HtmxPost("/Invoices", "/Invoices?handler=Collect", new() { ["Collect.InvoiceId"] = invId.ToString(), ["Collect.Amount"] = "50", ["Collect.PaymentMethod"] = "Cash" });
-            Assert.Equal(HttpStatusCode.Forbidden, direct.StatusCode);
+            Assert.True(Denied(await c.GetAsync($"/Invoices?handler=Panel&id={invId}")));
+            var direct = await c.FormPost("/Invoices", "/Invoices?handler=Collect", new() { ["invoiceId"] = invId.ToString(), ["amount"] = "50", ["method"] = "Cash" });
+            Assert.True(Denied(direct));
 
             // spoof: no handler in the URL, handler named in the form body
-            var spoof = await c.HtmxPost("/Invoices", "/Invoices", new() { ["handler"] = "Collect", ["Collect.InvoiceId"] = invId.ToString(), ["Collect.Amount"] = "50", ["Collect.PaymentMethod"] = "Cash" });
-            Assert.DoesNotContain("Collected", spoof.Trigger());
+            await c.FormPost("/Invoices", "/Invoices", new() { ["handler"] = "Collect", ["invoiceId"] = invId.ToString(), ["amount"] = "50", ["method"] = "Cash" });
 
             var detail = app.Run(sp => sp.GetRequiredService<InvoiceService>().Get(invId));
             Assert.Equal(0, detail.Header.Collected);   // nothing was collected by any route
         }
 
         [Fact]
-        public async Task Dashboard_permission_allows_the_report_widgets_but_not_the_reports_page()
+        public async Task Dashboard_permission_does_not_open_the_reports_page()
         {
             var (app, _) = NewApp();
             app.SeedRole("Boss", Perm.Dashboard);
             app.SeedUser("boss", "pw", "Bo", role: "Boss");
             var c = await LoginAs(app, "boss");
             Assert.Equal(HttpStatusCode.OK, (await c.GetAsync("/Dashboard")).StatusCode);
-            Assert.Equal(HttpStatusCode.OK, (await c.GetAsync("/Reports?handler=Panel&kind=sellers")).StatusCode);
             Assert.True(Denied(await c.GetAsync("/Reports")));
-            Assert.True(Denied(await c.GetAsync("/Reports?handler=Export&kind=sellers")));
+            Assert.True(Denied(await c.GetAsync("/Reports?handler=Export")));
+        }
+
+        [Fact]
+        public async Task Sign_in_lands_on_the_dashboard_only_for_users_who_may_see_it()
+        {
+            var (app, _) = NewApp();
+            app.SeedRole("Boss", Perm.Dashboard);
+            app.SeedUser("boss", "pw", "Bo", role: "Boss");
+            app.SeedUser("nobody", "pw", "Nina", role: null);
+            Assert.Equal("/Dashboard", (await TestApp.Login(app.NewClient(), "boss", "pw")).Headers.Location!.OriginalString);
+            Assert.Equal("/", (await TestApp.Login(app.NewClient(), "nobody", "pw")).Headers.Location!.OriginalString);
         }
 
         [Fact]
@@ -212,42 +228,40 @@ namespace TalukdarSales.Tests
 
         // ---- roles page -------------------------------------------------------------------------------------
 
+        private static async Task<HttpResponseMessage> PostPairs(HttpClient c, string pageUrl, string url, params (string Key, string Value)[] pairs)
+        {
+            var all = pairs.Select(p => KeyValuePair.Create(p.Key, p.Value)).ToList();
+            all.Add(KeyValuePair.Create("__RequestVerificationToken", await TestApp.Antiforgery(c, pageUrl)));
+            return await c.PostAsync(url, new FormUrlEncodedContent(all));
+        }
+
         [Fact]
         public async Task Roles_page_assigns_permissions_replacing_the_set()
         {
             var (app, _) = NewApp();
             var c = await LoginAs(app, "admin");
-            await c.HtmxPost("/Roles", "/Roles?handler=CreateRole", new() { ["Role.Name"] = "Clerk" });
-            var roleId = app.Run(sp => sp.GetRequiredService<ApplicationDbContext>().ApplicationRoles.Single(r => r.Name == "Clerk").Id);
+            await c.FormPost("/Roles", "/Roles?handler=CreateRole", new() { ["name"] = "Clerk" });
+            var roleId = RoleId(app, "Clerk");
 
-            async Task<HttpResponseMessage> Assign(params string[] keys)
-            {
-                var form = new MultipartFormDataContent { { new StringContent(await TestApp.Antiforgery(c, "/Roles")), "__RequestVerificationToken" }, { new StringContent(roleId.ToString()), "Assign.RoleId" } };
-                foreach (var k in keys) form.Add(new StringContent(k), "Assign.Keys");
-                var req = new HttpRequestMessage(HttpMethod.Post, "/Roles?handler=Assign") { Content = form };
-                req.Headers.Add("HX-Request", "true");
-                return await c.SendAsync(req);
-            }
+            Task<HttpResponseMessage> Assign(params string[] keys) =>
+                PostPairs(c, $"/Roles?role={roleId}", "/Roles?handler=Assign", keys.Select(k => ("Assign.Keys", k)).Prepend(("Assign.RoleId", roleId.ToString())).ToArray());
 
-            Assert.Contains("closeModal", (await Assign(Perm.InvoiceView, Perm.Reports)).Trigger());
-            Assert.Contains("View reports", await c.GetStringAsync("/Roles?handler=List"));
-            Assert.Contains("View, print and export invoices", await c.GetStringAsync("/Roles?handler=List"));
+            Assert.Equal("Permissions saved.", await c.FlashAfter(await Assign(Perm.InvoiceView, Perm.Reports)));
+            var page = await c.GetStringAsync($"/Roles?role={roleId}");
+            Assert.Contains("value=\"Reports.View\" checked", page);
+            Assert.Contains("value=\"Invoices.View\" checked", page);
+            Assert.Contains("Sales invoice", page);       // permissions are grouped
 
             await Assign(Perm.Reports, Perm.Reports);   // duplicate posted keys must not duplicate rows; Invoices.View removed
-            var list = await c.GetStringAsync("/Roles?handler=List");
-            Assert.DoesNotContain("View, print and export invoices", list);
+            page = await c.GetStringAsync($"/Roles?role={roleId}");
+            Assert.DoesNotContain("value=\"Invoices.View\" checked", page);
             Assert.Equal(1, app.Run(sp => sp.GetRequiredService<ApplicationDbContext>().RoleWisePermissions.Count(p => p.RoleId == roleId && !p.IsDeleted)));
 
-            // the form shows grouped permissions with the current ones ticked
-            var form2 = await c.GetStringAsync($"/Roles?handler=Assign&id={roleId}");
-            Assert.Contains("Sales invoice", form2);
-            Assert.Contains("value=\"Reports.View\" checked", form2);
-
             // the Administrator role is built in
-            var adminRoleId = app.Run(sp => sp.GetRequiredService<ApplicationDbContext>().ApplicationRoles.Single(r => r.Name == "Administrator").Id);
-            var adminTry = await c.HtmxPost("/Roles", "/Roles?handler=Assign", new() { ["Assign.RoleId"] = adminRoleId.ToString(), ["Assign.Keys"] = Perm.Reports });
-            Assert.Contains("full access", adminTry.Trigger());
-            Assert.Contains("All access", await c.GetStringAsync("/Roles?handler=List"));
+            var adminRoleId = RoleId(app, "Administrator");
+            var adminTry = await PostPairs(c, "/Roles", "/Roles?handler=Assign", ("Assign.RoleId", adminRoleId.ToString()), ("Assign.Keys", Perm.Reports));
+            Assert.Contains("full access", await c.FlashAfter(adminTry));
+            Assert.Contains("all access", await c.GetStringAsync("/Roles"));
         }
 
         [Fact]
@@ -258,13 +272,10 @@ namespace TalukdarSales.Tests
             app.SeedRole("Target");
             app.SeedUser("mgr", "pw", "Max", role: "RoleManager");
             var c = await LoginAs(app, "mgr");
-            var roleId = app.Run(sp => sp.GetRequiredService<ApplicationDbContext>().ApplicationRoles.Single(r => r.Name == "Target").Id);
+            var roleId = RoleId(app, "Target");
 
-            var form = new MultipartFormDataContent { { new StringContent(await TestApp.Antiforgery(c, "/Roles")), "__RequestVerificationToken" }, { new StringContent(roleId.ToString()), "Assign.RoleId" },
-                { new StringContent(Perm.Reports), "Assign.Keys" }, { new StringContent(Perm.Users), "Assign.Keys" }, { new StringContent(Perm.InvoiceCollect), "Assign.Keys" } };
-            var req = new HttpRequestMessage(HttpMethod.Post, "/Roles?handler=Assign") { Content = form };
-            req.Headers.Add("HX-Request", "true");
-            await c.SendAsync(req);
+            await PostPairs(c, "/Roles", "/Roles?handler=Assign", ("Assign.RoleId", roleId.ToString()),
+                ("Assign.Keys", Perm.Reports), ("Assign.Keys", Perm.Users), ("Assign.Keys", Perm.InvoiceCollect));
 
             var granted = app.Run(sp =>
             {
@@ -273,7 +284,7 @@ namespace TalukdarSales.Tests
             });
             Assert.Equal(new[] { Perm.Reports }, granted);   // Users and Invoices.Collect were silently not granted
 
-            Assert.Contains("(you do not hold this permission)", await c.GetStringAsync($"/Roles?handler=Assign&id={roleId}"));
+            Assert.Contains("you do not hold this permission", await c.GetStringAsync($"/Roles?role={roleId}"));
         }
 
         // ---- user roles -------------------------------------------------------------------------------------
@@ -282,7 +293,7 @@ namespace TalukdarSales.Tests
             app.Run(sp => sp.GetRequiredService<ApplicationDbContext>().ApplicationRoles.Single(r => r.Name == name).Id);
 
         [Fact]
-        public async Task Admin_assigns_a_role_through_the_edit_modal_and_it_takes_effect_at_once()
+        public async Task Admin_assigns_a_role_through_the_edit_panel_and_it_takes_effect_at_once()
         {
             var (app, _) = NewApp();
             app.SeedRole("Viewer", Perm.InvoiceView);
@@ -291,15 +302,15 @@ namespace TalukdarSales.Tests
             Assert.True(Denied(await v.GetAsync("/Invoices")));
 
             var admin = await LoginAs(app, "admin");
-            Assert.Contains("name=\"Edit.RoleId\"", await admin.GetStringAsync($"/Users?handler=Edit&id={viewer}"));
-            var res = await admin.HtmxPost("/Users", "/Users?handler=Edit", new() { ["Edit.Id"] = viewer.ToString(), ["Edit.FirstName"] = "Vic", ["Edit.RoleId"] = RoleId(app, "Viewer").ToString() });
-            Assert.Contains("closeModal", res.Trigger());
+            Assert.Contains("name=\"Edit.RoleId\"", await admin.GetStringAsync($"/Users?editId={viewer}"));
+            var res = await admin.FormPost($"/Users?editId={viewer}", "/Users?handler=Edit", new() { ["Edit.Id"] = viewer.ToString(), ["Edit.FirstName"] = "Vic", ["Edit.RoleId"] = RoleId(app, "Viewer").ToString() });
+            Assert.Equal(HttpStatusCode.Redirect, res.StatusCode);
 
             Assert.Equal(HttpStatusCode.OK, (await v.GetAsync("/Invoices")).StatusCode);
-            Assert.Contains("Viewer", await admin.GetStringAsync("/Users?handler=List"));
+            Assert.Contains("Viewer", await admin.GetStringAsync("/Users"));
 
             // removing the role removes the access again
-            await admin.HtmxPost("/Users", "/Users?handler=Edit", new() { ["Edit.Id"] = viewer.ToString(), ["Edit.FirstName"] = "Vic", ["Edit.RoleId"] = "0" });
+            await admin.FormPost($"/Users?editId={viewer}", "/Users?handler=Edit", new() { ["Edit.Id"] = viewer.ToString(), ["Edit.FirstName"] = "Vic", ["Edit.RoleId"] = "0" });
             Assert.True(Denied(await v.GetAsync("/Invoices")));
         }
 
@@ -316,30 +327,30 @@ namespace TalukdarSales.Tests
 
             // a user manager with the Roles permission cannot see or grant Administrator
             var c = await LoginAs(app, "ua");
-            var form = await c.GetStringAsync($"/Users?handler=Edit&id={ua}");
-            Assert.Contains(">Viewer<", form);
-            Assert.DoesNotContain(">Administrator<", form);
-            var self = await c.HtmxPost("/Users", "/Users?handler=Edit", new() { ["Edit.Id"] = ua.ToString(), ["Edit.FirstName"] = "Uma", ["Edit.RoleId"] = adminRole.ToString() });
-            Assert.Equal("", self.Trigger());
+            var form = await c.GetStringAsync($"/Users?editId={ua}");
+            Assert.Contains(">Viewer</option>", form);
+            Assert.DoesNotContain(">Administrator</option>", form);
+            var self = await c.FormPost($"/Users?editId={ua}", "/Users?handler=Edit", new() { ["Edit.Id"] = ua.ToString(), ["Edit.FirstName"] = "Uma", ["Edit.RoleId"] = adminRole.ToString() });
+            Assert.Equal(HttpStatusCode.OK, self.StatusCode);
             Assert.Contains("Only administrators", await self.Content.ReadAsStringAsync());
             Assert.False(app.Run(sp => sp.GetRequiredService<AccessService>().For(ua).IsAdmin));
 
             // nor can they demote an administrator
-            var demote = await c.HtmxPost("/Users", "/Users?handler=Edit", new() { ["Edit.Id"] = adminId.ToString(), ["Edit.FirstName"] = "Ada", ["Edit.RoleId"] = RoleId(app, "Viewer").ToString() });
+            var demote = await c.FormPost($"/Users?editId={adminId}", "/Users?handler=Edit", new() { ["Edit.Id"] = adminId.ToString(), ["Edit.FirstName"] = "Ada", ["Edit.RoleId"] = RoleId(app, "Viewer").ToString() });
             Assert.Contains("Only administrators", await demote.Content.ReadAsStringAsync());
 
             // creating a user with the Administrator role is refused and creates nothing
             app.Seed(db => db.UserTypes.Add(new TalukdarSales.Web.Models.UserType { TypeName = "T", CreatedOn = DateTime.Now }));
             var before = app.Run(sp => sp.GetRequiredService<ApplicationDbContext>().Users.Count());
-            var create = await c.HtmxPost("/Users", "/Users?handler=Create", new()
+            var create = await c.FormPost("/Users?new=true", "/Users?handler=Create", new()
                 { ["Create.UserTypeId"] = "1", ["Create.FirstName"] = "Evil", ["Create.PhoneNumber"] = "1", ["Create.RoleId"] = adminRole.ToString() });
-            Assert.Equal("", create.Trigger());
+            Assert.Equal(HttpStatusCode.OK, create.StatusCode);
             Assert.Equal(before, app.Run(sp => sp.GetRequiredService<ApplicationDbContext>().Users.Count()));
 
             // a user manager WITHOUT the Roles permission has no role field and a forged one is rejected
             var c2 = await LoginAs(app, "uo");
-            Assert.DoesNotContain("name=\"Edit.RoleId\"", await c2.GetStringAsync($"/Users?handler=Edit&id={uo}"));
-            var forged = await c2.HtmxPost("/Users", "/Users?handler=Edit", new() { ["Edit.Id"] = uo.ToString(), ["Edit.FirstName"] = "Ola", ["Edit.RoleId"] = RoleId(app, "Viewer").ToString() });
+            Assert.DoesNotContain("name=\"Edit.RoleId\"", await c2.GetStringAsync($"/Users?editId={uo}"));
+            var forged = await c2.FormPost($"/Users?editId={uo}", "/Users?handler=Edit", new() { ["Edit.Id"] = uo.ToString(), ["Edit.FirstName"] = "Ola", ["Edit.RoleId"] = RoleId(app, "Viewer").ToString() });
             Assert.Contains("do not have permission", await forged.Content.ReadAsStringAsync());
             Assert.False(app.Run(sp => sp.GetRequiredService<AccessService>().For(uo).Has(Perm.InvoiceView)));
         }
@@ -351,14 +362,14 @@ namespace TalukdarSales.Tests
             var c = await LoginAs(app, "admin");
             app.SeedRole("Viewer", Perm.InvoiceView);
 
-            var blocked = await c.HtmxPost("/Users", "/Users?handler=Edit", new() { ["Edit.Id"] = adminId.ToString(), ["Edit.FirstName"] = "Ada", ["Edit.RoleId"] = RoleId(app, "Viewer").ToString() });
+            var blocked = await c.FormPost($"/Users?editId={adminId}", "/Users?handler=Edit", new() { ["Edit.Id"] = adminId.ToString(), ["Edit.FirstName"] = "Ada", ["Edit.RoleId"] = RoleId(app, "Viewer").ToString() });
             Assert.Contains("last administrator", await blocked.Content.ReadAsStringAsync());
             Assert.True(app.Run(sp => sp.GetRequiredService<AccessService>().For(adminId).IsAdmin));
 
             // once a second administrator exists, the first can step down
             app.SeedUser("admin2", "pw", "Bea");
-            var ok = await c.HtmxPost("/Users", "/Users?handler=Edit", new() { ["Edit.Id"] = adminId.ToString(), ["Edit.FirstName"] = "Ada", ["Edit.RoleId"] = RoleId(app, "Viewer").ToString() });
-            Assert.Contains("closeModal", ok.Trigger());
+            var ok = await c.FormPost($"/Users?editId={adminId}", "/Users?handler=Edit", new() { ["Edit.Id"] = adminId.ToString(), ["Edit.FirstName"] = "Ada", ["Edit.RoleId"] = RoleId(app, "Viewer").ToString() });
+            Assert.Equal(HttpStatusCode.Redirect, ok.StatusCode);
             Assert.False(app.Run(sp => sp.GetRequiredService<AccessService>().For(adminId).IsAdmin));
         }
 

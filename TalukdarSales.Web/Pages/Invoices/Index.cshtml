@@ -11,7 +11,7 @@
     <div><h1 class="page-title">Invoices</h1><div class="page-sub">Collect a payment against a customer. It clears their oldest invoices first.</div></div>
     <div class="actions">
         <a class="btn" href="?handler=Export&status=@Model.Status&q=@Uri.EscapeDataString(Model.Q ?? "")&days=@Model.Days">@Icons.Svg("download", 18)Export Excel</a>
-        <a class="btn btn-p" href="/Requisitions">Invoice waiting orders</a>
+        @if (Access.For(User).Has(TalukdarSales.Web.Security.Perm.RequisitionView)) { <a class="btn btn-p" href="/Requisitions">Invoice waiting orders</a> }
     </div>
 </header>
 

@@ -32,7 +32,6 @@ builder.Services.AddScoped<TalukdarSales.Web.Services.UserService>();
 builder.Services.AddScoped<TalukdarSales.Web.Services.ImageStore>();
 builder.Services.AddScoped<TalukdarSales.Web.Services.RequisitionService>();
 builder.Services.AddScoped<TalukdarSales.Web.Services.InvoiceService>();
-builder.Services.AddScoped<TalukdarSales.Web.Services.ReportService>();
 builder.Services.AddScoped<TalukdarSales.Web.Services.AnalyticsService>();
 builder.Services.AddScoped<TalukdarSales.Web.Security.AccessService>();
 builder.Services.AddScoped<TalukdarSales.Web.Security.AccessSeeder>();
