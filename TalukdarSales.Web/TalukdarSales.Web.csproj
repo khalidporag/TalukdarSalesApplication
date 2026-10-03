@@ -18,9 +18,27 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <ClientAppDir>$(MSBuildProjectDirectory)\ClientApp\</ClientAppDir>
+    <DefaultItemExcludes>$(DefaultItemExcludes);ClientApp\node_modules\**;ClientApp\dist\**</DefaultItemExcludes>
+  </PropertyGroup>
+
   <ItemGroup>
     <Folder Include="wwwroot\font\" />
     <Folder Include="wwwroot\images\" />
   </ItemGroup>
+
+  <!-- Build the Angular app and publish it with the API (requires Node.js). Skip with -p:SkipClientBuild=true -->
+  <Target Name="BuildClientApp" BeforeTargets="ComputeFilesToPublish" Condition="'$(SkipClientBuild)' != 'true'">
+    <Exec WorkingDirectory="$(ClientAppDir)" Command="npm ci" Condition="!Exists('$(ClientAppDir)node_modules')" />
+    <Exec WorkingDirectory="$(ClientAppDir)" Command="npm run build -- --configuration production" />
+    <ItemGroup>
+      <ClientDistFiles Include="$(ClientAppDir)dist\**" />
+      <ResolvedFileToPublish Include="@(ClientDistFiles)">
+        <RelativePath>ClientApp\dist\%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
 
 </Project>

@@ -29,7 +29,7 @@ export class NoticeComponent implements OnInit {
   imageUrl: string | null = null;
   // isEdit: boolean = false;
 
-  noticeUrl = "https://localhost:7019/images/notices/"
+  noticeUrl = `${environment.apiBaseUrl}/images/notices/`
 
   cardData: any = [
     {

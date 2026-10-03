@@ -1,0 +1,14 @@
+{
+  "/api": {
+    "target": "https://localhost:7019",
+    "secure": false
+  },
+  "/images": {
+    "target": "https://localhost:7019",
+    "secure": false
+  },
+  "/pdf": {
+    "target": "https://localhost:7019",
+    "secure": false
+  }
+}

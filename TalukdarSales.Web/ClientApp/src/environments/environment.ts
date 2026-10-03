@@ -1,8 +1,6 @@
 export const environment = {
-    production: false,
-    itemsPerPage: 20,
-    //apiBaseUrl: "https://localhost:7019"
-    // apiBaseUrl: "http://localhost:8002"
-    apiBaseUrl: "http://192.168.0.129:8002"
-
-  }
+  production: false,
+  itemsPerPage: 20,
+  // Same origin as the API (served by TalukdarSales.Web). In development `ng serve` proxies /api and /images (see proxy.conf.json).
+  apiBaseUrl: ""
+};
