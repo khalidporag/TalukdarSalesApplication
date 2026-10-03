@@ -1,0 +1,14 @@
+@page
+@model TalukdarSales.Web.Pages.TimeSetting.IndexModel
+@{ ViewData["Title"] = "Time Setting"; }
+@if (TempData["Saved"] is string saved) { <div class="alert alert-success py-2">@saved</div> }
+<div class="card" style="max-width:420px">
+    <div class="card-body">
+        <p class="text-muted">Requisitions can only be submitted between these times (server time).</p>
+        <form method="post">
+            <div class="mb-3"><label class="form-label">From</label><input class="form-control" type="time" asp-for="Input.From" /><span class="text-danger small" asp-validation-for="Input.From"></span></div>
+            <div class="mb-3"><label class="form-label">To</label><input class="form-control" type="time" asp-for="Input.To" /><span class="text-danger small" asp-validation-for="Input.To"></span></div>
+            <button class="btn btn-success" type="submit">Save</button>
+        </form>
+    </div>
+</div>
