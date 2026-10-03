@@ -11,7 +11,9 @@ namespace TalukdarSales.Web.Pages.Users
 {
     public class IndexModel : PageModelBase
     {
-        private const int PageSize = 12;
+        private const int DefaultSize = 10;
+        [BindProperty(SupportsGet = true)] public int Size { get; set; }
+        private int PageSize => PageSizes.Clamp(Size, DefaultSize);
 
         private readonly UserService _users;
         private readonly IUserTypeRepository _userTypes;
@@ -31,6 +33,8 @@ namespace TalukdarSales.Web.Pages.Users
         // list filters
         [BindProperty(SupportsGet = true)] public string Name { get; set; }
         [BindProperty(SupportsGet = true)] public int? TypeId { get; set; }
+        [BindProperty(SupportsGet = true)] public string Status { get; set; }
+        [BindProperty(SupportsGet = true)] public string Sort { get; set; }
         [BindProperty(SupportsGet = true, Name = "p")] public int PageNo { get; set; } = 1;
 
         [BindProperty(SupportsGet = true)] public int? EditId { get; set; }
@@ -182,7 +186,7 @@ namespace TalukdarSales.Web.Pages.Users
 
         private void LoadUsers()
         {
-            Users = _users.Search(TypeId, Name, PageNo, PageSize);
+            Users = _users.Search(TypeId, Name, PageNo, PageSize, Status, Sort);
             RoleByUser = _users.RoleNames(Users.Items.Select(u => u.Id));
         }
 

@@ -55,6 +55,9 @@ Point an IIS site at `publish`. Keep `wwwroot/images` and `wwwroot/pdf` (uploade
 Repositories return `IQueryable<T>` (`GetAll()` = not-deleted rows, `FindBy(predicate)`), so filtering, grouping, counting and paging run in SQL. Rules of thumb: compose the query first and materialise last (`ToList()`, `Paged<T>.Create(query, page, size)`); use `ToLower().Contains(...)` for case-insensitive search (not `StringComparison`); look names up with `ids.Contains(x.Id)` instead of loading whole tables.
 Tests run on SQLite and `SqlServerTranslationTests` runs every service entry point on the SQL Server provider (against an unreachable server: EF translates before it connects), so a query EF cannot translate fails the build, not production.
 
+## Lists, paging and filters
+Every list pages in SQL through `Paged<T>` and the shared pager (`Pages/Shared/_Pager.cshtml`): "Showing a to b of N", rows per page (10, 25, 50, 100 via `size=`), first/previous/numbered/next/last with ellipses. A page past the end shows the last page. To add a paged list: bind `Size` and `p`, call `Paged<T>.Create(query, page, PageSizes.Clamp(Size, default))`, then `<partial name="_Pager" model="paged.Pager(Url())" />` where `Url()` carries the current filters. Filters are plain GET links and forms, so every view is bookmarkable. Exports ignore paging and export the whole filtered set.
+
 ## Money
 All money (prices, invoice totals, collections, customer balance and credit limit) is `double`. `Helpers/Money.Round` rounds to 2 decimals at every write so floating-point noise never reaches a balance; keep using it for any new money arithmetic.
 

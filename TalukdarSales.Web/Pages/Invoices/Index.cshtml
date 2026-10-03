@@ -4,13 +4,13 @@
     ViewData["Title"] = "Invoices";
     var b = Model.Board;
     var canCollect = Access.For(User).Has(TalukdarSales.Web.Security.Perm.InvoiceCollect);
-    string Url(string status = null) => $"/Invoices?status={status ?? Model.Status}&q={Uri.EscapeDataString(Model.Q ?? "")}&days={Model.Days}";
+    string Url(string status = null) => $"/Invoices?status={status ?? Model.Status}&q={Uri.EscapeDataString(Model.Q ?? "")}&days={Model.Days}&from={Model.From:yyyy-MM-dd}&to={Model.To:yyyy-MM-dd}";
     var rate = b.Billed <= 0 ? 0 : Math.Round(b.Collected / b.Billed * 100);
 }
 <header class="page-head">
     <div><h1 class="page-title">Invoices</h1><div class="page-sub">Collect a payment against a customer. It clears their oldest invoices first.</div></div>
     <div class="actions">
-        <a class="btn" href="?handler=Export&status=@Model.Status&q=@Uri.EscapeDataString(Model.Q ?? "")&days=@Model.Days">@Icons.Svg("download", 18)Export Excel</a>
+        <a class="btn" href="?handler=Export&status=@Model.Status&q=@Uri.EscapeDataString(Model.Q ?? "")&days=@Model.Days&from=@Model.From?.ToString("yyyy-MM-dd")&to=@Model.To?.ToString("yyyy-MM-dd")">@Icons.Svg("download", 18)Export Excel</a>
         @if (Access.For(User).Has(TalukdarSales.Web.Security.Perm.RequisitionView)) { <a class="btn btn-p" href="/Requisitions">Invoice waiting orders</a> }
     </div>
 </header>
@@ -37,7 +37,10 @@
             <option value="30" selected="@(Model.Days == 30)">Last 30 days</option>
             <option value="0" selected="@(Model.Days == 0)">Any date</option>
         </select>
-        <button class="btn" aria-label="Search">@Icons.Svg("chevron-right", 18)</button>
+<label class="row lbl" style="gap:6px">From <input type="date" name="from" value="@Model.From?.ToString("yyyy-MM-dd")" style="width:auto" /></label>
+        <label class="row lbl" style="gap:6px">To <input type="date" name="to" value="@Model.To?.ToString("yyyy-MM-dd")" style="width:auto" /></label>
+        <button class="btn">Filter</button>
+        @if (!string.IsNullOrEmpty(Model.Q) || Model.Days != 30 || Model.From != null || Model.To != null || Model.Status != "all") { <a class="btn" href="/Invoices">Clear</a> }
     </div>
 </form>
 
@@ -45,7 +48,7 @@
     <section class="card flush grow" style="flex:1 1 600px;min-width:0">
         <div class="tbl-wrap">
         <table class="tbl" style="min-width:560px">
-            <thead><tr><th>Invoice</th><th>Customer</th><th class="r">Total</th><th style="width:150px">Paid</th><th class="r">Due</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th>Invoice</th><th>Customer</th><th class="r">Total</th><th style="width:110px">Paid</th><th class="r">Due</th><th>Status</th><th></th></tr></thead>
             <tbody>
             @foreach (var r in b.Page.Items)
             {
@@ -68,7 +71,7 @@
             </tbody>
         </table>
         </div>
-        <partial name="_Pager" model='(b.Page.Page, b.Page.TotalPages, Url(), "")' />
+        <partial name="_Pager" model="b.Page.Pager(Url())" />
     </section>
 
     <aside class="card panel" id="panel">

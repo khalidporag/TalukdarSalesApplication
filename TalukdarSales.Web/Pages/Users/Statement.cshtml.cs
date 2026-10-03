@@ -12,9 +12,26 @@ namespace TalukdarSales.Web.Pages.Users
         [BindProperty(SupportsGet = true)] public int Id { get; set; }
         [BindProperty(SupportsGet = true)] public DateTime? From { get; set; }
         [BindProperty(SupportsGet = true)] public DateTime? To { get; set; }
-        public Statement Data { get; private set; }
+        [BindProperty(SupportsGet = true)] public string Kind { get; set; }
+        [BindProperty(SupportsGet = true)] public int Size { get; set; }
+        [BindProperty(SupportsGet = true, Name = "p")] public int PageNo { get; set; } = 1;
+        /// <summary>Print every line, not just the page on screen.</summary>
+        [BindProperty(SupportsGet = true)] public bool All { get; set; }
 
-        public IActionResult OnGet() => Load() ? Page() : NotFound();
+        public Statement Data { get; private set; }
+        public List<StatementEntry> Shown { get; private set; }
+        public PagerVm Pager { get; private set; }
+
+        public IActionResult OnGet()
+        {
+            if (!Load()) return NotFound();
+            var rows = Data.Entries.Where(e => string.IsNullOrEmpty(Kind) || e.Kind == Kind).ToList();
+            var size = All ? Math.Max(1, rows.Count) : PageSizes.Clamp(Size, 25);
+            var page = Math.Clamp(PageNo, 1, Math.Max(1, (int)Math.Ceiling(rows.Count / (double)size)));
+            Shown = rows.Skip((page - 1) * size).Take(size).ToList();
+            Pager = new PagerVm(page, size, rows.Count, $"/Users/Statement?id={Id}&from={From:yyyy-MM-dd}&to={To:yyyy-MM-dd}&kind={Kind}");
+            return Page();
+        }
 
         public IActionResult OnGetExport()
         {

@@ -3,7 +3,8 @@
 @{
     ViewData["Title"] = "Customers";
     var u0 = Model.Users;
-    string Url(int? typeId = null, bool keepType = true) => $"/Users?name={Uri.EscapeDataString(Model.Name ?? "")}&typeId={(keepType ? Model.TypeId : typeId)}";
+    string Filters() => $"name={Uri.EscapeDataString(Model.Name ?? "")}&status={Model.Status}&sort={Model.Sort}";
+    string Url(int? typeId = null, bool keepType = true) => $"/Users?{Filters()}&typeId={(keepType ? Model.TypeId : typeId)}";
     string Img(string n) => string.IsNullOrEmpty(n) ? null : "/images/users/" + n;
 }
 <header class="page-head">
@@ -11,15 +12,29 @@
     <div class="actions"><a class="btn btn-p" href="@Url()&new=true">@Icons.Svg("plus", 18, 2.2)New customer</a></div>
 </header>
 
-<form method="get" class="row between wrap" style="gap:12px">
-    <div class="chips">
-        <a class="chip @(Model.TypeId == null ? "on" : "")" href="@Url(null, false)">All</a>
-        @foreach (var t in Model.UserTypeOptions) { <a class="chip @(Model.TypeId?.ToString() == t.Value ? "on" : "")" href="/Users?name=@Uri.EscapeDataString(Model.Name ?? "")&typeId=@t.Value">@t.Text</a> }
+<form method="get" class="col" style="gap:12px">
+    <input type="hidden" name="typeId" value="@Model.TypeId" />
+    <div class="row between wrap" style="gap:12px">
+        <div class="chips">
+            <a class="chip @(Model.TypeId == null ? "on" : "")" href="@Url(null, false)">All groups</a>
+            @foreach (var t in Model.UserTypeOptions) { <a class="chip @(Model.TypeId?.ToString() == t.Value ? "on" : "")" href="/Users?@Filters()&typeId=@t.Value">@t.Text</a> }
+        </div>
+        <div class="seg" role="group" aria-label="Balance">
+            <a href="/Users?name=@Uri.EscapeDataString(Model.Name ?? "")&typeId=@Model.TypeId&sort=@Model.Sort" class="@(string.IsNullOrEmpty(Model.Status) ? "on" : "")">Everyone</a>
+            <a href="/Users?name=@Uri.EscapeDataString(Model.Name ?? "")&typeId=@Model.TypeId&sort=@Model.Sort&status=owes" class="@(Model.Status == "owes" ? "on" : "")">Owes money</a>
+            <a href="/Users?name=@Uri.EscapeDataString(Model.Name ?? "")&typeId=@Model.TypeId&sort=@Model.Sort&status=over" class="@(Model.Status == "over" ? "on" : "")">Over limit</a>
+        </div>
     </div>
-    <div class="row" style="gap:8px">
-        <input type="hidden" name="typeId" value="@Model.TypeId" />
+    <div class="row wrap" style="gap:8px">
+        <input type="hidden" name="status" value="@Model.Status" />
         <input type="search" name="name" value="@Model.Name" placeholder="Search name, phone or ID" aria-label="Search customers" style="width:260px" />
-        <button class="btn" aria-label="Search">@Icons.Svg("chevron-right", 18)</button>
+        <select name="sort" aria-label="Sort by" onchange="this.form.submit()">
+            <option value="" selected="@(string.IsNullOrEmpty(Model.Sort))">Newest first</option>
+            <option value="name" selected="@(Model.Sort == "name")">Name A to Z</option>
+            <option value="due" selected="@(Model.Sort == "due")">Owes most</option>
+        </select>
+        <button class="btn">Filter</button>
+        @if (!string.IsNullOrEmpty(Model.Name) || Model.TypeId != null || !string.IsNullOrEmpty(Model.Status) || !string.IsNullOrEmpty(Model.Sort)) { <a class="btn" href="/Users">Clear</a> }
     </div>
 </form>
 
@@ -46,7 +61,7 @@
                 <a class="btn btn-s" href="@Url()&editId=@u.Id">Edit</a>
             </div>
         }
-        <partial name="_Pager" model='(u0.Page, u0.TotalPages, Url(), "")' />
+        <partial name="_Pager" model="u0.Pager(Url())" />
     </section>
 
     @if (Model.Mode != null)

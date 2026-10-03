@@ -1,13 +1,28 @@
 @page
 @model TalukdarSales.Web.Pages.Notifications.IndexModel
-@{ ViewData["Title"] = "Notifications"; }
+@{
+    ViewData["Title"] = "Notifications";
+    string Url(string kind = null, bool? unread = null) => $"/Notifications?kind={kind ?? Model.Kind}&unread={(unread ?? Model.Unread).ToString().ToLower()}";
+}
 <header class="page-head">
     <div><h1 class="page-title">Notifications</h1><div class="page-sub">New orders, customers over their credit limit and order-desk closing reminders</div></div>
-    <form method="post" asp-page-handler="ReadAll" class="actions"><button class="btn" @(Model.Items.Any(i => !i.IsRead) ? null : "disabled")>Mark all as read</button></form>
+    <form method="post" asp-page-handler="ReadAll" class="actions"><button class="btn" @(Model.UnreadCount > 0 ? null : "disabled")>Mark all as read</button></form>
 </header>
+<div class="row between wrap" style="gap:12px">
+    <div class="seg" role="group" aria-label="Show">
+        <a href="@Url(unread: false)" class="@(Model.Unread ? "" : "on")">All</a>
+        <a href="@Url(unread: true)" class="@(Model.Unread ? "on" : "")">Unread <span class="faint">@Model.UnreadCount</span></a>
+    </div>
+    <div class="chips">
+        <a class="chip @(Model.Kind == null ? "on" : "")" href="@Url("")">Everything</a>
+        <a class="chip @(Model.Kind == "new-order" ? "on" : "")" href="@Url("new-order")">Orders</a>
+        <a class="chip @(Model.Kind == "over-limit" ? "on" : "")" href="@Url("over-limit")">Credit</a>
+        <a class="chip @(Model.Kind == "closing" ? "on" : "")" href="@Url("closing")">Closing</a>
+    </div>
+</div>
 <section class="card flush">
-    @if (!Model.Items.Any()) { <div class="empty">Nothing yet. You will see new orders and alerts here.</div> }
-    @foreach (var n in Model.Items)
+    @if (!Model.Items.Items.Any()) { <div class="empty">@(Model.Unread ? "You are all caught up." : "Nothing yet. You will see new orders and alerts here.")</div> }
+    @foreach (var n in Model.Items.Items)
     {
         var tone = n.Kind == "over-limit" ? "bad" : n.Kind == "closing" ? "warn" : "info";
         <a class="list-row @(n.IsRead ? "" : "focus")" href="/Notifications?handler=Open&id=@n.Id&to=@Uri.EscapeDataString(n.Link ?? "")">
@@ -16,4 +31,5 @@
             <span class="lbl">@n.CreatedOn.ToString("d MMM, h:mm tt")</span>
         </a>
     }
+    <partial name="_Pager" model="Model.Items.Pager(Url())" />
 </section>

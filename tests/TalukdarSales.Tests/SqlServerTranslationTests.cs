@@ -104,6 +104,14 @@ namespace TalukdarSales.Tests
             Check("already sent", sp => sp.GetRequiredService<NotificationService>().AlreadySent("closing", d));
             Check("users with permission", sp => sp.GetRequiredService<AccessService>().UserIdsWith(Perm.Reports));
             Check("closing reminder", sp => ClosingReminderService.Check(sp, d));
+            Check("collections page", sp => sp.GetRequiredService<InvoiceService>().Collections(d, d, "cash", "ann", 2, 25));
+            Check("collections page (no filter)", sp => sp.GetRequiredService<InvoiceService>().Collections(null, null, null, null, 1, 10));
+            Check("collected by day", sp => sp.GetRequiredService<InvoiceService>().CollectedByDay(d, d));
+            Check("customers owing", sp => sp.GetRequiredService<UserService>().Search(null, "x", 1, 10, "owes", "due"));
+            Check("customers over limit", sp => sp.GetRequiredService<UserService>().Search(1, null, 2, 10, "over", "name"));
+            Check("notification page", sp => sp.GetRequiredService<NotificationService>().Page(1, "closing", true, 2, 25));
+            Check("order board range", sp => sp.GetRequiredService<RequisitionService>().Board("all", "x", 1, 0, 1, 25, d, d));
+            Check("invoice board range", sp => sp.GetRequiredService<InvoiceService>().Board("due", "x", 0, 1, 25, d, null));
             Check("access", sp => sp.GetRequiredService<AccessService>().For(1));
             Check("admin ids", sp => sp.GetRequiredService<AccessService>().AdministratorUserIds());
             Check("seeder", sp => sp.GetRequiredService<AccessSeeder>().Run());

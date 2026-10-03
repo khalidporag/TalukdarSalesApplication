@@ -7,7 +7,9 @@ namespace TalukdarSales.Web.Pages.Audit
 {
     public class IndexModel : PageModelBase
     {
-        private const int PageSize = 30;
+        private const int DefaultSize = 25;
+        [BindProperty(SupportsGet = true)] public int Size { get; set; }
+        private int PageSize => PageSizes.Clamp(Size, DefaultSize);
         private readonly AuditService _audit;
         public IndexModel(AuditService audit) => _audit = audit;
 

@@ -1,14 +1,34 @@
-@* Model: (int Page, int TotalPages, string Url, string Target) – Url is a query-string base; links use plain GET (?p=). Target is unused and kept for callers. *@
-@model (int Page, int TotalPages, string Url, string Target)
-@if (Model.TotalPages > 1)
+@* Shared pager: "Showing a-b of N", rows per page, and numbered pages with first/last and ellipses. Links are plain GETs so filters are kept. *@
+@model PagerVm
+@if (Model.Total > 0)
 {
-    var sep = Model.Url.Contains('?') ? "&" : "?";
-    <nav class="pager" aria-label="Pages">
-        @if (Model.Page > 1) { <a href="@(Model.Url)@(sep)p=@(Model.Page - 1)" aria-label="Previous page">@Icons.Svg("chevron-left", 16)</a> }
-        @for (var i = Math.Max(1, Model.Page - 2); i <= Math.Min(Model.TotalPages, Model.Page + 2); i++)
-        {
-            <a href="@(Model.Url)@(sep)p=@i" class="@(i == Model.Page ? "on" : "")" aria-current="@(i == Model.Page ? "page" : null)">@i</a>
-        }
-        @if (Model.Page < Model.TotalPages) { <a href="@(Model.Url)@(sep)p=@(Model.Page + 1)" aria-label="Next page">@Icons.Svg("chevron-right", 16)</a> }
+    var pages = Model.TotalPages;
+    var current = Math.Min(Model.Page, pages);
+    var shown = new SortedSet<int> { 1, pages, current, current - 1, current + 1, current - 2, current + 2 };
+    var last = 0;
+    <nav class="pager-bar" aria-label="Pagination">
+        <div class="lbl">Showing <b>@Fmt.Int(Model.From)</b> to <b>@Fmt.Int(Model.To)</b> of <b>@Fmt.Int(Model.Total)</b></div>
+        <div class="row" style="gap:12px">
+            <label class="row lbl" style="gap:8px">Rows
+                <select aria-label="Rows per page" onchange="location.href=this.value">
+                    @foreach (var n in PageSizes.Options) { <option value="@Model.Link(1, n)" selected="@(n == Model.PageSize)">@n</option> }
+                </select>
+            </label>
+            @if (pages > 1)
+            {
+                <div class="pager">
+                    <a class="@(current <= 1 ? "off" : "")" href="@(current <= 1 ? "#" : Model.Link(1))" aria-label="First page" aria-disabled="@(current <= 1 ? "true" : null)">@Icons.Svg("chevron-left", 16)@Icons.Svg("chevron-left", 16)</a>
+                    <a class="@(current <= 1 ? "off" : "")" href="@(current <= 1 ? "#" : Model.Link(current - 1))" aria-label="Previous page" aria-disabled="@(current <= 1 ? "true" : null)">@Icons.Svg("chevron-left", 16)</a>
+                    @foreach (var n in shown.Where(n => n >= 1 && n <= pages))
+                    {
+                        if (n - last > 1) { <span class="gap" aria-hidden="true">…</span> }
+                        <a class="@(n == current ? "on" : "")" href="@Model.Link(n)" aria-current="@(n == current ? "page" : null)" aria-label="Page @n">@n</a>
+                        last = n;
+                    }
+                    <a class="@(current >= pages ? "off" : "")" href="@(current >= pages ? "#" : Model.Link(current + 1))" aria-label="Next page" aria-disabled="@(current >= pages ? "true" : null)">@Icons.Svg("chevron-right", 16)</a>
+                    <a class="@(current >= pages ? "off" : "")" href="@(current >= pages ? "#" : Model.Link(pages))" aria-label="Last page" aria-disabled="@(current >= pages ? "true" : null)">@Icons.Svg("chevron-right", 16)@Icons.Svg("chevron-right", 16)</a>
+                </div>
+            }
+        </div>
     </nav>
 }

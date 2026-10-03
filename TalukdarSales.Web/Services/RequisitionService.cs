@@ -67,10 +67,15 @@ namespace TalukdarSales.Web.Services
         public int WaitingCount() => _requisitions.GetAll().Count(r => r.IsActive);
 
         /// <summary>Orders for the board: tab is "waiting" (default), "invoiced" or "all". <paramref name="days"/> 0 means any date.</summary>
-        public OrderBoard Board(string tab, string search, int? userTypeId, int days, int page, int pageSize)
+        public OrderBoard Board(string tab, string search, int? userTypeId, int days, int page, int pageSize, DateTime? from = null, DateTime? to = null)
         {
             var q = _requisitions.GetAll();
-            if (days > 0) { var since = DateTime.Today.AddDays(-(days - 1)); q = q.Where(r => r.CreatedDateTime >= since); }
+            if (from != null || to != null)
+            {
+                if (from != null) { var s0 = from.Value.Date; q = q.Where(r => r.CreatedDateTime >= s0); }
+                if (to != null) { var e0 = to.Value.Date.AddDays(1); q = q.Where(r => r.CreatedDateTime < e0); }
+            }
+            else if (days > 0) { var since = DateTime.Today.AddDays(-(days - 1)); q = q.Where(r => r.CreatedDateTime >= since); }
             var users = _users.GetAll();
             if (userTypeId != null) q = q.Where(r => users.Any(u => u.Id == r.UserId && u.UserTypeId == userTypeId));
             if (!string.IsNullOrWhiteSpace(search))

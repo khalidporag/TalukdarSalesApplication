@@ -36,6 +36,15 @@ namespace TalukdarSales.Web.Services
         public List<Notification> Recent(int userId, int take = 50) =>
             _db.Notifications.Where(n => !n.IsDeleted && n.UserId == userId).OrderByDescending(n => n.CreatedOn).ThenByDescending(n => n.Id).Take(take).ToList();
 
+        /// <summary>One page of a user's notifications, newest first. kind is new-order, over-limit or closing; empty means all kinds.</summary>
+        public Infrastructure.Paged<Notification> Page(int userId, string kind, bool unreadOnly, int page, int size)
+        {
+            var q = _db.Notifications.Where(n => !n.IsDeleted && n.UserId == userId);
+            if (!string.IsNullOrWhiteSpace(kind)) q = q.Where(n => n.Kind == kind);
+            if (unreadOnly) q = q.Where(n => !n.IsRead);
+            return Infrastructure.Paged<Notification>.Create(q.OrderByDescending(n => n.CreatedOn).ThenByDescending(n => n.Id), page, size);
+        }
+
         public void MarkRead(int userId, int id)
         {
             var n = _db.Notifications.FirstOrDefault(x => x.Id == id && x.UserId == userId);

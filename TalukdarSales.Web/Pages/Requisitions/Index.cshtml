@@ -3,7 +3,7 @@
 @{
     ViewData["Title"] = "Orders to invoice";
     var b = Model.Board;
-    string Url(string tab = null) => $"/Requisitions?tab={tab ?? Model.Tab}&q={Uri.EscapeDataString(Model.Q ?? "")}&typeId={Model.TypeId}&days={Model.Days}";
+    string Url(string tab = null) => $"/Requisitions?tab={tab ?? Model.Tab}&q={Uri.EscapeDataString(Model.Q ?? "")}&typeId={Model.TypeId}&days={Model.Days}&from={Model.From:yyyy-MM-dd}&to={Model.To:yyyy-MM-dd}";
     var canInvoice = Access.For(User).Has(TalukdarSales.Web.Security.Perm.RequisitionApprove);
 }
 <header class="page-head">
@@ -31,14 +31,17 @@
             <option value="7" selected="@(Model.Days == 7)">Last 7 days</option>
             <option value="30" selected="@(Model.Days == 30)">Last 30 days</option>
         </select>
-        <button class="btn" aria-label="Search">@Icons.Svg("chevron-right", 18)</button>
+<label class="row lbl" style="gap:6px">From <input type="date" name="from" value="@Model.From?.ToString("yyyy-MM-dd")" style="width:auto" /></label>
+        <label class="row lbl" style="gap:6px">To <input type="date" name="to" value="@Model.To?.ToString("yyyy-MM-dd")" style="width:auto" /></label>
+        <button class="btn">Filter</button>
+        @if (!string.IsNullOrEmpty(Model.Q) || Model.TypeId != null || Model.Days != 0 || Model.From != null || Model.To != null) { <a class="btn" href="/Requisitions?tab=@Model.Tab">Clear</a> }
     </div>
 </form>
 
 <div class="row top wrap" style="gap:22px">
     <section class="col grow" style="flex:1 1 560px;min-width:0;gap:12px">
         <form method="post" asp-page-handler="Bulk" id="bulk">
-            <input type="hidden" name="tab" value="@Model.Tab" /><input type="hidden" name="q" value="@Model.Q" /><input type="hidden" name="typeId" value="@Model.TypeId" /><input type="hidden" name="days" value="@Model.Days" />
+            <input type="hidden" name="tab" value="@Model.Tab" /><input type="hidden" name="q" value="@Model.Q" /><input type="hidden" name="typeId" value="@Model.TypeId" /><input type="hidden" name="days" value="@Model.Days" /><input type="hidden" name="from" value="@Model.From?.ToString("yyyy-MM-dd")" /><input type="hidden" name="to" value="@Model.To?.ToString("yyyy-MM-dd")" />
             <div class="card flush">
                 <div class="list-head">
                     @if (canInvoice && Model.Tab != "invoiced") { <input type="checkbox" id="all" aria-label="Select all" /> }
@@ -63,7 +66,7 @@
                         </span>
                     </div>
                 }
-                <partial name="_Pager" model='(b.Page.Page, b.Page.TotalPages, Url(), "")' />
+                <partial name="_Pager" model="b.Page.Pager(Url())" />
             </div>
             <div class="actionbar" id="selbar" hidden>
                 <div><b id="sel-count">0 selected</b><span style="color:#E0CCEE"> · <span id="sel-total">৳ 0</span></span></div>

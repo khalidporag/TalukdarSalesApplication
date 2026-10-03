@@ -8,7 +8,10 @@ namespace TalukdarSales.Web.Pages.Invoices
 
     public class IndexModel : PageModelBase
     {
-        private const int PageSize = 25;
+        private const int DefaultSize = 25;
+        [BindProperty(SupportsGet = true)] public int Size { get; set; }
+        private bool _exportAll;
+        private int PageSize => _exportAll ? 100000 : PageSizes.Clamp(Size, DefaultSize);
         public static readonly string[] Methods = { "Cash", "bKash", "Bank", "Cheque" };
         private readonly InvoiceService _invoices;
 
@@ -17,6 +20,8 @@ namespace TalukdarSales.Web.Pages.Invoices
         [BindProperty(SupportsGet = true)] public string Status { get; set; } = "all";
         [BindProperty(SupportsGet = true)] public string Q { get; set; }
         [BindProperty(SupportsGet = true)] public int Days { get; set; } = 30;
+        [BindProperty(SupportsGet = true)] public DateTime? From { get; set; }
+        [BindProperty(SupportsGet = true)] public DateTime? To { get; set; }
         [BindProperty(SupportsGet = true)] public int? Id { get; set; }
         [BindProperty(SupportsGet = true, Name = "p")] public int PageNo { get; set; } = 1;
 
@@ -37,6 +42,7 @@ namespace TalukdarSales.Web.Pages.Invoices
 
         public IActionResult OnGetExport()
         {
+            PageNo = 1; _exportAll = true;
             Load();
             return Excel.Sheet("InvoiceList.xlsx", "Invoice Data",
                 new[] { "Invoice For", "Invoice No", "Requisition No", "Creation Time", "Total", "Collection", "Due" },
@@ -53,13 +59,13 @@ namespace TalukdarSales.Web.Pages.Invoices
                 var (ok, error) = _invoices.Collect(invoiceId, amount.Value, string.IsNullOrWhiteSpace(method) ? "Cash" : method.Trim());
                 TempData["Flash"] = ok ? $"৳ {Fmt.Money(amount.Value)} collected by {method}." : error;
             }
-            return RedirectToPage("Index", new { Status, Q, Days, Id = invoiceId });
+            return RedirectToPage("Index", new { Status, Q, Days, From, To, Id = invoiceId });
         }
 
         private void Load()
         {
             Status = Status is "unpaid" or "partial" or "paid" or "due" ? Status : "all";
-            Board = _invoices.Board(Status, Q, Days, PageNo, PageSize);
+            Board = _invoices.Board(Status, Q, Days, PageNo, PageSize, From, To);
         }
 
         private CollectPanel LoadPanel(int id)

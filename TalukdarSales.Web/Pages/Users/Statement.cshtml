@@ -14,10 +14,18 @@
         <input type="date" name="to" value="@Day(d.To)" aria-label="To" style="width:auto" />
         <button class="btn">Show</button>
         <a class="btn" href="?handler=Export&id=@c.Id&from=@Day(d.From)&to=@Day(d.To)">@Icons.Svg("download", 18)Excel</a>
+        <input type="hidden" name="kind" value="@Model.Kind" />
         <button type="button" class="btn btn-p" onclick="window.print()">@Icons.Svg("print", 18)Print</button>
     </form>
 </header>
 
+<div class="row between wrap no-print" style="gap:12px">
+    <div class="chips">
+        @foreach (var (k, label) in new[] { ("", "Everything"), ("Invoice", "Invoices"), ("Payment", "Payments"), ("Credit note", "Credit notes"), ("Refund", "Refunds") })
+        { <a class="chip @(Model.Kind == k || (string.IsNullOrEmpty(Model.Kind) && k == "") ? "on" : "")" href="/Users/Statement?id=@c.Id&from=@Day(d.From)&to=@Day(d.To)&kind=@Uri.EscapeDataString(k)">@label</a> }
+    </div>
+    <a class="btn btn-s" href="/Users/Statement?id=@c.Id&from=@Day(d.From)&to=@Day(d.To)&kind=@Uri.EscapeDataString(Model.Kind ?? "")&all=true">Show all lines to print</a>
+</div>
 <article class="sheet">
     <div class="row between top wrap">
         <img src="~/img/logo-yellow.png" alt="Talukder Foods" style="height:78px;width:auto;border-radius:10px" />
@@ -30,8 +38,8 @@
     <table>
         <thead><tr><th>Date</th><th>Type</th><th>Reference</th><th class="r">Debit</th><th class="r">Credit</th><th class="r">Balance</th></tr></thead>
         <tbody>
-            <tr><td colspan="5"><b>Opening balance</b></td><td class="r num"><b>৳ @Fmt.Money(d.Opening)</b></td></tr>
-            @foreach (var e in d.Entries)
+            @if (Model.Pager.Page == 1) { <tr><td colspan="5"><b>Opening balance</b></td><td class="r num"><b>৳ @Fmt.Money(d.Opening)</b></td></tr> }
+            @foreach (var e in Model.Shown)
             {
                 <tr>
                     <td>@e.Date.ToString("d MMM yyyy")</td>
@@ -42,7 +50,7 @@
                     <td class="r num">৳ @Fmt.Money(e.Balance)</td>
                 </tr>
             }
-            @if (d.Entries.Count == 0) { <tr><td colspan="6" class="lbl" style="text-align:center">Nothing in this period.</td></tr> }
+            @if (Model.Shown.Count == 0) { <tr><td colspan="6" class="lbl" style="text-align:center">Nothing matches.</td></tr> }
             <tr><td colspan="5"><b>Closing balance</b></td><td class="r num"><b>৳ @Fmt.Money(d.Closing)</b></td></tr>
         </tbody>
     </table>
@@ -51,3 +59,4 @@
         <div><div class="lbl">Paid in period</div><div class="num strong">৳ @Fmt.Money(d.Paid)</div></div>
     </div>
 </article>
+<div class="card flush no-print"><partial name="_Pager" model="Model.Pager" /></div>

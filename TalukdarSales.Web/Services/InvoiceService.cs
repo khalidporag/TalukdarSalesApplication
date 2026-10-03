@@ -48,6 +48,9 @@ namespace TalukdarSales.Web.Services
     public record StatementEntry(DateTime Date, string Kind, string Reference, string Note, double Debit, double Credit, double Balance);
     public record Statement(User Customer, DateTime From, DateTime To, double Opening, List<StatementEntry> Entries, double Closing, double Billed, double Paid);
 
+    public record MethodTotal(string Method, double Amount);
+    public record CollectionPage(Paged<CollectionRow> Page, double Total, int Payments, List<MethodTotal> ByMethod, Dictionary<DateTime, double> DayTotals);
+
     public record CollectionRow(int Id, int InvoiceId, string InvoiceNumber, int UserId, double Amount, string PaymentMethod, DateTime Time, string UserName = "");
 
     public class InvoiceService
@@ -216,10 +219,15 @@ namespace TalukdarSales.Web.Services
         }
 
         /// <summary>Invoices for the list: status is all, unpaid, partial or paid; days 0 means any date.</summary>
-        public InvoiceBoard Board(string status, string search, int days, int page, int pageSize)
+        public InvoiceBoard Board(string status, string search, int days, int page, int pageSize, DateTime? from = null, DateTime? to = null)
         {
             var q = _invoices.GetAll();
-            if (days > 0) { var since = DateTime.Today.AddDays(-(days - 1)); q = q.Where(i => i.CreatedDateTime >= since); }
+            if (from != null || to != null)
+            {
+                if (from != null) { var s0 = from.Value.Date; q = q.Where(i => i.CreatedDateTime >= s0); }
+                if (to != null) { var e0 = to.Value.Date.AddDays(1); q = q.Where(i => i.CreatedDateTime < e0); }
+            }
+            else if (days > 0) { var since = DateTime.Today.AddDays(-(days - 1)); q = q.Where(i => i.CreatedDateTime >= since); }
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var t = search.Trim().ToLower();
@@ -448,16 +456,65 @@ namespace TalukdarSales.Web.Services
                 var end = to.Value.Date.AddDays(1);
                 q = q.Where(c => c.CreatedOn >= start && c.CreatedOn < end);
             }
-            var items = q.OrderByDescending(c => c.CreatedOn).ThenByDescending(c => c.Id).ToList();
+            var rows = MapCollections(q.OrderByDescending(c => c.CreatedOn).ThenByDescending(c => c.Id).ToList());
+            return (rows, rows.Where(r => r.Amount > 0).Sum(r => r.Amount));
+        }
+
+        /// <summary>Money collected per day over a range (refunds excluded), summed in SQL.</summary>
+        public Dictionary<DateTime, double> CollectedByDay(DateTime from, DateTime to)
+        {
+            var start = from.Date; var end = to.Date.AddDays(1);
+            return _ledger.GetAll().Where(c => c.CollectionAmount > 0 && c.CreatedOn >= start && c.CreatedOn < end)
+                .GroupBy(c => c.CreatedOn.Date).Select(g => new { Day = g.Key, Amount = g.Sum(c => c.CollectionAmount) })
+                .ToList().ToDictionary(x => x.Day, x => x.Amount);
+        }
+
+        private List<CollectionRow> MapCollections(List<CollectionLedger> items)
+        {
             var invoiceIds = items.Select(c => c.SalesInvoiceId).Distinct().ToList();
             var invoices = _invoices.GetAll().Where(i => invoiceIds.Contains(i.Id)).ToDictionary(i => i.Id);
             var userIds = items.Select(c => c.UserId).Distinct().ToList();
             var names = _users.GetAll().Where(u => userIds.Contains(u.Id)).Select(u => new { u.Id, u.FirstName, u.LastName }).ToList()
                 .ToDictionary(u => u.Id, u => $"{u.FirstName} {u.LastName}".Trim());
-            var rows = items.Select(c => new CollectionRow(c.Id, c.SalesInvoiceId,
+            return items.Select(c => new CollectionRow(c.Id, c.SalesInvoiceId,
                 invoices.TryGetValue(c.SalesInvoiceId, out var i) ? i.InvoiceSerialNo : "",
                 c.UserId, c.CollectionAmount, c.PaymentMethod, c.CreatedOn, names.TryGetValue(c.UserId, out var n) ? n : "")).ToList();
-            return (rows, rows.Where(r => r.Amount > 0).Sum(r => r.Amount));
+        }
+
+        /// <summary>
+        /// Collections for the history page, filtered and paged in SQL. The totals and the method split cover the whole filtered set,
+        /// not just the page shown; day totals cover the days that appear on the page.
+        /// </summary>
+        public CollectionPage Collections(DateTime? from, DateTime? to, string method, string search, int page, int size)
+        {
+            var q = _ledger.GetAll();
+            if (from != null) { var start = from.Value.Date; q = q.Where(c => c.CreatedOn >= start); }
+            if (to != null) { var end = to.Value.Date.AddDays(1); q = q.Where(c => c.CreatedOn < end); }
+            if (!string.IsNullOrWhiteSpace(method)) { var m = method.Trim().ToLower(); q = q.Where(c => c.PaymentMethod != null && c.PaymentMethod.ToLower() == m); }
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var t = search.Trim().ToLower();
+                var users = _users.GetAll(); var invs = _invoices.GetAll();
+                q = q.Where(c => users.Any(u => u.Id == c.UserId && (u.FirstName + " " + u.LastName).ToLower().Contains(t))
+                    || invs.Any(i => i.Id == c.SalesInvoiceId && i.InvoiceSerialNo != null && i.InvoiceSerialNo.ToLower().Contains(t)));
+            }
+            var paid = q.Where(c => c.CollectionAmount > 0);
+            var total = paid.Sum(c => (double?)c.CollectionAmount) ?? 0;
+            var count = paid.Count();
+            var byMethod = paid.GroupBy(c => c.PaymentMethod ?? "Other").Select(g => new { Method = g.Key, Amount = g.Sum(c => c.CollectionAmount) })
+                .OrderByDescending(x => x.Amount).ToList().Select(x => new MethodTotal(x.Method, x.Amount)).ToList();
+
+            var paged = Paged<CollectionLedger>.Create(q.OrderByDescending(c => c.CreatedOn).ThenByDescending(c => c.Id), page, size);
+            var rows = MapCollections(paged.Items);
+            var dayTotals = new Dictionary<DateTime, double>();
+            if (rows.Count > 0)
+            {
+                var lo = rows.Min(r => r.Time).Date; var hi = rows.Max(r => r.Time).Date.AddDays(1);
+                dayTotals = paid.Where(c => c.CreatedOn >= lo && c.CreatedOn < hi).GroupBy(c => c.CreatedOn.Date)
+                    .Select(g => new { Day = g.Key, Amount = g.Sum(c => c.CollectionAmount) }).ToList().ToDictionary(x => x.Day, x => x.Amount);
+            }
+            return new CollectionPage(new Paged<CollectionRow> { Items = rows, Page = paged.Page, PageSize = paged.PageSize, Total = paged.Total },
+                total, count, byMethod, dayTotals);
         }
     }
 }

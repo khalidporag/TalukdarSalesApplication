@@ -10,7 +10,9 @@ namespace TalukdarSales.Web.Pages.Requisitions
 
     public class IndexModel : PageModelBase
     {
-        private const int PageSize = 25;
+        private const int DefaultSize = 25;
+        [BindProperty(SupportsGet = true)] public int Size { get; set; }
+        private int PageSize => PageSizes.Clamp(Size, DefaultSize);
         private readonly RequisitionService _requisitions;
         private readonly InvoiceService _invoices;
         private readonly IUserTypeRepository _userTypes;
@@ -31,6 +33,8 @@ namespace TalukdarSales.Web.Pages.Requisitions
         [BindProperty(SupportsGet = true)] public string Q { get; set; }
         [BindProperty(SupportsGet = true)] public int? TypeId { get; set; }
         [BindProperty(SupportsGet = true)] public int Days { get; set; }
+        [BindProperty(SupportsGet = true)] public DateTime? From { get; set; }
+        [BindProperty(SupportsGet = true)] public DateTime? To { get; set; }
         [BindProperty(SupportsGet = true)] public int? Id { get; set; }
         [BindProperty(SupportsGet = true, Name = "p")] public int PageNo { get; set; } = 1;
 
@@ -41,7 +45,7 @@ namespace TalukdarSales.Web.Pages.Requisitions
         public void OnGet()
         {
             Tab = Tab is "invoiced" or "all" or "cancelled" ? Tab : "waiting";
-            Board = _requisitions.Board(Tab, Q, TypeId, Days, PageNo, PageSize);
+            Board = _requisitions.Board(Tab, Q, TypeId, Days, PageNo, PageSize, From, To);
             TypeOptions = _userTypes.GetAll().Select(t => new SelectListItem(t.TypeName, t.Id.ToString())).ToList();
             if (Id != null) Panel = LoadPanel(Id.Value);
         }
@@ -96,7 +100,7 @@ namespace TalukdarSales.Web.Pages.Requisitions
         }
 
         private IActionResult Back(int? id = null) =>
-            RedirectToPage("Index", new { Tab, Q, TypeId, Days, Id = id });
+            RedirectToPage("Index", new { Tab, Q, TypeId, Days, From, To, Id = id });
 
         private OrderPanel LoadPanel(int id)
         {

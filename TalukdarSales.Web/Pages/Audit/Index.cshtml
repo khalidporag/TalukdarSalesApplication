@@ -34,5 +34,5 @@
             <span class="lbl" style="width:130px;text-align:right">@a.CreatedOn.ToString("d MMM, h:mm tt")</span>
         </div>
     }
-    <partial name="_Pager" model='(items.Page, items.TotalPages, Q(), "")' />
+    <partial name="_Pager" model="items.Pager(Q())" />
 </section>

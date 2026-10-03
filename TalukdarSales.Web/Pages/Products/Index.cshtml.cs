@@ -10,7 +10,9 @@ namespace TalukdarSales.Web.Pages.Products
 {
     public class IndexModel : PageModelBase
     {
-        private const int PageSize = 12;
+        private const int DefaultSize = 10;
+        [BindProperty(SupportsGet = true)] public int Size { get; set; }
+        private int PageSize => PageSizes.Clamp(Size, DefaultSize);
         private readonly IFinishedGoodsRepository _goods;
         private readonly IFinishedGoodTypeRepository _types;
         private readonly ImageStore _images;
@@ -26,6 +28,10 @@ namespace TalukdarSales.Web.Pages.Products
 
         [BindProperty(SupportsGet = true)] public string Name { get; set; }
         [BindProperty(SupportsGet = true)] public int? TypeId { get; set; }
+        /// <summary>available or hidden; empty shows both.</summary>
+        [BindProperty(SupportsGet = true)] public string Status { get; set; }
+        /// <summary>name (default), price or priceDesc.</summary>
+        [BindProperty(SupportsGet = true)] public string Sort { get; set; }
         [BindProperty(SupportsGet = true, Name = "p")] public int PageNo { get; set; } = 1;
 
         public Paged<FinishedGood> Items { get; private set; }
@@ -99,7 +105,7 @@ namespace TalukdarSales.Web.Pages.Products
             _goods.Commit();
             _audit.Log("product.availability", "Product", g.Id, $"{g.Name} {(g.IsActive ? "made available" : "hidden")}");
             TempData["Flash"] = g.IsActive ? $"{g.Name} is available again." : $"{g.Name} is hidden from new orders.";
-            return RedirectToPage("Index", new { TypeId, Name, p = PageNo });
+            return RedirectToPage("Index", new { TypeId, Name, Status, Sort, Size, p = PageNo });
         }
 
         public async Task<IActionResult> OnPostCreateAsync([Bind(Prefix = nameof(Create))] CreateInput input)
@@ -165,7 +171,12 @@ namespace TalukdarSales.Web.Pages.Products
                 var term = Name.Trim().ToLower();
                 all = all.Where(n => n.Name.ToLower().Contains(term));
             }
-            Items = Paged<FinishedGood>.Create(all.OrderBy(n => n.Name).ThenBy(n => n.Id), PageNo, PageSize);
+            if (Status == "available") all = all.Where(n => n.IsActive);
+            else if (Status == "hidden") all = all.Where(n => !n.IsActive);
+            var ordered = Sort == "price" ? all.OrderBy(n => n.UnitPrice).ThenBy(n => n.Name)
+                : Sort == "priceDesc" ? all.OrderByDescending(n => n.UnitPrice).ThenBy(n => n.Name)
+                : all.OrderBy(n => n.Name).ThenBy(n => n.Id);
+            Items = Paged<FinishedGood>.Create(ordered, PageNo, PageSize);
             TypeNames = _types.GetAll().ToDictionary(t => t.Id, t => t.Name);
         }
 
