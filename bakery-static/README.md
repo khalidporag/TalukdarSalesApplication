@@ -14,4 +14,4 @@ Open `index.html` in a browser, or serve the folder:
 
 Orders and custom-cake enquiries open WhatsApp with the message pre-filled. The basket is kept in the browser's localStorage.
 
-Deploy by uploading the folder to any static host (GitHub Pages, Netlify, Cloudflare Pages).
+Deployed to GitHub Pages by `.github/workflows/pages.yml` on every push to `main` that touches this folder. Live at https://khalidporag.github.io/TalukdarSalesApplication/ (one-time setup: Settings, Pages, Source = GitHub Actions). It also works on any static host.
