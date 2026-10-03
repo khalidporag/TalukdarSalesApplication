@@ -1,0 +1,38 @@
+@page
+@model TalukdarSales.Web.Pages.Audit.IndexModel
+@using TalukdarSales.Web.Services
+@{
+    ViewData["Title"] = "Audit log";
+    var items = Model.Items;
+    string Q(string entity = null) => $"/Audit?q={Uri.EscapeDataString(Model.Q ?? "")}&entity={entity ?? Model.Entity}&from={Model.From:yyyy-MM-dd}&to={Model.To:yyyy-MM-dd}";
+}
+<header class="page-head">
+    <div><h1 class="page-title">Audit log</h1><div class="page-sub">Who changed what, and when. Entries cannot be edited.</div></div>
+    <div class="actions"><a class="btn" href="@Q()&handler=Export">@Icons.Svg("download", 18)Export Excel</a></div>
+</header>
+<form method="get" class="row between wrap" style="gap:12px">
+    <input type="hidden" name="entity" value="@Model.Entity" />
+    <div class="chips">
+        <a class="chip @(string.IsNullOrEmpty(Model.Entity) ? "on" : "")" href="@Q("")">Everything</a>
+        @foreach (var e in AuditService.Entities) { <a class="chip @(Model.Entity == e ? "on" : "")" href="@Q(e)">@e</a> }
+    </div>
+    <div class="row wrap" style="gap:8px">
+        <input type="date" name="from" value="@Model.From?.ToString("yyyy-MM-dd")" aria-label="From" style="width:auto" />
+        <input type="date" name="to" value="@Model.To?.ToString("yyyy-MM-dd")" aria-label="To" style="width:auto" />
+        <input type="search" name="q" value="@Model.Q" placeholder="Search person or detail" aria-label="Search the audit log" style="width:220px" />
+        <button class="btn" aria-label="Search">@Icons.Svg("chevron-right", 18)</button>
+    </div>
+</form>
+<section class="card flush">
+    @if (!items.Items.Any()) { <div class="empty">No activity matches.</div> }
+    @foreach (var a in items.Items)
+    {
+        <div class="list-row">
+            <span class="avatar-s">@Fmt.Initials(a.UserName)</span>
+            <div class="grow" style="min-width:0"><div>@a.Summary</div><div class="lbl">@a.UserName · @a.Action</div></div>
+            <span class="pill neutral">@a.Entity</span>
+            <span class="lbl" style="width:130px;text-align:right">@a.CreatedOn.ToString("d MMM, h:mm tt")</span>
+        </div>
+    }
+    <partial name="_Pager" model="items.Pager(Q())" />
+</section>

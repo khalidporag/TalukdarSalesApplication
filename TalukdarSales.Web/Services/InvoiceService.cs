@@ -28,7 +28,14 @@ namespace TalukdarSales.Web.Services
         public double Total => Quantity * Price;
     }
 
-    public record InvoiceDetail(InvoiceRow Header, string UserSequentialId, double Quantity, List<InvoiceLineView> Lines);
+    public record CreditNoteView(int Id, string Serial, DateTime Date, double Amount, double Refund, string Reason, List<InvoiceLineView> Lines);
+    public record ReturnableLine(int FinishedGoodId, string ProductName, double Price, double Sold, double Returned)
+    {
+        public double Left => Sold - Returned;
+    }
+
+    public record InvoiceDetail(InvoiceRow Header, string UserSequentialId, double Quantity, List<InvoiceLineView> Lines,
+        double Discount = 0, double Returned = 0, List<CreditNoteView> Notes = null);
 
     public record InvoiceBoard(Paged<InvoiceRow> Page, double Billed, double Collected,
         int All, int Unpaid, int Partial, int Paid)
@@ -37,6 +44,12 @@ namespace TalukdarSales.Web.Services
     }
 
     public record OpenInvoice(int Id, string Number, DateTime Created, double Due);
+
+    public record StatementEntry(DateTime Date, string Kind, string Reference, string Note, double Debit, double Credit, double Balance);
+    public record Statement(User Customer, DateTime From, DateTime To, double Opening, List<StatementEntry> Entries, double Closing, double Billed, double Paid);
+
+    public record MethodTotal(string Method, double Amount);
+    public record CollectionPage(Paged<CollectionRow> Page, double Total, int Payments, List<MethodTotal> ByMethod, Dictionary<DateTime, double> DayTotals);
 
     public record CollectionRow(int Id, int InvoiceId, string InvoiceNumber, int UserId, double Amount, string PaymentMethod, DateTime Time, string UserName = "");
 
@@ -50,12 +63,17 @@ namespace TalukdarSales.Web.Services
         private readonly ICollectionLedgerRepository _ledger;
         private readonly IUserRepository _users;
         private readonly IFinishedGoodsRepository _goods;
+        private readonly CurrentUser _current;
+        private readonly AuditService _audit;
+        private readonly IConfiguration _config;
 
         public InvoiceService(ApplicationDbContext db, ISalesInvoiceRepository invoices,
             ISalesInvoiceDetailsRepository invoiceDetails, ISalesRequisitionRepository requisitions,
             ISalesRequisitionDetailRepository requisitionDetails, ICollectionLedgerRepository ledger,
-            IUserRepository users, IFinishedGoodsRepository goods)
+            IUserRepository users, IFinishedGoodsRepository goods,
+            CurrentUser current, AuditService audit, IConfiguration config)
         {
+            _current = current; _audit = audit; _config = config;
             _db = db;
             _invoices = invoices;
             _invoiceDetails = invoiceDetails;
@@ -90,11 +108,19 @@ namespace TalukdarSales.Web.Services
                 created.Add(invoice);
             }
             tx.Commit();
+            foreach (var inv in created)
+                _audit.Log("invoice.create", "Invoice", inv.Id, $"{inv.InvoiceSerialNo} for ৳ {inv.TotalPrice:0.##}");
             return (true, null, created);
         }
 
         /// <summary>Manual invoice for one requisition with adjusted quantities. Prices come from the requisition.</summary>
-        public (bool Ok, string Error, SalesInvoice Invoice) CreateForRequisition(int requisitionId, IEnumerable<InvoiceLine> lines)
+        public double MaxDiscountPercent => _config.GetValue("Sales:MaxDiscountPercent", 20d);
+
+        /// <summary>Discount in taka, or as a percent of the subtotal (percent wins when both are given). Returns the taka amount.</summary>
+        public static double DiscountFor(double subtotal, double amount, double percent) =>
+            Money.Round(percent > 0 ? subtotal * percent / 100 : amount);
+
+        public (bool Ok, string Error, SalesInvoice Invoice) CreateForRequisition(int requisitionId, IEnumerable<InvoiceLine> lines, double discountAmount = 0, double discountPercent = 0)
         {
             var requisition = _requisitions.GetSingle(requisitionId);
             if (requisition == null || !requisition.IsActive)
@@ -108,16 +134,25 @@ namespace TalukdarSales.Web.Services
             if (picked.Count == 0)
                 return (false, "Enter a quantity for at least one product.", null);
 
+            var subtotal = Money.Round(picked.Sum(l => l.Quantity * l.Price));
+            var discount = DiscountFor(subtotal, discountAmount, discountPercent);
+            if (discount < 0 || discountPercent < 0 || discountAmount < 0) return (false, "A discount cannot be negative.", null);
+            if (discount > subtotal + 0.005) return (false, "The discount is larger than the invoice.", null);
+            if (subtotal > 0 && discount / subtotal * 100 > MaxDiscountPercent + 0.005)
+                return (false, $"Discounts are limited to {MaxDiscountPercent:0.##}% of the invoice.", null);
+
             using var tx = _db.Database.BeginTransaction();
-            var invoice = Build(requisition, picked);
+            var invoice = Build(requisition, picked, discount, discountPercent);
             if (invoice == null)
                 return (false, "User not found.", null);
             tx.Commit();
+            _audit.Log("invoice.create", "Invoice", invoice.Id,
+                $"{invoice.InvoiceSerialNo} for ৳ {invoice.TotalPrice:0.##}" + (discount > 0 ? $" after a ৳ {discount:0.##} discount" : ""));
             return (true, null, invoice);
         }
 
         // Must run inside a transaction. Adds the invoice total to the user's due amount.
-        private SalesInvoice Build(SalesRequisition requisition, List<InvoiceBuildLine> lines)
+        private SalesInvoice Build(SalesRequisition requisition, List<InvoiceBuildLine> lines, double discount = 0, double discountPercent = 0)
         {
             var user = _users.GetSingle(requisition.UserId);
             if (user == null)
@@ -129,7 +164,10 @@ namespace TalukdarSales.Web.Services
                 UserId = requisition.UserId,
                 SalesRequisitionId = requisition.Id,
                 Quantity = lines.Sum(l => l.Quantity),
-                TotalPrice = Money.Round(lines.Sum(l => l.Quantity * l.Price)),
+                TotalPrice = Money.Round(lines.Sum(l => l.Quantity * l.Price) - discount),
+                DiscountAmount = discount,
+                DiscountPercentage = discountPercent,
+                CreatedByUserId = _current.Id,
                 CreatedDateTime = now
             };
             _invoices.Add(invoice);
@@ -181,10 +219,15 @@ namespace TalukdarSales.Web.Services
         }
 
         /// <summary>Invoices for the list: status is all, unpaid, partial or paid; days 0 means any date.</summary>
-        public InvoiceBoard Board(string status, string search, int days, int page, int pageSize)
+        public InvoiceBoard Board(string status, string search, int days, int page, int pageSize, DateTime? from = null, DateTime? to = null)
         {
             var q = _invoices.GetAll();
-            if (days > 0) { var since = DateTime.Today.AddDays(-(days - 1)); q = q.Where(i => i.CreatedDateTime >= since); }
+            if (from != null || to != null)
+            {
+                if (from != null) { var s0 = from.Value.Date; q = q.Where(i => i.CreatedDateTime >= s0); }
+                if (to != null) { var e0 = to.Value.Date.AddDays(1); q = q.Where(i => i.CreatedDateTime < e0); }
+            }
+            else if (days > 0) { var since = DateTime.Today.AddDays(-(days - 1)); q = q.Where(i => i.CreatedDateTime >= since); }
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var t = search.Trim().ToLower();
@@ -231,7 +274,118 @@ namespace TalukdarSales.Web.Services
             var goodIds = details.Select(d => d.FinishedGoodsId).Distinct().ToList();
             var goods = _goods.GetAll().Where(g => goodIds.Contains(g.Id)).ToDictionary(g => g.Id);
             var lines = details.Select(d => new InvoiceLineView(goods.TryGetValue(d.FinishedGoodsId, out var g) ? g.Name : "", d.Quantity, d.Price)).ToList();
-            return new InvoiceDetail(header, user?.SequencialUserId ?? "", invoice.Quantity, lines);
+            var notes = _db.CreditNotes.Where(n => !n.IsDeleted && n.SalesInvoiceId == id).OrderBy(n => n.Id).ToList();
+            var noteIds = notes.Select(n => n.Id).ToList();
+            var noteLines = _db.CreditNoteLines.Where(l => !l.IsDeleted && noteIds.Contains(l.CreditNoteId)).ToList();
+            var noteGoodIds = noteLines.Select(l => l.FinishedGoodId).Distinct().ToList();
+            var noteGoods = _goods.GetAll().Where(g => noteGoodIds.Contains(g.Id)).ToDictionary(g => g.Id, g => g.Name);
+            var views = notes.Select(n => new CreditNoteView(n.Id, n.Serial, n.CreatedOn, n.Amount, n.Refund, n.Reason,
+                noteLines.Where(l => l.CreditNoteId == n.Id).Select(l => new InvoiceLineView(noteGoods.TryGetValue(l.FinishedGoodId, out var nm) ? nm : "", l.Quantity, l.Price)).ToList())).ToList();
+            return new InvoiceDetail(header, user?.SequencialUserId ?? "", invoice.Quantity, lines, invoice.DiscountAmount, invoice.ReturnedAmount, views);
+        }
+
+        /// <summary>
+        /// A customer's account for a period: invoices (at their original value) and refunds add to the balance;
+        /// payments and credit notes reduce it. The closing balance matches what the customer owes.
+        /// </summary>
+        public Statement StatementFor(int userId, DateTime from, DateTime to)
+        {
+            var user = _users.GetSingle(userId);
+            if (user == null) return null;
+            var start = from.Date; var end = to.Date.AddDays(1);
+            var all = new List<(DateTime Date, string Kind, string Ref, string Note, double Debit, double Credit)>();
+            var invoices = _invoices.GetAll().Where(i => i.UserId == userId).ToList();
+            foreach (var i in invoices)
+                all.Add((i.CreatedDateTime, "Invoice", i.InvoiceSerialNo, i.DiscountAmount > 0 ? $"after ৳ {i.DiscountAmount:0.##} discount" : "", Money.Round(i.TotalPrice + i.ReturnedAmount), 0));
+            var invNo = invoices.ToDictionary(i => i.Id, i => i.InvoiceSerialNo);
+            foreach (var c in _ledger.GetAll().Where(c => c.UserId == userId).ToList())
+            {
+                var reference = invNo.TryGetValue(c.SalesInvoiceId, out var n) ? n : "";
+                if (c.CollectionAmount >= 0) all.Add((c.CreatedOn, "Payment", reference, c.PaymentMethod, 0, c.CollectionAmount));
+                else all.Add((c.CreatedOn, "Refund", reference, "paid back to customer", -c.CollectionAmount, 0));
+            }
+            foreach (var cn in _db.CreditNotes.Where(n => !n.IsDeleted && n.UserId == userId).ToList())
+                all.Add((cn.CreatedOn, "Credit note", cn.Serial, cn.Reason, 0, cn.Amount));
+
+            var ordered = all.OrderBy(a => a.Date).ToList();
+            var opening = Money.Round(ordered.Where(a => a.Date < start).Sum(a => a.Debit - a.Credit));
+            var balance = opening;
+            var entries = new List<StatementEntry>();
+            foreach (var a in ordered.Where(a => a.Date >= start && a.Date < end))
+            {
+                balance = Money.Round(balance + a.Debit - a.Credit);
+                entries.Add(new StatementEntry(a.Date, a.Kind, a.Ref, a.Note, a.Debit, a.Credit, balance));
+            }
+            return new Statement(user, start, end.AddDays(-1), opening, entries, balance,
+                entries.Where(e => e.Kind == "Invoice").Sum(e => e.Debit), entries.Where(e => e.Kind == "Payment").Sum(e => e.Credit));
+        }
+
+        /// <summary>What can still be returned on an invoice, per product.</summary>
+        public List<ReturnableLine> Returnable(int invoiceId)
+        {
+            var details = _invoiceDetails.GetAll().Where(d => d.SalesInvoiceId == invoiceId).ToList();
+            var noteIds = _db.CreditNotes.Where(n => !n.IsDeleted && n.SalesInvoiceId == invoiceId).Select(n => n.Id).ToList();
+            var returned = _db.CreditNoteLines.Where(l => !l.IsDeleted && noteIds.Contains(l.CreditNoteId)).ToList()
+                .GroupBy(l => l.FinishedGoodId).ToDictionary(g => g.Key, g => g.Sum(l => l.Quantity));
+            var goodIds = details.Select(d => d.FinishedGoodsId).Distinct().ToList();
+            var names = _goods.GetAll().Where(g => goodIds.Contains(g.Id)).ToDictionary(g => g.Id, g => g.Name);
+            return details.GroupBy(d => d.FinishedGoodsId).Select(g => new ReturnableLine(g.Key, names.TryGetValue(g.Key, out var n) ? n : "",
+                g.First().Price, g.Sum(d => d.Quantity), returned.TryGetValue(g.Key, out var r) ? r : 0)).ToList();
+        }
+
+        /// <summary>
+        /// Takes goods back against an invoice. The credit (price net of the invoice's discount) reduces the invoice total and the
+        /// customer's balance; if the invoice was already paid beyond its new total, the excess is refunded through a negative ledger row.
+        /// </summary>
+        public (bool Ok, string Error, CreditNote Note) ReturnGoods(int invoiceId, IEnumerable<InvoiceLine> lines, string reason)
+        {
+            reason = (reason ?? "").Trim();
+            if (reason.Length == 0) return (false, "Give a reason for the return.", null);
+            var invoice = _invoices.GetSingle(invoiceId);
+            if (invoice == null) return (false, "Invoice not found.", null);
+            var user = _users.GetSingle(invoice.UserId);
+            if (user == null) return (false, "User not found.", null);
+
+            var returnable = Returnable(invoiceId).ToDictionary(r => r.FinishedGoodId);
+            var picked = (lines ?? Enumerable.Empty<InvoiceLine>()).Where(l => l.Quantity > 0)
+                .GroupBy(l => l.FinishedGoodId).Select(g => new InvoiceLine(g.Key, g.Sum(x => x.Quantity))).ToList();
+            if (picked.Count == 0) return (false, "Enter a quantity for at least one product.", null);
+            foreach (var l in picked)
+                if (!returnable.TryGetValue(l.FinishedGoodId, out var r) || l.Quantity > r.Left + 0.000001)
+                    return (false, "You cannot return more than was sold.", null);
+
+            var gross = returnable.Values.Sum(r => r.Sold * r.Price);
+            var factor = gross <= 0 ? 1 : Math.Max(0, (invoice.TotalPrice + invoice.ReturnedAmount) / gross);   // discount share carried by each unit
+            var amount = Money.Round(picked.Sum(l => l.Quantity * returnable[l.FinishedGoodId].Price * factor));
+            amount = Math.Min(amount, invoice.TotalPrice);
+
+            using var tx = _db.Database.BeginTransaction();
+            var oldDue = invoice.TotalPrice - invoice.CollectionAmount;
+            var newTotal = Money.Round(invoice.TotalPrice - amount);
+            var newCollected = Math.Min(invoice.CollectionAmount, newTotal);
+            var refund = Money.Round(invoice.CollectionAmount - newCollected);
+            var newDue = newTotal - newCollected;
+
+            var note = new CreditNote { SalesInvoiceId = invoiceId, UserId = invoice.UserId, Amount = amount, Refund = refund, Reason = reason.Length > 300 ? reason[..300] : reason,
+                CreatedByUserId = _current.Id, CreatedOn = DateTime.Now };
+            _db.CreditNotes.Add(note);
+            _db.SaveChanges();
+            note.Serial = "CN - " + note.Id.ToString("D6");
+            _db.CreditNoteLines.AddRange(picked.Select(l => new CreditNoteLine { CreditNoteId = note.Id, FinishedGoodId = l.FinishedGoodId, Quantity = l.Quantity,
+                Price = Money.Round(returnable[l.FinishedGoodId].Price * factor), CreatedOn = DateTime.Now }));
+
+            invoice.TotalPrice = newTotal;
+            invoice.CollectionAmount = newCollected;
+            invoice.ReturnedAmount = Money.Round(invoice.ReturnedAmount + amount);
+            _invoices.Update(invoice);
+            if (refund > 0)
+                _ledger.Add(new CollectionLedger { UserId = invoice.UserId, SalesInvoiceId = invoiceId, CollectionAmount = -refund, PaymentMethod = "Refund" });
+            user.DueAmount = Money.Round(user.DueAmount + (newDue - oldDue));
+            _users.Update(user);
+            _invoices.Commit();
+            tx.Commit();
+            _audit.Log("creditnote.create", "Credit note", note.Id, $"{note.Serial} against {invoice.InvoiceSerialNo}: ৳ {amount:0.##} credited" + (refund > 0 ? $", ৳ {refund:0.##} to refund" : "") + $". {note.Reason}");
+            return (true, null, note);
         }
 
         private static InvoiceRow ToRow(SalesInvoice i, Dictionary<int, User> users, Dictionary<int, SalesRequisition> reqs) =>
@@ -287,6 +441,7 @@ namespace TalukdarSales.Web.Services
             _users.Update(user);
             _invoices.Commit();
             tx.Commit();
+            _audit.Log("payment.collect", "Payment", invoiceId, $"৳ {amount:0.##} by {paymentMethod} from {user.FirstName} {user.LastName}".Trim());
             return (true, null);
         }
 
@@ -301,16 +456,65 @@ namespace TalukdarSales.Web.Services
                 var end = to.Value.Date.AddDays(1);
                 q = q.Where(c => c.CreatedOn >= start && c.CreatedOn < end);
             }
-            var items = q.OrderByDescending(c => c.CreatedOn).ThenByDescending(c => c.Id).ToList();
+            var rows = MapCollections(q.OrderByDescending(c => c.CreatedOn).ThenByDescending(c => c.Id).ToList());
+            return (rows, rows.Where(r => r.Amount > 0).Sum(r => r.Amount));
+        }
+
+        /// <summary>Money collected per day over a range (refunds excluded), summed in SQL.</summary>
+        public Dictionary<DateTime, double> CollectedByDay(DateTime from, DateTime to)
+        {
+            var start = from.Date; var end = to.Date.AddDays(1);
+            return _ledger.GetAll().Where(c => c.CollectionAmount > 0 && c.CreatedOn >= start && c.CreatedOn < end)
+                .GroupBy(c => c.CreatedOn.Date).Select(g => new { Day = g.Key, Amount = g.Sum(c => c.CollectionAmount) })
+                .ToList().ToDictionary(x => x.Day, x => x.Amount);
+        }
+
+        private List<CollectionRow> MapCollections(List<CollectionLedger> items)
+        {
             var invoiceIds = items.Select(c => c.SalesInvoiceId).Distinct().ToList();
             var invoices = _invoices.GetAll().Where(i => invoiceIds.Contains(i.Id)).ToDictionary(i => i.Id);
             var userIds = items.Select(c => c.UserId).Distinct().ToList();
             var names = _users.GetAll().Where(u => userIds.Contains(u.Id)).Select(u => new { u.Id, u.FirstName, u.LastName }).ToList()
                 .ToDictionary(u => u.Id, u => $"{u.FirstName} {u.LastName}".Trim());
-            var rows = items.Select(c => new CollectionRow(c.Id, c.SalesInvoiceId,
+            return items.Select(c => new CollectionRow(c.Id, c.SalesInvoiceId,
                 invoices.TryGetValue(c.SalesInvoiceId, out var i) ? i.InvoiceSerialNo : "",
                 c.UserId, c.CollectionAmount, c.PaymentMethod, c.CreatedOn, names.TryGetValue(c.UserId, out var n) ? n : "")).ToList();
-            return (rows, rows.Where(r => r.Amount > 0).Sum(r => r.Amount));
+        }
+
+        /// <summary>
+        /// Collections for the history page, filtered and paged in SQL. The totals and the method split cover the whole filtered set,
+        /// not just the page shown; day totals cover the days that appear on the page.
+        /// </summary>
+        public CollectionPage Collections(DateTime? from, DateTime? to, string method, string search, int page, int size)
+        {
+            var q = _ledger.GetAll();
+            if (from != null) { var start = from.Value.Date; q = q.Where(c => c.CreatedOn >= start); }
+            if (to != null) { var end = to.Value.Date.AddDays(1); q = q.Where(c => c.CreatedOn < end); }
+            if (!string.IsNullOrWhiteSpace(method)) { var m = method.Trim().ToLower(); q = q.Where(c => c.PaymentMethod != null && c.PaymentMethod.ToLower() == m); }
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var t = search.Trim().ToLower();
+                var users = _users.GetAll(); var invs = _invoices.GetAll();
+                q = q.Where(c => users.Any(u => u.Id == c.UserId && (u.FirstName + " " + u.LastName).ToLower().Contains(t))
+                    || invs.Any(i => i.Id == c.SalesInvoiceId && i.InvoiceSerialNo != null && i.InvoiceSerialNo.ToLower().Contains(t)));
+            }
+            var paid = q.Where(c => c.CollectionAmount > 0);
+            var total = paid.Sum(c => (double?)c.CollectionAmount) ?? 0;
+            var count = paid.Count();
+            var byMethod = paid.GroupBy(c => c.PaymentMethod ?? "Other").Select(g => new { Method = g.Key, Amount = g.Sum(c => c.CollectionAmount) })
+                .OrderByDescending(x => x.Amount).ToList().Select(x => new MethodTotal(x.Method, x.Amount)).ToList();
+
+            var paged = Paged<CollectionLedger>.Create(q.OrderByDescending(c => c.CreatedOn).ThenByDescending(c => c.Id), page, size);
+            var rows = MapCollections(paged.Items);
+            var dayTotals = new Dictionary<DateTime, double>();
+            if (rows.Count > 0)
+            {
+                var lo = rows.Min(r => r.Time).Date; var hi = rows.Max(r => r.Time).Date.AddDays(1);
+                dayTotals = paid.Where(c => c.CreatedOn >= lo && c.CreatedOn < hi).GroupBy(c => c.CreatedOn.Date)
+                    .Select(g => new { Day = g.Key, Amount = g.Sum(c => c.CollectionAmount) }).ToList().ToDictionary(x => x.Day, x => x.Amount);
+            }
+            return new CollectionPage(new Paged<CollectionRow> { Items = rows, Page = paged.Page, PageSize = paged.PageSize, Total = paged.Total },
+                total, count, byMethod, dayTotals);
         }
     }
 }

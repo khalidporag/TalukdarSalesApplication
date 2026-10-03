@@ -1,0 +1,62 @@
+@page
+@model TalukdarSales.Web.Pages.Users.StatementModel
+@{
+    var d = Model.Data;
+    var c = d.Customer;
+    ViewData["Title"] = "Statement · " + c.FirstName;
+    string Day(DateTime x) => x.ToString("yyyy-MM-dd");
+}
+<header class="page-head no-print">
+    <div><h1 class="page-title">Customer statement</h1><div class="page-sub">@c.FirstName @c.LastName · every invoice, payment and credit note</div></div>
+    <form method="get" class="actions">
+        <input type="hidden" name="id" value="@c.Id" />
+        <input type="date" name="from" value="@Day(d.From)" aria-label="From" style="width:auto" />
+        <input type="date" name="to" value="@Day(d.To)" aria-label="To" style="width:auto" />
+        <button class="btn">Show</button>
+        <a class="btn" href="?handler=Export&id=@c.Id&from=@Day(d.From)&to=@Day(d.To)">@Icons.Svg("download", 18)Excel</a>
+        <input type="hidden" name="kind" value="@Model.Kind" />
+        <button type="button" class="btn btn-p" onclick="window.print()">@Icons.Svg("print", 18)Print</button>
+    </form>
+</header>
+
+<div class="row between wrap no-print" style="gap:12px">
+    <div class="chips">
+        @foreach (var (k, label) in new[] { ("", "Everything"), ("Invoice", "Invoices"), ("Payment", "Payments"), ("Credit note", "Credit notes"), ("Refund", "Refunds") })
+        { <a class="chip @(Model.Kind == k || (string.IsNullOrEmpty(Model.Kind) && k == "") ? "on" : "")" href="/Users/Statement?id=@c.Id&from=@Day(d.From)&to=@Day(d.To)&kind=@Uri.EscapeDataString(k)">@label</a> }
+    </div>
+    <a class="btn btn-s" href="/Users/Statement?id=@c.Id&from=@Day(d.From)&to=@Day(d.To)&kind=@Uri.EscapeDataString(Model.Kind ?? "")&all=true">Show all lines to print</a>
+</div>
+<article class="sheet">
+    <div class="row between top wrap">
+        <img src="~/img/logo-yellow.png" alt="Talukder Foods" style="height:78px;width:auto;border-radius:10px" />
+        <div style="text-align:right"><div class="sec-label">Statement of account</div><div class="lbl">@d.From.ToString("d MMM yyyy") to @d.To.ToString("d MMM yyyy")</div></div>
+    </div>
+    <div class="row between top wrap" style="gap:24px">
+        <div><div class="sec-label">Customer</div><div class="strong" style="font-size:16px">@c.FirstName @c.LastName</div><div class="lbl">ID @c.SequencialUserId · @c.PhoneNumber</div>@if (!string.IsNullOrWhiteSpace(c.Address)) { <div class="lbl">@c.Address</div> }</div>
+        <div style="text-align:right"><div class="sec-label">Balance owed</div><div class="num" style="font-size:26px;font-weight:700;color:var(--maroon)">৳ @Fmt.Money(d.Closing)</div><div class="lbl">Account balance now ৳ @Fmt.Money(c.DueAmount)</div></div>
+    </div>
+    <table>
+        <thead><tr><th>Date</th><th>Type</th><th>Reference</th><th class="r">Debit</th><th class="r">Credit</th><th class="r">Balance</th></tr></thead>
+        <tbody>
+            @if (Model.Pager.Page == 1) { <tr><td colspan="5"><b>Opening balance</b></td><td class="r num"><b>৳ @Fmt.Money(d.Opening)</b></td></tr> }
+            @foreach (var e in Model.Shown)
+            {
+                <tr>
+                    <td>@e.Date.ToString("d MMM yyyy")</td>
+                    <td>@e.Kind</td>
+                    <td>@e.Reference@if (!string.IsNullOrEmpty(e.Note)) { <div class="lbl">@e.Note</div> }</td>
+                    <td class="r num">@(e.Debit > 0 ? "৳ " + Fmt.Money(e.Debit) : "")</td>
+                    <td class="r num">@(e.Credit > 0 ? "৳ " + Fmt.Money(e.Credit) : "")</td>
+                    <td class="r num">৳ @Fmt.Money(e.Balance)</td>
+                </tr>
+            }
+            @if (Model.Shown.Count == 0) { <tr><td colspan="6" class="lbl" style="text-align:center">Nothing matches.</td></tr> }
+            <tr><td colspan="5"><b>Closing balance</b></td><td class="r num"><b>৳ @Fmt.Money(d.Closing)</b></td></tr>
+        </tbody>
+    </table>
+    <div class="row wrap" style="gap:28px;justify-content:flex-end">
+        <div><div class="lbl">Billed in period</div><div class="num strong">৳ @Fmt.Money(d.Billed)</div></div>
+        <div><div class="lbl">Paid in period</div><div class="num strong">৳ @Fmt.Money(d.Paid)</div></div>
+    </div>
+</article>
+<div class="card flush no-print"><partial name="_Pager" model="Model.Pager" /></div>

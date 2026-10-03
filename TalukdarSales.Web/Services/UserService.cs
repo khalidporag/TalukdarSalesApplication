@@ -31,7 +31,8 @@ namespace TalukdarSales.Web.Services
         }
 
         /// <summary>One page of users, newest first. Filtering, counting and paging all run in SQL.</summary>
-        public Paged<UserDto> Search(int? userTypeId, string name, int page, int pageSize)
+        /// <summary>status: owes (balance above zero) or over (at or over the credit limit); sort: name, due or empty for newest first.</summary>
+        public Paged<UserDto> Search(int? userTypeId, string name, int page, int pageSize, string status = null, string sort = null)
         {
             var q = _users.GetAll();
             if (userTypeId != null)
@@ -46,7 +47,12 @@ namespace TalukdarSales.Web.Services
                     n.Username.ToLower().Contains(term));
             }
 
-            var paged = Paged<User>.Create(q.OrderByDescending(n => n.CreatedOn).ThenByDescending(n => n.Id), page, pageSize);
+            if (status == "owes") q = q.Where(n => n.DueAmount > 0.005);
+            else if (status == "over") q = q.Where(n => n.MaxCreditLimit > 0 && n.DueAmount >= n.MaxCreditLimit);
+            var ordered = sort == "name" ? q.OrderBy(n => n.FirstName).ThenBy(n => n.LastName).ThenBy(n => n.Id)
+                : sort == "due" ? q.OrderByDescending(n => n.DueAmount).ThenBy(n => n.FirstName).ThenBy(n => n.Id)
+                : q.OrderByDescending(n => n.CreatedOn).ThenByDescending(n => n.Id);
+            var paged = Paged<User>.Create(ordered, page, pageSize);
             var types = _userTypes.GetAll().ToDictionary(n => n.Id);
             return new Paged<UserDto>
             {

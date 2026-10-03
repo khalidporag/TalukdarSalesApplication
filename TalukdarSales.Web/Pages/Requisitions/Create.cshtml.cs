@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TalukdarSales.Web.Infrastructure;
 using TalukdarSales.Web.Interfaces;
+using TalukdarSales.Web.Security;
 using TalukdarSales.Web.Services;
 
 namespace TalukdarSales.Web.Pages.Requisitions
@@ -15,14 +16,19 @@ namespace TalukdarSales.Web.Pages.Requisitions
         private readonly IFinishedGoodTypeRepository _goodTypes;
         private readonly IFinishedGoodsRepository _goods;
         private readonly ISalesRequisitionRepository _requisitions;
+        private readonly AccessService _access;
 
         public CreateModel(RequisitionService service, IUserRepository users, IFinishedGoodTypeRepository goodTypes,
-            IFinishedGoodsRepository goods, ISalesRequisitionRepository requisitions)
+            IFinishedGoodsRepository goods, ISalesRequisitionRepository requisitions, AccessService access)
         {
+            _access = access;
             _service = service; _users = users; _goodTypes = goodTypes; _goods = goods; _requisitions = requisitions;
         }
 
         [BindProperty] public int? UserId { get; set; }
+        /// <summary>When set, the page edits this waiting order instead of creating one.</summary>
+        [BindProperty(SupportsGet = true, Name = "edit")] public int? EditId { get; set; }
+        public string EditSerial { get; private set; }
         public Dictionary<int, double?> Qty { get; private set; } = new();
 
         public string Error { get; private set; }
@@ -33,11 +39,40 @@ namespace TalukdarSales.Web.Pages.Requisitions
         public List<string> Categories { get; private set; }
         public List<OrderProduct> Products { get; private set; }
 
-        public void OnGet() => LoadAll();
+        public IActionResult OnGet()
+        {
+            if (EditId != null)
+            {
+                if (!_access.For(User).Has(Perm.RequisitionEdit)) return Forbid();
+                var got = _service.Get(EditId.Value);
+                if (got == null) return NotFound();
+                var (h, lines) = got.Value;
+                if (!h.IsActive) return RedirectToPage("/Requisitions/Index", new { id = h.Id, tab = "all" });
+                UserId = h.UserId;
+                EditSerial = h.Serial;
+                Qty = lines.GroupBy(l => l.FinishedGoodId).ToDictionary(g => g.Key, g => (double?)g.Sum(l => l.Quantity));
+            }
+            LoadAll();
+            return Page();
+        }
 
         public IActionResult OnPost()
         {
             Qty = QtyForm.Read(Request.Form);
+            if (EditId != null)
+            {
+                if (!_access.For(User).Has(Perm.RequisitionEdit)) return Forbid();
+                var (ok2, error2) = _service.Update(EditId.Value, Qty.Where(kv => kv.Value > 0).Select(kv => new RequisitionLine(kv.Key, kv.Value.Value)));
+                if (ok2)
+                {
+                    TempData["Flash"] = "Order updated.";
+                    return RedirectToPage("/Requisitions/Index", new { id = EditId, tab = "waiting" });
+                }
+                Error = error2;
+                EditSerial = _service.Get(EditId.Value)?.Header.Serial;
+                LoadAll();
+                return Page();
+            }
             if (UserId == null)
                 Error = "Choose a customer first.";
             else

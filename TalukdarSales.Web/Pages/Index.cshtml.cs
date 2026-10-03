@@ -14,9 +14,11 @@ namespace TalukdarSales.Web.Pages
         private readonly INoticeRepository _notices;
         private readonly ImageStore _images;
         private readonly AccessService _access;
+        private readonly AuditService _audit;
 
-        public IndexModel(INoticeRepository notices, ImageStore images, AccessService access)
+        public IndexModel(INoticeRepository notices, ImageStore images, AccessService access, AuditService audit)
         {
+            _audit = audit;
             _notices = notices;
             _images = images;
             _access = access;
@@ -81,6 +83,7 @@ namespace TalukdarSales.Web.Pages
                 Flash = "Notice published";
             }
             _notices.Commit();
+            _audit.Log("notice.save", "Notice", null, $"{Flash}: {title}");
             return RedirectToPage();
         }
 
@@ -91,6 +94,7 @@ namespace TalukdarSales.Web.Pages
                 return NotFound();
             _notices.Delete(n);
             _notices.Commit();
+            _audit.Log("notice.remove", "Notice", id, $"Notice removed: {n.Title}");
             Flash = "Notice removed";
             return RedirectToPage();
         }

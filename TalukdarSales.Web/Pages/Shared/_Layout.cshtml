@@ -1,6 +1,7 @@
 @using System.Security.Claims
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @inject TalukdarSales.Web.Services.RequisitionService Reqs
+@inject TalukdarSales.Web.Services.NotificationService Notes
 @{
     var token = Antiforgery.GetAndStoreTokens(Context).RequestToken;
     var path = Context.Request.Path.Value ?? "/";
@@ -9,6 +10,7 @@
     bool Can(string key) => access.Has(key);
     var displayName = User.FindFirstValue(ClaimTypes.GivenName) ?? User.Identity?.Name ?? "";
     var waiting = Can(Perm.RequisitionView) ? Reqs.WaitingCount() : 0;
+    var unread = Notes.UnreadCount(int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : 0);
     var home = Can(Perm.Dashboard) ? "/Dashboard" : "/";
     var role = access.IsAdmin ? "Administrator" : string.Join(", ", access.RoleNames);
 
@@ -19,7 +21,8 @@
         {
             ("Dashboard", "/Dashboard", Perm.Dashboard, "dashboard", new[] { "/Dashboard" }, 0),
             ("KPI report", "/Reports", Perm.Reports, "reports", new[] { "/Reports" }, 0),
-            ("Notices", "/", null, "notices", new[] { "/" }, 0),
+            ("Notices", "/", null, "megaphone", new[] { "/" }, 0),
+            ("Notifications", "/Notifications", null, "notices", new[] { "/Notifications" }, unread),
         }),
         ("Sell", new[]
         {
@@ -38,6 +41,7 @@
         {
             ("Roles", "/Roles", Perm.Roles, "roles", new[] { "/Roles" }, 0),
             ("Order window", "/TimeSetting", Perm.TimeSetting, "clock", new[] { "/TimeSetting" }, 0),
+            ("Audit log", "/Audit", Perm.AuditView, "list", new[] { "/Audit" }, 0),
         }),
     };
 }

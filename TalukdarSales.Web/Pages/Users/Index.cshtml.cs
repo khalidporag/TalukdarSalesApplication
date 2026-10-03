@@ -11,15 +11,19 @@ namespace TalukdarSales.Web.Pages.Users
 {
     public class IndexModel : PageModelBase
     {
-        private const int PageSize = 12;
+        private const int DefaultSize = 10;
+        [BindProperty(SupportsGet = true)] public int Size { get; set; }
+        private int PageSize => PageSizes.Clamp(Size, DefaultSize);
 
         private readonly UserService _users;
         private readonly IUserTypeRepository _userTypes;
         private readonly IApplicationRoleRepository _roles;
         private readonly AccessService _access;
+        private readonly AuditService _audit;
 
-        public IndexModel(UserService users, IUserTypeRepository userTypes, IApplicationRoleRepository roles, AccessService access)
+        public IndexModel(UserService users, IUserTypeRepository userTypes, IApplicationRoleRepository roles, AccessService access, AuditService audit)
         {
+            _audit = audit;
             _access = access;
             _users = users;
             _userTypes = userTypes;
@@ -29,6 +33,8 @@ namespace TalukdarSales.Web.Pages.Users
         // list filters
         [BindProperty(SupportsGet = true)] public string Name { get; set; }
         [BindProperty(SupportsGet = true)] public int? TypeId { get; set; }
+        [BindProperty(SupportsGet = true)] public string Status { get; set; }
+        [BindProperty(SupportsGet = true)] public string Sort { get; set; }
         [BindProperty(SupportsGet = true, Name = "p")] public int PageNo { get; set; } = 1;
 
         [BindProperty(SupportsGet = true)] public int? EditId { get; set; }
@@ -122,6 +128,7 @@ namespace TalukdarSales.Web.Pages.Users
             };
 
             var (ok, message) = await _users.CreateAsync(dto);
+            if (ok) _audit.Log("customer.create", "Customer", null, $"{dto.FirstName} {dto.LastName}".Trim() + " added");
             if (!ok)
             {
                 ModelState.AddModelError(string.Empty, message);
@@ -142,6 +149,7 @@ namespace TalukdarSales.Web.Pages.Users
             if (Edit.RoleId != null)
             {
                 var (roleOk, roleError) = _users.AssignRole(Edit.Id, Edit.RoleId.Value, _access.For(User));
+                if (roleOk) _audit.Log("role.assign", "Role", Edit.Id, $"{Edit.FirstName} {Edit.LastName}".Trim() + (Edit.RoleId.Value == 0 ? " lost their role" : " got role #" + Edit.RoleId.Value));
                 if (!roleOk)
                 {
                     ModelState.AddModelError("Edit.RoleId", roleError);
@@ -149,6 +157,8 @@ namespace TalukdarSales.Web.Pages.Users
                 }
             }
 
+            var before = _users.Get(Edit.Id);
+            var oldLimit = before?.MaxCreditLimit ?? 0;
             var updated = _users.Update(new UpdateUserDto
             {
                 Id = Edit.Id,
@@ -159,6 +169,8 @@ namespace TalukdarSales.Web.Pages.Users
             if (!updated)
                 return NotFound();
 
+            if (Math.Abs(oldLimit - Edit.MaxCreditLimit) > 0.0001)
+                _audit.Log("credit.change", "Customer", Edit.Id, $"{Edit.FirstName} {Edit.LastName}".Trim() + $" credit limit ৳ {oldLimit:0.##} to ৳ {Edit.MaxCreditLimit:0.##}");
             TempData["Flash"] = "Customer updated.";
             return RedirectToPage("Index");
         }
@@ -174,7 +186,7 @@ namespace TalukdarSales.Web.Pages.Users
 
         private void LoadUsers()
         {
-            Users = _users.Search(TypeId, Name, PageNo, PageSize);
+            Users = _users.Search(TypeId, Name, PageNo, PageSize, Status, Sort);
             RoleByUser = _users.RoleNames(Users.Items.Select(u => u.Id));
         }
 
