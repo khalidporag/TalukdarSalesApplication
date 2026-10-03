@@ -13,12 +13,24 @@ Sign-in uses a cookie. There is no separate JSON API.
 | `ConnectionStrings:DefaultConnection` | SQL Server |
 | `Kpi:MonthlySalesTarget` | Sales target per month for the KPI report gauge and target bars (default 1500000) |
 | `Kpi:CollectionRateTarget` | Target collected-as-%-of-billed (default 85) |
+| `Kpi:CommissionPercent` | Percent of billed sales paid to the salesperson; 0 hides the commission column on the KPI report (default 0) |
+| `Sales:MaxDiscountPercent` | Largest discount allowed when invoicing, as a percent of the invoice (default 20) |
+| `Notifications:ClosingReminderMinutes` | Remind order takers this many minutes before the order window closes; 0 turns it off (default 30) |
 | `Kpi:DailyOrdersTarget` | Optional orders-per-day target; 0 hides the target on the Orders KPI (default 0) |
 
 ## Design system
 Colours and type come from the Talukder Foods logo: red `#D7261F` (one primary action per screen), maroon `#7F1628` for headings, plum `#4A0A6B` for the navigation, butter yellow `#FBEA8F` for highlights. Rubik for headings and figures, Figtree for text, Noto Sans Bengali for the taka sign. Charts use four validated series colours (`#E5412D`, `#7B4BB8`, `#C98A12`, `#1F9E96`), are drawn as server-rendered SVG (`Infrastructure/Charts.cs`, `Pages/Shared/_LineChart.cshtml`) with a small hover script in `wwwroot/js/app.js`, and every chart has its numbers in a table or label. Amounts use Indian digit grouping (`Fmt.Money`). Controls are at least 44px tall for phone use.
 
 Main flows: **New order** (`/Requisitions/Create`, live cart in `wwwroot/js/order.js`, credit warning, no page reloads) then **Orders to invoice** (`/Requisitions`: tick and bulk-invoice, one-tap invoice, or open the side panel to adjust quantities) then **Invoices** (collect panel with allocation preview, print layout) and **Collections**. The **Dashboard** is the bird's-eye view (KPIs, trend, attention list, ageing, categories, production, notices) and **KPI report** adds targets, previous-period comparison, weekly charts and Excel export.
+
+## Orders, returns and accountability
+- **Edit and cancel:** a waiting order can be edited (`/Requisitions/Create?edit=ID`, products already on it keep their price) or cancelled with a reason. Cancelled orders drop out of invoicing, the production plan and the KPIs. Permission: *Edit and cancel waiting orders*.
+- **Discounts:** the invoice panel takes a taka or percent discount, capped by `Sales:MaxDiscountPercent`. Permission: *Give discounts when invoicing*.
+- **Returns and credit notes:** `/Invoices/Return` records goods taken back. The credit (net of the invoice's discount) lowers the invoice total and the customer's balance; if the invoice was already paid beyond its new total the excess is written to the collection ledger as a negative "Refund" row. Permission: *Record returns and credit notes*.
+- **Customer statement:** `/Users/Statement?id=` lists invoices, payments, refunds and credit notes with a running balance, for any period, with print and Excel.
+- **Salesperson attribution:** each order records who took it; the KPI report has a sales-team board (orders, billed, collected, optional commission).
+- **Audit log:** `/Audit` records orders, invoices, payments, returns, price and credit-limit changes, role and permission changes, notices and the order window, with who and when (permission *View the audit log*). Call `AuditService.Log(...)` after any new sensitive change.
+- **Notifications:** new orders and over-limit orders notify people who can invoice; a daily closing reminder goes to order takers. They appear under *Notifications* with an unread count in the menu.
 
 ## Access control
 - Permissions are a fixed list in `Security/Permissions.cs` (view/manage a screen, plus separate approve and collect actions). At startup they are synced into the `ApplicationModules` table; roles are granted permissions on **Roles** and users get a role on **Customers**.
@@ -47,7 +59,7 @@ Tests run on SQLite and `SqlServerTranslationTests` runs every service entry poi
 All money (prices, invoice totals, collections, customer balance and credit limit) is `double`. `Helpers/Money.Round` rounds to 2 decimals at every write so floating-point noise never reaches a balance; keep using it for any new money arithmetic.
 
 ## Database changes
-Migrations are not applied automatically. After deploying, run `dotnet ef database update` (or generate a script with `dotnet ef migrations script`) against the production database; back it up first.
+The `AuditNotificationsReturnsAttribution` migration adds the audit, notification and credit-note tables and new columns on orders and invoices (all existing rows stay valid). Migrations are not applied automatically. After deploying, run `dotnet ef database update` (or generate a script with `dotnet ef migrations script`) against the production database; back it up first.
 
 ## Layout
     TalukdarSales.Web/

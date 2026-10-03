@@ -1,12 +1,15 @@
 @model TalukdarSales.Web.Pages.Requisitions.OrderPanel
 @{
     var h = Model.Header;
-    var canInvoice = Access.For(User).Has(TalukdarSales.Web.Security.Perm.InvoiceCreate) && h.IsActive;
+    var access = Access.For(User);
+    var canInvoice = access.Has(TalukdarSales.Web.Security.Perm.InvoiceCreate) && h.IsActive;
+    var canDiscount = canInvoice && access.Has(TalukdarSales.Web.Security.Perm.InvoiceDiscount);
+    var canEdit = access.Has(TalukdarSales.Web.Security.Perm.RequisitionEdit) && h.IsActive;
 }
 <form method="post" asp-page="/Requisitions/Index" asp-page-handler="Create" asp-route-id="@h.Id" class="col" style="gap:14px" id="panel-form">
     <div class="row between top" style="gap:10px">
-        <div><div class="ct">@h.Serial</div><div class="lbl">@h.Customer · @h.Created.ToString("d MMM, h:mm tt")</div></div>
-        <span class="pill @(h.IsActive ? "warn" : "good")">@(h.IsActive ? "Waiting" : "Invoiced")</span>
+        <div><div class="ct">@h.Serial</div><div class="lbl">@h.Customer · @h.Created.ToString("d MMM, h:mm tt")@(h.TakenBy != null ? " · taken by " + h.TakenBy : "")</div></div>
+        <span class="pill @(h.IsCancelled ? "neutral" : h.IsActive ? "warn" : "good")">@(h.IsCancelled ? "Cancelled" : h.IsActive ? "Waiting" : "Invoiced")</span>
     </div>
     <div>
         <div class="lbl row" style="gap:10px;padding-bottom:6px;border-bottom:1px solid var(--line)"><span class="grow">Product</span><span style="width:@(canInvoice ? 118 : 50)px;text-align:center">Qty</span><span style="width:74px;text-align:right">Amount</span></div>
@@ -27,14 +30,35 @@
             </div>
         }
     </div>
+    @if (canDiscount)
+    {
+        <div class="row" style="gap:8px;align-items:flex-end">
+            <div class="field grow"><label for="disc">Discount</label><input id="disc" name="discount" type="number" min="0" step="any" inputmode="decimal" value="0" /></div>
+            <div class="field" style="width:84px"><label for="disc-kind" class="sr">Kind</label><select id="disc-kind" name="discountKind"><option value="amount">৳</option><option value="percent">%</option></select></div>
+        </div>
+        <div class="row between lbl" id="sub-row" hidden><span>Subtotal</span><span class="num" id="panel-sub"></span></div>
+        <div class="lbl" id="disc-warn" hidden style="color:#B3231C"></div>
+    }
     <div class="row between"><span class="muted">Invoice total</span><span class="num" style="font-size:26px;font-weight:700;color:var(--maroon)" id="panel-total">৳ @Fmt.Int(h.Total)</span></div>
     <div class="pill warn" id="panel-changed" hidden style="border-radius:10px;padding:8px 12px;white-space:normal">Quantities differ from the order. The invoice uses what you set here.</div>
+    @if (h.IsCancelled) { <div class="note grey">Cancelled: @h.CancelReason</div> }
     @if (canInvoice) { <button class="btn btn-p btn-lg btn-block">Create invoice · <span id="panel-total2">৳ @Fmt.Int(h.Total)</span></button> }
     else if (h.InvoiceId != null) { <a class="btn btn-lg btn-block" href="/Invoices/Details?id=@h.InvoiceId">Print invoice @h.InvoiceNo</a> }
 </form>
+@if (canEdit)
+{
+    <div class="col" style="gap:10px;border-top:1px solid var(--line);padding-top:14px">
+        <a class="btn btn-block" href="/Requisitions/Create?edit=@h.Id">Edit order</a>
+        <form method="post" asp-page="/Requisitions/Index" asp-page-handler="Cancel" asp-route-id="@h.Id" class="row" style="gap:8px" data-confirm="Cancel @h.Serial? It will be removed from invoicing and the production plan.">
+            <input name="reason" placeholder="Reason for cancelling" maxlength="300" required aria-label="Reason for cancelling" class="grow" style="min-width:0;width:auto" />
+            <button class="btn btn-s" style="color:#B3231C;border-color:#F3C3BE">Cancel order</button>
+        </form>
+    </div>
+}
 <script>
 (function () {
   const form = document.getElementById('panel-form'); if (!form) return;
+  const MAXD = @Html.Raw(Model.MaxDiscount.ToString(System.Globalization.CultureInfo.InvariantCulture));
   function fmt(n) { n = Math.round(n); const s = String(n), l = s.slice(-3), r = s.slice(0, -3).replace(/\B(?=(\d{2})+(?!\d))/g, ','); return r ? r + ',' + l : l; }
   function recalc() {
     let total = 0, changed = false;
@@ -44,8 +68,17 @@
       if (q !== parseFloat(row.dataset.orig)) changed = true;
       total += q * p; row.querySelector('.amount').textContent = '৳ ' + fmt(q * p);
     });
-    document.getElementById('panel-total').textContent = '৳ ' + fmt(total);
-    const t2 = document.getElementById('panel-total2'); if (t2) t2.textContent = '৳ ' + fmt(total);
+    const dv = form.querySelector('#disc'); let net = total;
+    if (dv) {
+      const kind = form.querySelector('#disc-kind').value, v = parseFloat(dv.value) || 0;
+      const d = kind === 'percent' ? total * v / 100 : v;
+      net = Math.max(0, total - d);
+      form.querySelector('#sub-row').hidden = d <= 0; form.querySelector('#panel-sub').textContent = '৳ ' + fmt(total);
+      const w = form.querySelector('#disc-warn'); const over = d > total || (total > 0 && d / total * 100 > MAXD);
+      w.hidden = !over; w.textContent = d > total ? 'The discount is larger than the invoice.' : 'Discounts are limited to ' + MAXD + '% of the invoice.';
+    }
+    document.getElementById('panel-total').textContent = '৳ ' + fmt(net);
+    const t2 = document.getElementById('panel-total2'); if (t2) t2.textContent = '৳ ' + fmt(net);
     document.getElementById('panel-changed').hidden = !changed;
   }
   form.addEventListener('click', e => {

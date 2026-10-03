@@ -11,5 +11,8 @@
         public double DiscountAmount { get; set; }
         public double DiscountPercentage { get; set; }
         public double CollectionAmount { get; set; }
+        public int CreatedByUserId { get; set; }
+        /// <summary>Value of goods returned by credit notes. TotalPrice already has it taken off.</summary>
+        public double ReturnedAmount { get; set; }
     }
 }

@@ -34,6 +34,7 @@ namespace TalukdarSales.Web.Services
     public record AgeBucket(string Name, double Amount);
     public record ProductRank(string Name, string Category, double Quantity, double PrevQuantity, double[] Spark);
     public record CreditAlert(int UserId, string Name, double Due, double Limit);
+    public record StaffSales(int UserId, string Name, int Orders, double Billed, double Collected);
     public record WeekPoint(DateTime Start, double Billed, double Collected);
 
     public class Overview
@@ -56,6 +57,7 @@ namespace TalukdarSales.Web.Services
         public List<ProductRank> Products { get; init; } = new();
         public List<int> OrdersByWeekday { get; init; } = new();   // Sun..Sat
         public List<CreditAlert> CreditAlerts { get; init; } = new();
+        public List<StaffSales> Staff { get; init; } = new();
     }
 
     public class AnalyticsService
@@ -123,12 +125,12 @@ namespace TalukdarSales.Web.Services
                 return new WeekPoint(s, range.Sum(d => V(wBilled, d)), range.Sum(d => V(wColl, d)));
             }).ToList();
 
-            var customerIds = _requisitions.GetAll().Where(r => r.CreatedDateTime >= p.Start && r.CreatedDateTime < p.EndExclusive)
+            var customerIds = _requisitions.GetAll().Where(r => !r.IsCancelled && r.CreatedDateTime >= p.Start && r.CreatedDateTime < p.EndExclusive)
                 .Select(r => r.UserId).Distinct().Count();
-            var prevCustomerIds = _requisitions.GetAll().Where(r => r.CreatedDateTime >= p.PrevStart && r.CreatedDateTime < p.PrevEnd)
+            var prevCustomerIds = _requisitions.GetAll().Where(r => !r.IsCancelled && r.CreatedDateTime >= p.PrevStart && r.CreatedDateTime < p.PrevEnd)
                 .Select(r => r.UserId).Distinct().Count();
 
-            var weekday = _requisitions.GetAll().Where(r => r.CreatedDateTime >= p.Start && r.CreatedDateTime < p.EndExclusive)
+            var weekday = _requisitions.GetAll().Where(r => !r.IsCancelled && r.CreatedDateTime >= p.Start && r.CreatedDateTime < p.EndExclusive)
                 .Select(r => r.CreatedDateTime).ToList()
                 .GroupBy(d => (int)d.DayOfWeek).ToDictionary(g => g.Key, g => g.Count());
 
@@ -142,8 +144,8 @@ namespace TalukdarSales.Web.Services
                 Period = p, Days = days, PrevBilledDays = prevDays, Weeks = weeks,
                 Billed = Billed(p.Start, p.EndExclusive), PrevBilled = Billed(p.PrevStart, p.PrevEnd),
                 Collected = Collected(p.Start, p.EndExclusive), PrevCollected = Collected(p.PrevStart, p.PrevEnd),
-                Orders = _requisitions.GetAll().Count(r => r.CreatedDateTime >= p.Start && r.CreatedDateTime < p.EndExclusive),
-                PrevOrders = _requisitions.GetAll().Count(r => r.CreatedDateTime >= p.PrevStart && r.CreatedDateTime < p.PrevEnd),
+                Orders = _requisitions.GetAll().Count(r => !r.IsCancelled && r.CreatedDateTime >= p.Start && r.CreatedDateTime < p.EndExclusive),
+                PrevOrders = _requisitions.GetAll().Count(r => !r.IsCancelled && r.CreatedDateTime >= p.PrevStart && r.CreatedDateTime < p.PrevEnd),
                 ActiveCustomers = customerIds, PrevActiveCustomers = prevCustomerIds,
                 TotalCustomers = _users.GetAll().Count(),
                 Waiting = waiting.Count, WaitingAmount = waitAmount,
@@ -156,6 +158,7 @@ namespace TalukdarSales.Web.Services
             o.Categories.AddRange(Categories(p));
             o.Products.AddRange(Products(p, today));
             o.CreditAlerts.AddRange(CreditAlerts());
+            o.Staff.AddRange(StaffBoard(p));
             return o;
         }
 
@@ -224,6 +227,22 @@ namespace TalukdarSales.Web.Services
                 var s = Enumerable.Range(0, 7).Select(i => spark.Where(r => r.FinishedGoodsId == x.Id && r.Day == sparkStart.AddDays(i)).Sum(r => r.Q)).ToArray();
                 return new ProductRank(g.Name, typeName.TryGetValue(g.GoodTypeId, out var n) ? n : "", x.Q, prev.TryGetValue(x.Id, out var pq) ? pq : 0, s);
             }).OrderByDescending(x => x.Quantity).ToList();
+        }
+
+        /// <summary>Per salesperson: orders taken, and the billed and collected value of the invoices those orders became.</summary>
+        private List<StaffSales> StaffBoard(Period p)
+        {
+            var orders = _requisitions.GetAll().Where(r => !r.IsCancelled && r.CreatedDateTime >= p.Start && r.CreatedDateTime < p.EndExclusive)
+                .GroupBy(r => r.CreatedByUserId).Select(g => new { UserId = g.Key, N = g.Count() }).ToList().ToDictionary(x => x.UserId, x => x.N);
+            var sales = (from i in _invoices.GetAll().Where(i => i.CreatedDateTime >= p.Start && i.CreatedDateTime < p.EndExclusive)
+                         join r in _requisitions.GetAll() on i.SalesRequisitionId equals r.Id
+                         select new { r.CreatedByUserId, i.TotalPrice, i.CollectionAmount }).ToList()
+                .GroupBy(x => x.CreatedByUserId).ToDictionary(g => g.Key, g => (Billed: g.Sum(x => x.TotalPrice), Paid: g.Sum(x => x.CollectionAmount)));
+            var ids = orders.Keys.Concat(sales.Keys).Distinct().ToList();
+            var names = _users.GetAll().Where(u => ids.Contains(u.Id)).ToList().ToDictionary(u => u.Id, u => $"{u.FirstName} {u.LastName}".Trim());
+            return ids.Select(id => new StaffSales(id, id == 0 ? "Not recorded" : names.TryGetValue(id, out var n) ? n : "Former staff",
+                    orders.TryGetValue(id, out var c) ? c : 0, sales.TryGetValue(id, out var s) ? s.Billed : 0, sales.TryGetValue(id, out var s2) ? s2.Paid : 0))
+                .OrderByDescending(x => x.Billed).ToList();
         }
 
         private List<CreditAlert> CreditAlerts() =>

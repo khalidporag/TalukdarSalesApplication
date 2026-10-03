@@ -13,10 +13,12 @@ namespace TalukdarSales.Web.Pages.Roles
         private readonly IApplicationModuleRepository _modules;
         private readonly IRoleWisePermissionRepository _permissions;
         private readonly AccessService _access;
+        private readonly TalukdarSales.Web.Services.AuditService _audit;
 
         public IndexModel(IApplicationRoleRepository roles, IApplicationModuleRepository modules,
-            IRoleWisePermissionRepository permissions, AccessService access)
+            IRoleWisePermissionRepository permissions, AccessService access, TalukdarSales.Web.Services.AuditService audit)
         {
+            _audit = audit;
             _roles = roles;
             _modules = modules;
             _permissions = permissions;
@@ -60,6 +62,7 @@ namespace TalukdarSales.Web.Pages.Roles
                 var role = new ApplicationRole { Name = name };
                 _roles.Add(role);
                 _roles.Commit();
+                _audit.Log("role.create", "Role", role.Id, $"Role {name} created");
                 TempData["Flash"] = "Role added.";
                 return RedirectToPage("Index", new { role = role.Id });
             }
@@ -109,6 +112,7 @@ namespace TalukdarSales.Web.Pages.Roles
             _permissions.Commit();
             _access.Invalidate();
 
+            _audit.Log("role.permissions", "Role", role.Id, $"{role.Name} now has {wanted.Count} permissions");
             TempData["Flash"] = "Permissions saved.";
             return RedirectToPage("Index", new { role = role.Id });
         }

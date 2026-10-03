@@ -24,6 +24,8 @@ namespace TalukdarSales.Web.Pages.Reports
         // Targets are plain configuration so each business can set its own (Kpi:* in appsettings).
         public double MonthlySalesTarget => _config.GetValue("Kpi:MonthlySalesTarget", 1500000d);
         public double CollectionRateTarget => _config.GetValue("Kpi:CollectionRateTarget", 85d);
+        /// <summary>Percent of billed sales paid to the salesperson; 0 hides the commission column.</summary>
+        public double CommissionPercent => _config.GetValue("Kpi:CommissionPercent", 0d);
         public double DailyOrdersTarget => _config.GetValue("Kpi:DailyOrdersTarget", 0d);
 
         public void OnGet()

@@ -6,7 +6,7 @@ using TalukdarSales.Web.Services;
 
 namespace TalukdarSales.Web.Pages.Requisitions
 {
-    public record OrderPanel(OrderRow Header, List<RequisitionDetailRow> Lines);
+    public record OrderPanel(OrderRow Header, List<RequisitionDetailRow> Lines, double MaxDiscount = 20);
 
     public class IndexModel : PageModelBase
     {
@@ -15,9 +15,15 @@ namespace TalukdarSales.Web.Pages.Requisitions
         private readonly InvoiceService _invoices;
         private readonly IUserTypeRepository _userTypes;
         private readonly ISalesInvoiceRepository _invoiceRepo;
+        private readonly ISalesRequisitionRepository _reqRepo;
+        private readonly IUserRepository _users;
+        private readonly Security.AccessService _access;
 
-        public IndexModel(RequisitionService requisitions, InvoiceService invoices, IUserTypeRepository userTypes, ISalesInvoiceRepository invoiceRepo)
+        public IndexModel(RequisitionService requisitions, InvoiceService invoices, IUserTypeRepository userTypes, ISalesInvoiceRepository invoiceRepo,
+            ISalesRequisitionRepository reqRepo, IUserRepository users, Security.AccessService access)
         {
+            _access = access;
+            _reqRepo = reqRepo; _users = users;
             _requisitions = requisitions; _invoices = invoices; _userTypes = userTypes; _invoiceRepo = invoiceRepo;
         }
 
@@ -34,7 +40,7 @@ namespace TalukdarSales.Web.Pages.Requisitions
 
         public void OnGet()
         {
-            Tab = Tab is "invoiced" or "all" ? Tab : "waiting";
+            Tab = Tab is "invoiced" or "all" or "cancelled" ? Tab : "waiting";
             Board = _requisitions.Board(Tab, Q, TypeId, Days, PageNo, PageSize);
             TypeOptions = _userTypes.GetAll().Select(t => new SelectListItem(t.TypeName, t.Id.ToString())).ToList();
             if (Id != null) Panel = LoadPanel(Id.Value);
@@ -59,11 +65,24 @@ namespace TalukdarSales.Web.Pages.Requisitions
             return Done(_invoices.CreateFromRequisitions(ids));
         }
 
-        // Invoice with quantities adjusted in the panel.
-        public IActionResult OnPostCreate(int id)
+        public IActionResult OnPostCancel(int id, string reason)
         {
+            var (ok, error) = _requisitions.Cancel(id, reason);
+            TempData["Flash"] = ok ? "Order cancelled." : error;
+            return ok ? Back() : Back(id);
+        }
+
+        // Invoice with quantities (and an optional discount) adjusted in the panel.
+        public IActionResult OnPostCreate(int id, double? discount, string discountKind)
+        {
+            var d = discount ?? 0;
+            if (d > 0 && !_access.For(User).Has(Security.Perm.InvoiceDiscount))
+            {
+                TempData["Flash"] = "You do not have permission to give discounts.";
+                return Back(id);
+            }
             var lines = QtyForm.Read(Request.Form).Where(kv => kv.Value > 0).Select(kv => new InvoiceLine(kv.Key, kv.Value.Value)).ToList();
-            var (ok, error, invoice) = _invoices.CreateForRequisition(id, lines);
+            var (ok, error, invoice) = _invoices.CreateForRequisition(id, lines, discountKind == "percent" ? 0 : d, discountKind == "percent" ? d : 0);
             TempData["Flash"] = ok ? $"{invoice.InvoiceSerialNo} created." : error;
             return ok ? Back() : Back(id);
         }
@@ -85,9 +104,11 @@ namespace TalukdarSales.Web.Pages.Requisitions
             if (got == null) return null;
             var (h, lines) = got.Value;
             var inv = _invoiceRepo.GetAll().Where(i => i.SalesRequisitionId == id).Select(i => new { i.Id, i.InvoiceSerialNo }).FirstOrDefault();
+            var r = _reqRepo.GetSingle(id);
+            var by = r.CreatedByUserId == 0 ? null : _users.GetSingle(r.CreatedByUserId);
             var row = new OrderRow(h.Id, h.Serial, h.UserId, h.UserName, h.CreatedDateTime, h.IsActive, lines.Count,
-                lines.Sum(l => l.Total), inv?.Id, inv?.InvoiceSerialNo);
-            return new OrderPanel(row, lines);
+                lines.Sum(l => l.Total), inv?.Id, inv?.InvoiceSerialNo, r.IsCancelled, r.CancelReason, by == null ? null : $"{by.FirstName} {by.LastName}".Trim());
+            return new OrderPanel(row, lines, _invoices.MaxDiscountPercent);
         }
     }
 }

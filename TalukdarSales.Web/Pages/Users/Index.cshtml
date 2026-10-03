@@ -42,6 +42,7 @@
                     <div class="meter @(over ? "" : "violet")" style="@(over ? "background:var(--bad-bg)" : "")"><i style="width:@pct%;@(over ? "background:#D7261F" : "")"></i></div>
                     <div class="lbl" style="font-size:12px">@(u.MaxCreditLimit > 0 ? "of ৳ " + Fmt.Int(u.MaxCreditLimit) + " · " + u.MaxCreditDays + " days" : "No credit limit")</div>
                 </div>
+                @if (Access.For(User).Has(TalukdarSales.Web.Security.Perm.InvoiceView)) { <a class="btn btn-s" href="/Users/Statement?id=@u.Id">Statement</a> }
                 <a class="btn btn-s" href="@Url()&editId=@u.Id">Edit</a>
             </div>
         }

@@ -34,6 +34,10 @@ namespace TalukdarSales.Web.Security
         public const string ProductTypes = "ProductTypes.Manage";
         public const string Products = "Products.Manage";
         public const string TimeSetting = "TimeSetting.Manage";
+        public const string RequisitionEdit = "Requisitions.Edit";
+        public const string InvoiceDiscount = "Invoices.Discount";
+        public const string InvoiceReturn = "Invoices.Return";
+        public const string AuditView = "Audit.View";
 
         public static readonly IReadOnlyList<Permission> Catalog = new List<Permission>
         {
@@ -45,15 +49,19 @@ namespace TalukdarSales.Web.Security
             new(RequisitionCreate, "Create requisitions", "Sales requisition"),
             new(RequisitionView, "View requisitions", "Sales requisition"),
             new(RequisitionApprove, "Approve requisitions (create invoices)", "Sales requisition"),
+            new(RequisitionEdit, "Edit and cancel waiting orders", "Sales requisition"),
 
             new(InvoiceCreate, "Create manual invoices", "Sales invoice"),
             new(InvoiceView, "View, print and export invoices", "Sales invoice"),
             new(InvoiceCollect, "Collect payments", "Sales invoice"),
+            new(InvoiceDiscount, "Give discounts when invoicing", "Sales invoice"),
+            new(InvoiceReturn, "Record returns and credit notes", "Sales invoice"),
             new(CollectionView, "View collection history", "Sales invoice"),
 
             new(Production, "View production planning", "Operations"),
             new(Notices, "Manage notices", "Operations"),
             new(Reports, "View reports", "Operations"),
+            new(AuditView, "View the audit log", "Operations"),
 
             new(ProductTypes, "Manage product types", "Settings"),
             new(Products, "Manage products", "Settings"),
@@ -83,16 +91,21 @@ namespace TalukdarSales.Web.Security
             new("/Requisitions/Index", "Invoice", RequisitionApprove),
             new("/Requisitions/Index", "Bulk", RequisitionApprove),
             new("/Requisitions/Index", "Create", InvoiceCreate),
+            new("/Requisitions/Index", "Cancel", RequisitionEdit),
 
             new("/Invoices/Index", null, InvoiceView),
             new("/Invoices/Index", "Panel", InvoiceCollect),
             new("/Invoices/Index", "Collect", InvoiceCollect),
             new("/Invoices/Details", null, InvoiceView),
+            new("/Invoices/Return", null, InvoiceReturn),
             new("/Collections/Index", null, CollectionView),
 
             new("/Production/Index", null, Production),
             new("/Reports/Index", null, Reports),
             new("/Reports/Index", "Export", Reports),
+            new("/Audit/Index", null, AuditView),
+            new("/Notifications/Index", null, Anyone),
+            new("/Users/Statement", null, InvoiceView),
             new("/Dashboard/Index", null, Dashboard),
 
             new("/Products/Index", null, Products),

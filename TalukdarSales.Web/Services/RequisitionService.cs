@@ -16,9 +16,9 @@ namespace TalukdarSales.Web.Services
     }
 
     public record OrderRow(int Id, string Serial, int UserId, string Customer, DateTime Created, bool IsActive,
-        int Items, double Total, int? InvoiceId, string InvoiceNo);
+        int Items, double Total, int? InvoiceId, string InvoiceNo, bool IsCancelled = false, string CancelReason = null, string TakenBy = null);
 
-    public record OrderBoard(Paged<OrderRow> Page, int Waiting, int Invoiced);
+    public record OrderBoard(Paged<OrderRow> Page, int Waiting, int Invoiced, int Cancelled = 0);
 
     public record ProductionItem(int FinishedGoodId, string ProductName, string Category, double Quantity);
     public record ProductionPlan(List<ProductionItem> Items, int Orders, int Customers);
@@ -34,10 +34,14 @@ namespace TalukdarSales.Web.Services
         private readonly IUserRepository _users;
         private readonly ITimeSettingRepository _timeSettings;
         private readonly ISalesInvoiceRepository _invoices;
+        private readonly CurrentUser _current;
+        private readonly AuditService _audit;
+        private readonly NotificationService _notify;
 
         public RequisitionService(ApplicationDbContext db, ISalesRequisitionRepository requisitions,
             ISalesRequisitionDetailRepository details, IFinishedGoodsRepository goods,
-            IUserRepository users, ITimeSettingRepository timeSettings, ISalesInvoiceRepository invoices)
+            IUserRepository users, ITimeSettingRepository timeSettings, ISalesInvoiceRepository invoices,
+            CurrentUser current, AuditService audit, NotificationService notify)
         {
             _db = db;
             _requisitions = requisitions;
@@ -46,6 +50,9 @@ namespace TalukdarSales.Web.Services
             _users = users;
             _timeSettings = timeSettings;
             _invoices = invoices;
+            _current = current;
+            _audit = audit;
+            _notify = notify;
         }
 
         /// <summary>True when <paramref name="now"/> is inside the window; supports windows that cross midnight.</summary>
@@ -73,9 +80,11 @@ namespace TalukdarSales.Web.Services
                     users.Any(u => u.Id == r.UserId && (u.FirstName + " " + u.LastName).ToLower().Contains(t)));
             }
             var waiting = q.Count(r => r.IsActive);
-            var invoiced = q.Count(r => !r.IsActive);
-            var shown = tab == "invoiced" ? q.Where(r => !r.IsActive) : tab == "all" ? q : q.Where(r => r.IsActive);
-            shown = tab == "invoiced" || tab == "all" ? shown.OrderByDescending(r => r.CreatedDateTime).ThenByDescending(r => r.Id)
+            var invoiced = q.Count(r => !r.IsActive && !r.IsCancelled);
+            var cancelled = q.Count(r => r.IsCancelled);
+            var shown = tab == "invoiced" ? q.Where(r => !r.IsActive && !r.IsCancelled) : tab == "cancelled" ? q.Where(r => r.IsCancelled)
+                : tab == "all" ? q : q.Where(r => r.IsActive);
+            shown = tab == "invoiced" || tab == "all" || tab == "cancelled" ? shown.OrderByDescending(r => r.CreatedDateTime).ThenByDescending(r => r.Id)
                 : shown.OrderBy(r => r.CreatedDateTime).ThenBy(r => r.Id);
             var paged = Paged<SalesRequisition>.Create(shown, page, pageSize);
 
@@ -90,9 +99,9 @@ namespace TalukdarSales.Web.Services
             {
                 totals.TryGetValue(r.Id, out var t); invs.TryGetValue(r.Id, out var inv);
                 return new OrderRow(r.Id, r.RequisitionSerial, r.UserId, names[r.Id], r.CreatedDateTime, r.IsActive,
-                    t?.Items ?? 0, Money.Round(t?.Total ?? 0), inv?.Id, inv?.InvoiceSerialNo);
+                    t?.Items ?? 0, Money.Round(t?.Total ?? 0), inv?.Id, inv?.InvoiceSerialNo, r.IsCancelled, r.CancelReason);
             }).ToList();
-            return new OrderBoard(new Paged<OrderRow> { Items = rows, Page = paged.Page, PageSize = paged.PageSize, Total = paged.Total }, waiting, invoiced);
+            return new OrderBoard(new Paged<OrderRow> { Items = rows, Page = paged.Page, PageSize = paged.PageSize, Total = paged.Total }, waiting, invoiced, cancelled);
         }
 
         /// <summary>The day's quantities per product with their category, plus how many orders and customers they come from.</summary>
@@ -105,14 +114,14 @@ namespace TalukdarSales.Web.Services
             var typeName = types.GetAll().Select(t => new { t.Id, t.Name }).ToList().ToDictionary(t => t.Id, t => t.Name);
             var items = totals.Select(t => new ProductionItem(t.FinishedGoodId, t.ProductName,
                 goodType.TryGetValue(t.FinishedGoodId, out var ty) && typeName.TryGetValue(ty, out var n) ? n : "Other", t.TotalQuantity)).ToList();
-            var day_ = _requisitions.GetAll().Where(r => r.CreatedDateTime >= start && r.CreatedDateTime < end);
+            var day_ = _requisitions.GetAll().Where(r => r.CreatedDateTime >= start && r.CreatedDateTime < end && !r.IsCancelled);
             return new ProductionPlan(items, day_.Count(), day_.Select(r => r.UserId).Distinct().Count());
         }
 
         public int OrderCountForDay(DateTime day)
         {
             var start = day.Date; var end = start.AddDays(1);
-            return _requisitions.GetAll().Count(r => r.CreatedDateTime >= start && r.CreatedDateTime < end);
+            return _requisitions.GetAll().Count(r => r.CreatedDateTime >= start && r.CreatedDateTime < end && !r.IsCancelled);
         }
 
         public (string From, string To) GetWindow()
@@ -153,7 +162,7 @@ namespace TalukdarSales.Web.Services
 
             using var tx = _db.Database.BeginTransaction();
             var now = DateTime.Now;
-            var requisition = new SalesRequisition { UserId = userId, CreatedDateTime = now, IsActive = true };
+            var requisition = new SalesRequisition { UserId = userId, CreatedDateTime = now, IsActive = true, CreatedByUserId = _current.Id };
             _requisitions.Add(requisition);
             _requisitions.Commit();
 
@@ -170,7 +179,63 @@ namespace TalukdarSales.Web.Services
             }).ToList());
             _requisitions.Commit();
             tx.Commit();
+
+            var user = _users.GetSingle(userId);
+            var name = $"{user.FirstName} {user.LastName}".Trim();
+            var total = Money.Round(wanted.Sum(l => l.Quantity * goods[l.FinishedGoodId].UnitPrice));
+            _audit.Log("order.create", "Order", requisition.Id, $"{requisition.RequisitionSerial} for {name}, ৳ {total:0.##}");
+            _notify.Notify(Security.Perm.RequisitionApprove, "new-order", $"New order {requisition.RequisitionSerial}", $"{name} · ৳ {total:0.##}", "/Requisitions?id=" + requisition.Id);
+            if (user.MaxCreditLimit > 0 && user.DueAmount + total > user.MaxCreditLimit)
+                _notify.Notify(Security.Perm.RequisitionApprove, "over-limit", $"Over credit limit: {name}",
+                    $"{requisition.RequisitionSerial} takes them to ৳ {user.DueAmount + total:0.##} against a limit of ৳ {user.MaxCreditLimit:0.##}.", "/Requisitions?id=" + requisition.Id);
             return (true, null, requisition);
+        }
+
+        /// <summary>Replaces the lines of a waiting order. Products already on the order keep their price; new products use the catalogue price.</summary>
+        public (bool Ok, string Error) Update(int id, IEnumerable<RequisitionLine> lines)
+        {
+            var r = _requisitions.GetSingle(id);
+            if (r == null || !r.IsActive || r.IsCancelled)
+                return (false, "Only waiting orders can be edited.");
+            var wanted = (lines ?? Enumerable.Empty<RequisitionLine>()).Where(l => l.Quantity > 0 && l.FinishedGoodId > 0)
+                .GroupBy(l => l.FinishedGoodId).Select(g => new RequisitionLine(g.Key, g.Sum(x => x.Quantity))).ToList();
+            if (wanted.Count == 0)
+                return (false, "Enter a quantity for at least one product, or cancel the order.");
+
+            var old = _details.GetAll().Where(d => d.SalesRequisitionId == id).OrderBy(d => d.Id).ToList();
+            var oldPrice = old.GroupBy(d => d.FinishedGoodId).ToDictionary(g => g.Key, g => g.First().Price);
+            var ids = wanted.Select(l => l.FinishedGoodId).ToList();
+            var goods = _goods.GetAll().Where(g => ids.Contains(g.Id)).ToDictionary(g => g.Id);
+            if (wanted.Any(l => !oldPrice.ContainsKey(l.FinishedGoodId) && (!goods.TryGetValue(l.FinishedGoodId, out var g) || !g.IsActive)))
+                return (false, "One or more products are not available.");
+
+            var before = Money.Round(old.Sum(d => d.Quantity * d.Price));
+            using var tx = _db.Database.BeginTransaction();
+            foreach (var d in old) _details.Delete(d);
+            var now = DateTime.Now;
+            _details.AddRange(wanted.Select(l => new SalesRequisitionDetail
+            {
+                SalesRequisitionId = id, CreatedDateTime = r.CreatedDateTime, FinishedGoodId = l.FinishedGoodId, Quantity = l.Quantity,
+                Price = oldPrice.TryGetValue(l.FinishedGoodId, out var p) ? p : goods[l.FinishedGoodId].UnitPrice
+            }).ToList());
+            _requisitions.Commit();
+            tx.Commit();
+            var after = Money.Round(wanted.Sum(l => l.Quantity * (oldPrice.TryGetValue(l.FinishedGoodId, out var p) ? p : goods[l.FinishedGoodId].UnitPrice)));
+            _audit.Log("order.edit", "Order", id, $"{r.RequisitionSerial} edited: ৳ {before:0.##} to ৳ {after:0.##}");
+            return (true, null);
+        }
+
+        public (bool Ok, string Error) Cancel(int id, string reason)
+        {
+            reason = (reason ?? "").Trim();
+            if (reason.Length == 0) return (false, "Give a reason for cancelling.");
+            var r = _requisitions.GetSingle(id);
+            if (r == null || !r.IsActive || r.IsCancelled) return (false, "Only waiting orders can be cancelled.");
+            r.IsActive = false; r.IsCancelled = true; r.CancelReason = reason.Length > 300 ? reason[..300] : reason;
+            _requisitions.Update(r);
+            _requisitions.Commit();
+            _audit.Log("order.cancel", "Order", id, $"{r.RequisitionSerial} cancelled: {r.CancelReason}");
+            return (true, null);
         }
 
         /// <summary>Filtered requisitions (SQL). Dates are inclusive days; <paramref name="userTypeId"/> filters by the requester's group.</summary>
@@ -237,8 +302,9 @@ namespace TalukdarSales.Web.Services
         {
             var start = day.Date;
             var end = start.AddDays(1);
+            var cancelled = _requisitions.GetAll().Where(r => r.IsCancelled).Select(r => r.Id);
             var totals = _details.GetAll()
-                .Where(d => d.CreatedDateTime >= start && d.CreatedDateTime < end)
+                .Where(d => d.CreatedDateTime >= start && d.CreatedDateTime < end && !cancelled.Contains(d.SalesRequisitionId))
                 .GroupBy(d => d.FinishedGoodId)
                 .Select(g => new { Id = g.Key, Quantity = g.Sum(x => x.Quantity) })
                 .ToList();

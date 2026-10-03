@@ -14,9 +14,11 @@ namespace TalukdarSales.Web.Pages.Products
         private readonly IFinishedGoodsRepository _goods;
         private readonly IFinishedGoodTypeRepository _types;
         private readonly ImageStore _images;
+        private readonly AuditService _audit;
 
-        public IndexModel(IFinishedGoodsRepository goods, IFinishedGoodTypeRepository types, ImageStore images)
+        public IndexModel(IFinishedGoodsRepository goods, IFinishedGoodTypeRepository types, ImageStore images, AuditService audit)
         {
+            _audit = audit;
             _goods = goods;
             _types = types;
             _images = images;
@@ -82,6 +84,7 @@ namespace TalukdarSales.Web.Pages.Products
             {
                 _types.Add(new FinishGoodType { Name = name });
                 _types.Commit();
+                _audit.Log("category.create", "Product", null, $"Category {name} added");
                 TempData["Flash"] = "Category added.";
             }
             return RedirectToPage("Index", new { TypeId, Name });
@@ -94,6 +97,7 @@ namespace TalukdarSales.Web.Pages.Products
             g.IsActive = !g.IsActive;
             _goods.Update(g);
             _goods.Commit();
+            _audit.Log("product.availability", "Product", g.Id, $"{g.Name} {(g.IsActive ? "made available" : "hidden")}");
             TempData["Flash"] = g.IsActive ? $"{g.Name} is available again." : $"{g.Name} is hidden from new orders.";
             return RedirectToPage("Index", new { TypeId, Name, p = PageNo });
         }
@@ -106,7 +110,7 @@ namespace TalukdarSales.Web.Pages.Products
             if (!ModelState.IsValid)
                 return Redisplay("create");
 
-            _goods.Add(new FinishedGood
+            var created = new FinishedGood
             {
                 Name = Create.Name.Trim(),
                 UOM = Create.UOM.Trim(),
@@ -115,8 +119,10 @@ namespace TalukdarSales.Web.Pages.Products
                 UnitPrice = Create.UnitPrice,
                 LogoName = await _images.SaveAsync(Create.Image, "products"),
                 IsActive = true
-            });
+            };
+            _goods.Add(created);
             _goods.Commit();
+            _audit.Log("product.create", "Product", created.Id, $"{created.Name} added at ৳ {created.UnitPrice:0.##}");
             TempData["Flash"] = "Product added.";
             return RedirectToPage("Index");
         }
@@ -130,11 +136,14 @@ namespace TalukdarSales.Web.Pages.Products
             var g = _goods.GetSingle(Edit.Id);
             if (g == null)
                 return NotFound();
+            var oldPrice = g.UnitPrice; var wasActive = g.IsActive;
             g.Description = Edit.Description;
             g.UnitPrice = Edit.UnitPrice;
             g.IsActive = Edit.IsActive;
             _goods.Update(g);
             _goods.Commit();
+            if (Math.Abs(oldPrice - g.UnitPrice) > 0.0001) _audit.Log("price.change", "Product", g.Id, $"{g.Name} price ৳ {oldPrice:0.##} to ৳ {g.UnitPrice:0.##}");
+            if (wasActive != g.IsActive) _audit.Log("product.availability", "Product", g.Id, $"{g.Name} {(g.IsActive ? "made available" : "hidden")}");
             TempData["Flash"] = "Product updated.";
             return RedirectToPage("Index");
         }

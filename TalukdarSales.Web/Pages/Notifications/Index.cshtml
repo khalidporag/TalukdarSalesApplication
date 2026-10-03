@@ -1,0 +1,19 @@
+@page
+@model TalukdarSales.Web.Pages.Notifications.IndexModel
+@{ ViewData["Title"] = "Notifications"; }
+<header class="page-head">
+    <div><h1 class="page-title">Notifications</h1><div class="page-sub">New orders, customers over their credit limit and order-desk closing reminders</div></div>
+    <form method="post" asp-page-handler="ReadAll" class="actions"><button class="btn" @(Model.Items.Any(i => !i.IsRead) ? null : "disabled")>Mark all as read</button></form>
+</header>
+<section class="card flush">
+    @if (!Model.Items.Any()) { <div class="empty">Nothing yet. You will see new orders and alerts here.</div> }
+    @foreach (var n in Model.Items)
+    {
+        var tone = n.Kind == "over-limit" ? "bad" : n.Kind == "closing" ? "warn" : "info";
+        <a class="list-row @(n.IsRead ? "" : "focus")" href="/Notifications?handler=Open&id=@n.Id&to=@Uri.EscapeDataString(n.Link ?? "")">
+            <span class="pill @tone">@(n.Kind == "over-limit" ? "Credit" : n.Kind == "closing" ? "Closing" : "Order")</span>
+            <div class="grow" style="min-width:0"><div class="@(n.IsRead ? "" : "strong")">@n.Title</div><div class="lbl">@n.Body</div></div>
+            <span class="lbl">@n.CreatedOn.ToString("d MMM, h:mm tt")</span>
+        </a>
+    }
+</section>

@@ -191,6 +191,28 @@
 </section>
 
 <section class="card flush">
+    <div class="row between" style="padding:16px 20px"><div><div class="ct">Sales team</div><div class="lbl">Orders taken and what they billed and collected, @p.Label</div></div></div>
+    @if (d.Staff.Count == 0) { <div class="empty">No orders in this period.</div> }
+    else
+    {
+        var staffMax = d.Staff.Select(x => x.Billed).DefaultIfEmpty(1).Max();
+        <div class="tbl-wrap"><table class="tbl">
+            <thead><tr><th>#</th><th>Salesperson</th><th class="r">Orders</th><th style="width:220px">Billed</th><th class="r">Collected</th>@if (Model.CommissionPercent > 0) { <th class="r">Commission @Charts.N(Model.CommissionPercent)%</th> }</tr></thead>
+            <tbody>
+            @for (var i = 0; i < d.Staff.Count; i++)
+            {
+                var x = d.Staff[i];
+                <tr><td>@(i + 1)</td><td class="wrap"><b>@x.Name</b></td><td class="r num">@x.Orders</td>
+                    <td><div class="num strong">৳ @Fmt.Int(x.Billed)</div><div class="meter violet" style="margin-top:4px"><i style="width:@Pct(x.Billed, staffMax)%"></i></div></td>
+                    <td class="r num">৳ @Fmt.Int(x.Collected)</td>
+                    @if (Model.CommissionPercent > 0) { <td class="r num strong">৳ @Fmt.Int(x.Billed * Model.CommissionPercent / 100)</td> }</tr>
+            }
+            </tbody>
+        </table></div>
+    }
+</section>
+
+<section class="card flush">
     <details>
         <summary class="row between" style="padding:16px 20px;cursor:pointer"><span class="ct">Data table</span><span class="lbl">Daily figures behind the charts</span></summary>
         <div class="tbl-wrap">

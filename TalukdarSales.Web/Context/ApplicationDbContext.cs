@@ -25,5 +25,9 @@ namespace TalukdarSales.Web.Context
         public DbSet<SalesInvoiceDetails> SalesInvoiceDetails { get; set; }
         public DbSet<TimeSetting> TimeSettings { get; set; }
         public DbSet<Notice> Notices { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<CreditNote> CreditNotes { get; set; }
+        public DbSet<CreditNoteLine> CreditNoteLines { get; set; }
     }
 }

@@ -11,6 +11,7 @@
     <div class="actions">
         <a class="btn" href="/Invoices">Back</a>
         <a class="btn" href="/Invoices/Details?handler=Export&id=@h.Id">@Icons.Svg("download", 18)Export Excel</a>
+        @if (Access.For(User).Has(TalukdarSales.Web.Security.Perm.InvoiceReturn) && Model.CanReturn) { <a class="btn" href="/Invoices/Return?id=@h.Id">Return goods</a> }
         <button class="btn btn-p" onclick="window.print()">@Icons.Svg("print", 18)Print</button>
     </div>
 </header>
@@ -38,9 +39,19 @@
         </tbody>
     </table>
     <div class="col" style="align-self:flex-end;min-width:260px;gap:8px">
+        @if (Model.Invoice.Discount > 0) { <div class="row between"><span class="muted">Discount</span><span class="num">− ৳ @Fmt.Money(Model.Invoice.Discount)</span></div> }
+        @if (Model.Invoice.Returned > 0) { <div class="row between"><span class="muted">Returned goods</span><span class="num">− ৳ @Fmt.Money(Model.Invoice.Returned)</span></div> }
         <div class="row between"><span class="muted">Invoice total</span><span class="num strong" style="font-size:18px">৳ @Fmt.Money(h.Total)</span></div>
         <div class="row between"><span class="muted">Collected</span><span class="num">৳ @Fmt.Money(h.Collected)</span></div>
         <div class="row between" style="border-top:2px solid var(--ink);padding-top:8px"><span class="strong">Due</span><span class="num" style="font-size:22px;font-weight:700;color:var(--maroon)">৳ @Fmt.Money(h.Due)</span></div>
     </div>
+    @foreach (var n in Model.Invoice.Notes ?? new())
+    {
+        <div class="col" style="gap:6px;border-top:1px dashed var(--line-2);padding-top:12px">
+            <div class="row between"><b>@n.Serial</b><span class="lbl">@n.Date.ToString("d MMM yyyy") · @n.Reason</span></div>
+            @foreach (var l in n.Lines) { <div class="row between lbl"><span>@Fmt.Money(l.Quantity) × @l.ProductName</span><span class="num">৳ @Fmt.Money(l.Total)</span></div> }
+            <div class="row between"><span class="muted">Credited@(n.Refund > 0 ? " · refund due ৳ " + Fmt.Money(n.Refund) : "")</span><span class="num strong">৳ @Fmt.Money(n.Amount)</span></div>
+        </div>
+    }
     <div class="lbl" style="text-align:center;border-top:1px solid var(--line);padding-top:16px">Thank you for your business · Talukder Foods</div>
 </article>

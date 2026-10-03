@@ -18,6 +18,8 @@ namespace TalukdarSales.Web.Infrastructure
             ["customers"] = "M16 20v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM20 20v-1a4 4 0 0 0-3-3.9M16 4.2a3.5 3.5 0 0 1 0 6.6",
             ["roles"] = "M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z",
             ["notices"] = "M6 9a6 6 0 1 1 12 0c0 6 2 7 2 7H4s2-1 2-7zM10 20a2 2 0 0 0 4 0",
+            ["megaphone"] = "M4 10v4h3l7 4V6L7 10zM17 9a4 4 0 0 1 0 6",
+            ["list"] = "M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01",
             ["clock"] = "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2",
             ["plus"] = "M12 5v14M5 12h14",
             ["check"] = "M5 12l5 5 9-10",

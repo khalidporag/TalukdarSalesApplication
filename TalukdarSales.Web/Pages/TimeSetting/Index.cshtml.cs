@@ -9,7 +9,8 @@ namespace TalukdarSales.Web.Pages.TimeSetting
     public class IndexModel : PageModelBase
     {
         private readonly ITimeSettingRepository _settings;
-        public IndexModel(ITimeSettingRepository settings) => _settings = settings;
+        private readonly Services.AuditService _audit;
+        public IndexModel(ITimeSettingRepository settings, Services.AuditService audit) { _settings = settings; _audit = audit; }
 
         public bool OpenNow { get; private set; }
         public string LeftText { get; private set; }
@@ -61,6 +62,7 @@ namespace TalukdarSales.Web.Pages.TimeSetting
                 _settings.Update(current);
             }
             _settings.Commit();
+            _audit.Log("window.change", "Setting", null, $"Order window set to {Input.From} - {Input.To}");
             TempData["Flash"] = "Order window saved.";
             return RedirectToPage();
         }

@@ -80,6 +80,17 @@ namespace TalukdarSales.Web.Security
             return _db.Users.Where(u => !u.IsDeleted && userIds.Contains(u.Id)).Select(u => u.Id).ToList();
         }
 
+        /// <summary>Ids of the users who hold a permission: administrators plus members of any role granted it.</summary>
+        public List<int> UserIdsWith(string key)
+        {
+            var roleIds = _db.RoleWisePermissions.Where(p => !p.IsDeleted)
+                .Join(_db.ApplicationModules.Where(m => m.Url == key && !m.IsDeleted), p => p.ModuleId, m => m.Id, (p, m) => p.RoleId).ToList();
+            var ids = _db.UserRoleMappings.Where(m => !m.IsDeleted && roleIds.Contains(m.RoleId)).Select(m => m.UserId).ToList();
+            ids.AddRange(AdministratorUserIds());
+            var live = _db.Users.Where(u => !u.IsDeleted).Select(u => u.Id).ToList().ToHashSet();
+            return ids.Distinct().Where(live.Contains).ToList();
+        }
+
         public void Invalidate() => _cache.Clear();
     }
 

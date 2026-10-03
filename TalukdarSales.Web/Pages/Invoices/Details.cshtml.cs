@@ -10,11 +10,14 @@ namespace TalukdarSales.Web.Pages.Invoices
         public DetailsModel(InvoiceService invoices) => _invoices = invoices;
 
         public InvoiceDetail Invoice { get; private set; }
+        public bool CanReturn { get; private set; }
 
         public IActionResult OnGet(int id)
         {
             Invoice = _invoices.Get(id);
-            return Invoice == null ? NotFound() : Page();
+            if (Invoice == null) return NotFound();
+            CanReturn = _invoices.Returnable(id).Any(r => r.Left > 0.000001);
+            return Page();
         }
 
         public IActionResult OnGetExport(int id)
