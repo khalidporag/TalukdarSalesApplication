@@ -1,0 +1,15 @@
+@page
+@model TalukdarSales.Web.Pages.Dashboard.IndexModel
+@{ ViewData["Title"] = "Dashboard"; }
+<div class="row g-3">
+@foreach (var (kind, title) in new[] { ("sellers", "Top 5 Sellers"), ("best", "Top 5 Selling Products"), ("worst", "Least 5 Selling Products"), ("due", "Top 5 Customers by Due Amount") })
+{
+    <div class="col-xl-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between"><strong>@title</strong><span class="text-muted small">last month</span></div>
+            <div class="card-body p-0" hx-get="/Reports?handler=Panel&kind=@kind" hx-trigger="load"><div class="p-3 text-muted">Loading…</div></div>
+        </div>
+    </div>
+}
+</div>
+<div class="mt-3"><a href="/Reports">More reports &rarr;</a></div>

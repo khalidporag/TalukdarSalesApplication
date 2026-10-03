@@ -23,3 +23,4 @@ body { background: #f5f6f8; }
   body { background: #fff; }
   .invoice-sheet { border: 0; }
 }
+.text-truncate-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }

@@ -59,6 +59,7 @@ builder.Services.AddScoped<TalukdarSales.Web.Services.UserService>();
 builder.Services.AddScoped<TalukdarSales.Web.Services.ImageStore>();
 builder.Services.AddScoped<TalukdarSales.Web.Services.RequisitionService>();
 builder.Services.AddScoped<TalukdarSales.Web.Services.InvoiceService>();
+builder.Services.AddScoped<TalukdarSales.Web.Services.ReportService>();
 
 // Pages use a cookie; /api/* keeps JWT bearer. The policy scheme picks one per request so a
 // browser cookie is never accepted by the API (no CSRF exposure there).

@@ -1,2 +1,19 @@
 @page
 @model TalukdarSales.Web.Pages.IndexModel
+@{ ViewData["Title"] = "Notices"; }
+<div class="row g-3">
+    @foreach (var n in Model.Notices)
+    {
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100" role="button" hx-get="/?handler=Notice&id=@n.Id" hx-target="#modal-content">
+                @if (!string.IsNullOrEmpty(n.LogoName)) { <img src="/images/notices/@n.LogoName" class="card-img-top" style="max-height:180px;object-fit:cover" alt="" /> }
+                <div class="card-body">
+                    <h6 class="card-title">@n.Title</h6>
+                    <p class="card-text small text-muted text-truncate-3">@n.Description</p>
+                </div>
+                <div class="card-footer bg-transparent small text-muted">Created at: @n.CreatedOn.ToString("dd MMM yyyy HH:mm")</div>
+            </div>
+        </div>
+    }
+    @if (!Model.Notices.Any()) { <div class="col-12"><div class="alert alert-light border">No notices yet.</div></div> }
+</div>
