@@ -22,7 +22,7 @@ Sign-in uses a cookie. There is no separate JSON API.
 
 ## Develop
     dotnet run --project TalukdarSales.Web        # https://localhost:7019
-    dotnet test tests/TalukdarSales.Tests          # runs the app in-process on an in-memory database
+    dotnet test tests/TalukdarSales.Tests          # runs the app in-process on an in-memory SQLite database
 
 ## Publish to IIS
 Needs the .NET SDK on the build machine and the ASP.NET Core Hosting Bundle (net6) on the server. No Node.js.
@@ -30,6 +30,16 @@ Needs the .NET SDK on the build machine and the ASP.NET Core Hosting Bundle (net
     dotnet publish TalukdarSales.Web -c Release -o publish
 
 Point an IIS site at `publish`. Keep `wwwroot/images` and `wwwroot/pdf` (uploaded files) between deployments, and set the connection string on the server.
+
+## Data access
+Repositories return `IQueryable<T>` (`GetAll()` = not-deleted rows, `FindBy(predicate)`), so filtering, grouping, counting and paging run in SQL. Rules of thumb: compose the query first and materialise last (`ToList()`, `Paged<T>.Create(query, page, size)`); use `ToLower().Contains(...)` for case-insensitive search (not `StringComparison`); look names up with `ids.Contains(x.Id)` instead of loading whole tables.
+Tests run on SQLite and `SqlServerTranslationTests` runs every service entry point on the SQL Server provider (against an unreachable server: EF translates before it connects), so a query EF cannot translate fails the build, not production.
+
+## Money
+All money (prices, invoice totals, collections, customer balance and credit limit) is `double`. `Helpers/Money.Round` rounds to 2 decimals at every write so floating-point noise never reaches a balance; keep using it for any new money arithmetic.
+
+## Database changes
+Migrations are not applied automatically. After deploying, run `dotnet ef database update` (or generate a script with `dotnet ef migrations script`) against the production database; back it up first.
 
 ## Layout
     TalukdarSales.Web/

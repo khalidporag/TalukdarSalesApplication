@@ -49,7 +49,7 @@ namespace TalukdarSales.Web.Pages.Users
             [Required, StringLength(100)] public string FirstName { get; set; }
             [StringLength(100)] public string LastName { get; set; }
             [Required, StringLength(30)] public string PhoneNumber { get; set; }
-            [Range(0, double.MaxValue)] public decimal MaxCreditLimit { get; set; }
+            [Range(0, double.MaxValue)] public double MaxCreditLimit { get; set; }
             [Range(0, int.MaxValue)] public int MaxCreditDays { get; set; }
             [StringLength(300)] public string Address { get; set; }
             [StringLength(100)] public string ContactPersonName { get; set; }
@@ -63,7 +63,7 @@ namespace TalukdarSales.Web.Pages.Users
             public int Id { get; set; }
             [Required, StringLength(100)] public string FirstName { get; set; }
             [StringLength(100)] public string LastName { get; set; }
-            [Range(0, double.MaxValue)] public decimal MaxCreditLimit { get; set; }
+            [Range(0, double.MaxValue)] public double MaxCreditLimit { get; set; }
             /// <summary>null = the role field was not shown/posted, leave the role alone; 0 = remove the role.</summary>
             public int? RoleId { get; set; }
         }
@@ -183,8 +183,8 @@ namespace TalukdarSales.Web.Pages.Users
 
         private void LoadUsers()
         {
-            Users = Paged<UserDto>.Create(_users.Search(TypeId, Name), PageNo, PageSize);
-            RoleByUser = _users.RoleNames();
+            Users = _users.Search(TypeId, Name, PageNo, PageSize);
+            RoleByUser = _users.RoleNames(Users.Items.Select(u => u.Id));
         }
 
         private void LoadOptions()

@@ -37,7 +37,7 @@ namespace TalukdarSales.Web.Pages.ProductTypes
                 return Partial("_CreateForm", this);
 
             var name = Create.Name.Trim();
-            if (_types.FindBy(t => t.Name == name && !t.IsDeleted).Any())
+            if (_types.GetAll().Any(t => t.Name.ToLower() == name.ToLower()))
             {
                 ModelState.AddModelError("Create.Name", "This product type already exists.");
                 return Partial("_CreateForm", this);
@@ -55,8 +55,11 @@ namespace TalukdarSales.Web.Pages.ProductTypes
         {
             var all = _types.GetAll();
             if (!string.IsNullOrWhiteSpace(Name))
-                all = all.Where(n => n.Name.Contains(Name.Trim(), StringComparison.OrdinalIgnoreCase));
-            Items = all.OrderBy(n => n.Name).ToList();
+            {
+                var term = Name.Trim().ToLower();
+                all = all.Where(n => n.Name.ToLower().Contains(term));
+            }
+            Items = all.OrderBy(n => n.Name).ThenBy(n => n.Id).ToList();
         }
     }
 }

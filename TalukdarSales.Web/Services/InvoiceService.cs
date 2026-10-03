@@ -1,10 +1,13 @@
 using TalukdarSales.Web.Context;
+using TalukdarSales.Web.Helpers;
 using TalukdarSales.Web.Interfaces;
 using TalukdarSales.Web.Models;
 
 namespace TalukdarSales.Web.Services
 {
     public record InvoiceLine(int FinishedGoodId, double Quantity);
+
+    internal record InvoiceBuildLine(int FinishedGoodId, double Quantity, double Price);
 
     public record InvoiceRow(int Id, string Number, int RequisitionId, string RequisitionNo, int UserId, string UserName,
         DateTime CreatedDateTime, double Total, double Collected)
@@ -62,12 +65,16 @@ namespace TalukdarSales.Web.Services
             if (requisitions.Count == 0)
                 return (false, "No active requisitions selected.", null);
 
+            var reqIds = requisitions.Select(r => r.Id).ToList();
+            var linesByRequisition = _requisitionDetails.GetAll().Where(d => reqIds.Contains(d.SalesRequisitionId)).OrderBy(d => d.Id).ToList()
+                .GroupBy(d => d.SalesRequisitionId).ToDictionary(g => g.Key, g => g.ToList());
+
             using var tx = _db.Database.BeginTransaction();
             var created = new List<SalesInvoice>();
             foreach (var r in requisitions)
             {
-                var lines = _requisitionDetails.GetAll().Where(d => d.SalesRequisitionId == r.Id)
-                    .Select(d => (d.FinishedGoodId, d.Quantity, d.Price)).ToList();
+                var lines = (linesByRequisition.TryGetValue(r.Id, out var rows) ? rows : new List<SalesRequisitionDetail>())
+                    .Select(d => new InvoiceBuildLine(d.FinishedGoodId, d.Quantity, d.Price)).ToList();
                 var invoice = Build(r, lines);
                 if (invoice == null)
                     return (false, $"User for {r.RequisitionSerial} was not found.", null);
@@ -84,11 +91,11 @@ namespace TalukdarSales.Web.Services
             if (requisition == null || !requisition.IsActive)
                 return (false, "Requisition not found or already invoiced.", null);
 
-            var prices = _requisitionDetails.GetAll().Where(d => d.SalesRequisitionId == requisitionId)
+            var prices = _requisitionDetails.GetAll().Where(d => d.SalesRequisitionId == requisitionId).OrderBy(d => d.Id).ToList()
                 .GroupBy(d => d.FinishedGoodId).ToDictionary(g => g.Key, g => g.First().Price);
             var picked = (lines ?? Enumerable.Empty<InvoiceLine>())
                 .Where(l => l.Quantity > 0 && prices.ContainsKey(l.FinishedGoodId))
-                .Select(l => (l.FinishedGoodId, l.Quantity, prices[l.FinishedGoodId])).ToList();
+                .Select(l => new InvoiceBuildLine(l.FinishedGoodId, l.Quantity, prices[l.FinishedGoodId])).ToList();
             if (picked.Count == 0)
                 return (false, "Enter a quantity for at least one product.", null);
 
@@ -101,7 +108,7 @@ namespace TalukdarSales.Web.Services
         }
 
         // Must run inside a transaction. Adds the invoice total to the user's due amount.
-        private SalesInvoice Build(SalesRequisition requisition, List<(int GoodId, double Qty, double Price)> lines)
+        private SalesInvoice Build(SalesRequisition requisition, List<InvoiceBuildLine> lines)
         {
             var user = _users.GetSingle(requisition.UserId);
             if (user == null)
@@ -112,8 +119,8 @@ namespace TalukdarSales.Web.Services
             {
                 UserId = requisition.UserId,
                 SalesRequisitionId = requisition.Id,
-                Quantity = lines.Sum(l => l.Qty),
-                TotalPrice = lines.Sum(l => l.Qty * l.Price),
+                Quantity = lines.Sum(l => l.Quantity),
+                TotalPrice = Money.Round(lines.Sum(l => l.Quantity * l.Price)),
                 CreatedDateTime = now
             };
             _invoices.Add(invoice);
@@ -125,13 +132,13 @@ namespace TalukdarSales.Web.Services
             _invoiceDetails.AddRange(lines.Select(l => new SalesInvoiceDetails
             {
                 SalesInvoiceId = invoice.Id,
-                FinishedGoodsId = l.GoodId,
+                FinishedGoodsId = l.FinishedGoodId,
                 CreatedDateTime = now,
-                Quantity = l.Qty,
+                Quantity = l.Quantity,
                 Price = l.Price
             }).ToList());
 
-            user.DueAmount += (decimal)invoice.TotalPrice;
+            user.DueAmount = Money.Round(user.DueAmount + invoice.TotalPrice);
             _users.Update(user);
 
             requisition.IsActive = false;
@@ -141,33 +148,45 @@ namespace TalukdarSales.Web.Services
             return invoice;
         }
 
+        private List<InvoiceRow> ToRows(IEnumerable<SalesInvoice> items)
+        {
+            var list = items.ToList();
+            var userIds = list.Select(i => i.UserId).Distinct().ToList();
+            var reqIds = list.Select(i => i.SalesRequisitionId).Distinct().ToList();
+            var users = _users.GetAll().Where(u => userIds.Contains(u.Id)).ToDictionary(u => u.Id);
+            var reqs = _requisitions.GetAll().Where(r => reqIds.Contains(r.Id)).ToDictionary(r => r.Id);
+            return list.Select(i => ToRow(i, users, reqs)).ToList();
+        }
+
         public InvoiceList List(int? userId, DateTime? from, DateTime? to)
         {
-            var users = _users.GetAll().ToDictionary(u => u.Id);
-            var requisitions = _requisitions.GetAll().ToDictionary(r => r.Id);
-            IEnumerable<SalesInvoice> q = _invoices.GetAll();
+            var q = _invoices.GetAll();
             if (userId != null) q = q.Where(i => i.UserId == userId);
             if (from != null && to != null)
             {
+                var start = from.Value.Date;
                 var end = to.Value.Date.AddDays(1);
-                q = q.Where(i => i.CreatedDateTime >= from.Value.Date && i.CreatedDateTime < end);
+                q = q.Where(i => i.CreatedDateTime >= start && i.CreatedDateTime < end);
             }
-            return new InvoiceList(q.OrderByDescending(i => i.CreatedDateTime).Select(i => ToRow(i, users, requisitions)).ToList());
+            return new InvoiceList(ToRows(q.OrderByDescending(i => i.CreatedDateTime).ThenByDescending(i => i.Id)));
         }
+
+        /// <summary>What the customer still owes across all invoices (summed in SQL).</summary>
+        public double OutstandingFor(int userId) =>
+            _invoices.GetAll().Where(i => i.UserId == userId).Sum(i => i.TotalPrice - i.CollectionAmount);
 
         public InvoiceDetail Get(int id)
         {
             var invoice = _invoices.GetSingle(id);
             if (invoice == null)
                 return null;
-            var users = _users.GetAll().ToDictionary(u => u.Id);
-            var requisitions = _requisitions.GetAll().ToDictionary(r => r.Id);
-            var goods = _goods.GetAll().ToDictionary(g => g.Id);
-            var lines = _invoiceDetails.GetAll().Where(d => d.SalesInvoiceId == id)
-                .Select(d => new InvoiceLineView(goods.TryGetValue(d.FinishedGoodsId, out var g) ? g.Name : "", d.Quantity, d.Price))
-                .ToList();
-            return new InvoiceDetail(ToRow(invoice, users, requisitions),
-                users.TryGetValue(invoice.UserId, out var u) ? u.SequencialUserId : "", invoice.Quantity, lines);
+            var header = ToRows(new[] { invoice }).Single();
+            var user = _users.GetSingle(invoice.UserId);
+            var details = _invoiceDetails.GetAll().Where(d => d.SalesInvoiceId == id).OrderBy(d => d.Id).ToList();
+            var goodIds = details.Select(d => d.FinishedGoodsId).Distinct().ToList();
+            var goods = _goods.GetAll().Where(g => goodIds.Contains(g.Id)).ToDictionary(g => g.Id);
+            var lines = details.Select(d => new InvoiceLineView(goods.TryGetValue(d.FinishedGoodsId, out var g) ? g.Name : "", d.Quantity, d.Price)).ToList();
+            return new InvoiceDetail(header, user?.SequencialUserId ?? "", invoice.Quantity, lines);
         }
 
         private static InvoiceRow ToRow(SalesInvoice i, Dictionary<int, User> users, Dictionary<int, SalesRequisition> reqs) =>
@@ -182,6 +201,7 @@ namespace TalukdarSales.Web.Services
         /// </summary>
         public (bool Ok, string Error) Collect(int invoiceId, double amount, string paymentMethod)
         {
+            amount = Money.Round(amount);
             if (amount <= 0)
                 return (false, "Invalid collection amount.");
             var invoice = _invoices.GetSingle(invoiceId);
@@ -194,7 +214,7 @@ namespace TalukdarSales.Web.Services
             var outstanding = _invoices.GetAll()
                 .Where(i => i.UserId == invoice.UserId && i.TotalPrice > i.CollectionAmount)
                 .OrderBy(i => i.CreatedDateTime).ThenBy(i => i.Id).ToList();
-            var totalOutstanding = outstanding.Sum(i => i.TotalPrice - i.CollectionAmount);
+            var totalOutstanding = Money.Round(outstanding.Sum(i => i.TotalPrice - i.CollectionAmount));
             if (amount > totalOutstanding + 0.005)
                 return (false, "Collection amount exceeds the outstanding amount.");
 
@@ -205,8 +225,8 @@ namespace TalukdarSales.Web.Services
             {
                 if (remaining <= 0.000001)
                     break;
-                var applied = Math.Min(remaining, inv.TotalPrice - inv.CollectionAmount);
-                inv.CollectionAmount += applied;
+                var applied = Money.Round(Math.Min(remaining, inv.TotalPrice - inv.CollectionAmount));
+                inv.CollectionAmount = Money.Round(inv.CollectionAmount + applied);
                 _invoices.Update(inv);
                 _ledger.Add(new CollectionLedger
                 {
@@ -215,10 +235,10 @@ namespace TalukdarSales.Web.Services
                     CollectionAmount = applied,
                     PaymentMethod = paymentMethod
                 });
-                remaining -= applied;
-                collected += applied;
+                remaining = Money.Round(remaining - applied);
+                collected = Money.Round(collected + applied);
             }
-            user.DueAmount -= (decimal)collected;
+            user.DueAmount = Money.Round(user.DueAmount - collected);
             _users.Update(user);
             _invoices.Commit();
             tx.Commit();
@@ -227,19 +247,21 @@ namespace TalukdarSales.Web.Services
 
         public (List<CollectionRow> Rows, double Total) CollectionHistory(int? userId, int? invoiceId, DateTime? from, DateTime? to)
         {
-            var invoices = _invoices.GetAll().ToDictionary(i => i.Id);
-            IEnumerable<CollectionLedger> q = _ledger.GetAll();
+            var q = _ledger.GetAll();
             if (userId != null) q = q.Where(c => c.UserId == userId);
             if (invoiceId != null) q = q.Where(c => c.SalesInvoiceId == invoiceId);
             if (from != null && to != null)
             {
+                var start = from.Value.Date;
                 var end = to.Value.Date.AddDays(1);
-                q = q.Where(c => c.CreatedOn >= from.Value.Date && c.CreatedOn < end);
+                q = q.Where(c => c.CreatedOn >= start && c.CreatedOn < end);
             }
-            var rows = q.OrderByDescending(c => c.CreatedOn)
-                .Select(c => new CollectionRow(c.Id, c.SalesInvoiceId,
-                    invoices.TryGetValue(c.SalesInvoiceId, out var i) ? i.InvoiceSerialNo : "",
-                    c.UserId, c.CollectionAmount, c.PaymentMethod, c.CreatedOn)).ToList();
+            var items = q.OrderByDescending(c => c.CreatedOn).ThenByDescending(c => c.Id).ToList();
+            var invoiceIds = items.Select(c => c.SalesInvoiceId).Distinct().ToList();
+            var invoices = _invoices.GetAll().Where(i => invoiceIds.Contains(i.Id)).ToDictionary(i => i.Id);
+            var rows = items.Select(c => new CollectionRow(c.Id, c.SalesInvoiceId,
+                invoices.TryGetValue(c.SalesInvoiceId, out var i) ? i.InvoiceSerialNo : "",
+                c.UserId, c.CollectionAmount, c.PaymentMethod, c.CreatedOn)).ToList();
             return (rows, rows.Where(r => r.Amount > 0).Sum(r => r.Amount));
         }
     }

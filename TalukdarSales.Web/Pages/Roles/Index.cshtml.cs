@@ -23,6 +23,8 @@ namespace TalukdarSales.Web.Pages.Roles
             _access = access;
         }
 
+        private static readonly List<string> CatalogKeys = Perm.Catalog.Select(p => p.Key).ToList();
+
         public List<ApplicationRole> Roles { get; private set; }
         /// <summary>Granted permission keys per role id.</summary>
         public Dictionary<int, HashSet<string>> RoleKeys { get; private set; }
@@ -57,7 +59,7 @@ namespace TalukdarSales.Web.Pages.Roles
                 return Partial("_RoleForm", this);
 
             var name = Role.Name.Trim();
-            if (_roles.GetAll().Any(r => string.Equals(r.Name, name, StringComparison.OrdinalIgnoreCase)))
+            if (_roles.GetAll().Any(r => r.Name.ToLower() == name.ToLower()))
             {
                 ModelState.AddModelError("Role.Name", "This role already exists. Please try a new role.");
                 return Partial("_RoleForm", this);
@@ -108,8 +110,8 @@ namespace TalukdarSales.Web.Pages.Roles
                 .Where(k => Changeable(k) ? posted.Contains(k) : existing.Contains(k))
                 .ToHashSet();
 
-            var moduleIdByKey = _modules.GetAll().Where(m => m.Url != null && Perm.Find(m.Url) != null)
-                .GroupBy(m => m.Url).ToDictionary(g => g.Key, g => g.First().Id);
+            var moduleIdByKey = _modules.GetAll().Where(m => CatalogKeys.Contains(m.Url))
+                .ToList().GroupBy(m => m.Url).ToDictionary(g => g.Key, g => g.First().Id);
             var rows = _permissions.GetAll().Where(p => p.RoleId == role.Id).ToList();
             var idToKey = moduleIdByKey.ToDictionary(kv => kv.Value, kv => kv.Key);
 
@@ -135,15 +137,20 @@ namespace TalukdarSales.Web.Pages.Roles
 
         private HashSet<string> GrantedKeys(int roleId)
         {
-            var keyById = _modules.GetAll().Where(m => m.Url != null && Perm.Find(m.Url) != null).ToDictionary(m => m.Id, m => m.Url);
-            return _permissions.GetAll().Where(p => p.RoleId == roleId && keyById.ContainsKey(p.ModuleId))
-                .Select(p => keyById[p.ModuleId]).ToHashSet();
+            // permissions granted to the role whose module is one of the catalog entries (legacy modules are ignored)
+            return _permissions.GetAll().Where(p => p.RoleId == roleId)
+                .Join(_modules.GetAll().Where(m => CatalogKeys.Contains(m.Url)), p => p.ModuleId, m => m.Id, (p, m) => m.Url)
+                .ToList().ToHashSet();
         }
 
         private void Load()
         {
-            Roles = _roles.GetAll().OrderBy(r => !AccessService.IsAdministratorRole(r.Name)).ThenBy(r => r.Name).ToList();
-            RoleKeys = Roles.ToDictionary(r => r.Id, r => GrantedKeys(r.Id));
+            Roles = _roles.GetAll().ToList().OrderBy(r => !AccessService.IsAdministratorRole(r.Name)).ThenBy(r => r.Name).ToList();
+            var roleIds = Roles.Select(r => r.Id).ToList();
+            var grants = _permissions.GetAll().Where(p => roleIds.Contains(p.RoleId))
+                .Join(_modules.GetAll().Where(m => CatalogKeys.Contains(m.Url)), p => p.ModuleId, m => m.Id, (p, m) => new { p.RoleId, Key = m.Url })
+                .ToList();
+            RoleKeys = Roles.ToDictionary(r => r.Id, r => grants.Where(g => g.RoleId == r.Id).Select(g => g.Key).ToHashSet());
         }
     }
 }

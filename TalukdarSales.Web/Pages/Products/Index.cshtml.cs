@@ -129,12 +129,15 @@ namespace TalukdarSales.Web.Pages.Products
 
         private void Load()
         {
-            IEnumerable<FinishedGood> all = _goods.GetAll();
+            var all = _goods.GetAll();
             if (TypeId != null)
                 all = all.Where(n => n.GoodTypeId == TypeId);
             if (!string.IsNullOrWhiteSpace(Name))
-                all = all.Where(n => n.Name.Contains(Name.Trim(), StringComparison.OrdinalIgnoreCase));
-            Items = Paged<FinishedGood>.Create(all.OrderBy(n => n.Name), PageNo, PageSize);
+            {
+                var term = Name.Trim().ToLower();
+                all = all.Where(n => n.Name.ToLower().Contains(term));
+            }
+            Items = Paged<FinishedGood>.Create(all.OrderBy(n => n.Name).ThenBy(n => n.Id), PageNo, PageSize);
             TypeNames = _types.GetAll().ToDictionary(t => t.Id, t => t.Name);
         }
 
