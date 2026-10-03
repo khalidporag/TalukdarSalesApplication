@@ -1,0 +1,22 @@
+@* Model: (int Page, int TotalPages, string Url, string Target)  – Url must already contain "?" or end ready for "&p=" *@
+@model (int Page, int TotalPages, string Url, string Target)
+@if (Model.TotalPages > 1)
+{
+    var sep = Model.Url.Contains('?') ? "&" : "?";
+    <nav>
+        <ul class="pagination pagination-sm justify-content-end mb-0">
+            <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                <a class="page-link" href="#" hx-get="@(Model.Url)@(sep)p=@(Model.Page - 1)" hx-target="@Model.Target" hx-push-url="false">&laquo;</a>
+            </li>
+            @for (var i = Math.Max(1, Model.Page - 2); i <= Math.Min(Model.TotalPages, Model.Page + 2); i++)
+            {
+                <li class="page-item @(i == Model.Page ? "active" : "")">
+                    <a class="page-link" href="#" hx-get="@(Model.Url)@(sep)p=@i" hx-target="@Model.Target">@i</a>
+                </li>
+            }
+            <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                <a class="page-link" href="#" hx-get="@(Model.Url)@(sep)p=@(Model.Page + 1)" hx-target="@Model.Target">&raquo;</a>
+            </li>
+        </ul>
+    </nav>
+}

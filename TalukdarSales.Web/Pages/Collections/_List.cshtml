@@ -1,0 +1,15 @@
+@model TalukdarSales.Web.Pages.Collections.IndexModel
+<div class="card-table">
+    <table class="table table-hover mb-0">
+        <thead><tr><th>#</th><th>Invoice No</th><th>Collection Time</th><th>Payment Method</th><th class="text-end">Amount</th></tr></thead>
+        <tbody>
+        @{ var i = 1; }
+        @foreach (var r in Model.Rows)
+        {
+            <tr><td>@(i++)</td><td>@r.InvoiceNumber</td><td>@r.Time.ToString("dd MMM yyyy HH:mm")</td><td>@r.PaymentMethod</td><td class="text-end">@r.Amount.ToString("N2")</td></tr>
+        }
+        @if (!Model.Rows.Any()) { <tr><td colspan="5" class="text-muted">No collections found.</td></tr> }
+        </tbody>
+        <tfoot><tr class="fw-bold"><td colspan="4">Total</td><td class="text-end">@Model.Total.ToString("N2")</td></tr></tfoot>
+    </table>
+</div>

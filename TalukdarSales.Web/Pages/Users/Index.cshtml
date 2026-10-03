@@ -1,0 +1,24 @@
+@page
+@model TalukdarSales.Web.Pages.Users.IndexModel
+@{
+    ViewData["Title"] = "User Management";
+}
+<div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+    <form id="user-filter" class="d-flex flex-wrap gap-2 flex-grow-1"
+          hx-get="/Users?handler=List" hx-target="#user-list"
+          hx-trigger="input changed delay:300ms from:#Name, change from:#TypeId, submit">
+        <input class="form-control w-auto" id="Name" name="Name" value="@Model.Name" placeholder="Name / Phone / User Id" autocomplete="off" />
+        <select class="form-select w-auto" id="TypeId" name="TypeId">
+            <option value="">All user groups</option>
+            @foreach (var t in Model.UserTypeOptions)
+            {
+                <option value="@t.Value" selected="@(Model.TypeId?.ToString() == t.Value)">@t.Text</option>
+            }
+        </select>
+    </form>
+    <button class="btn btn-success" hx-get="/Users?handler=Create" hx-target="#modal-content">Create User</button>
+</div>
+
+<div id="user-list" hx-get="/Users?handler=List" hx-include="#user-filter" hx-trigger="refreshList from:body">
+    <partial name="_UserList" model="Model" />
+</div>

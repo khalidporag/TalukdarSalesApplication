@@ -1,0 +1,35 @@
+@page
+@model TalukdarSales.Web.Pages.Requisitions.IndexModel
+@{ ViewData["Title"] = "Requisition List"; }
+@if (TempData["Success"] is string ok) { <div class="alert alert-success py-2">@ok</div> }
+<form id="filter" class="row g-2 mb-3" hx-get="/Requisitions?handler=List" hx-target="#list"
+      hx-trigger="input changed delay:300ms from:#Serial, change from:#Active, change from:#UserId, change from:#From, change from:#To, submit">
+    <div class="col-auto"><input class="form-control" id="Serial" name="Serial" value="@Model.Serial" placeholder="Requisition no" autocomplete="off" /></div>
+    <div class="col-auto">
+        <select class="form-select" id="Active" name="Active">
+            <option value="true" selected="@Model.Active">Active</option>
+            <option value="false" selected="@(!Model.Active)">Inactive (invoiced)</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <select class="form-select" id="TypeId" name="TypeId"
+                hx-get="/Lookup?handler=Users" hx-target="#UserId" hx-trigger="change"
+                hx-vals='js:{typeId: document.getElementById("TypeId").value}'>
+            <option value="">All groups</option>
+            @foreach (var t in Model.TypeOptions) { <option value="@t.Value" selected="@(Model.TypeId?.ToString() == t.Value)">@t.Text</option> }
+        </select>
+    </div>
+    <div class="col-auto">
+        <select class="form-select" id="UserId" name="UserId">
+            <option value="">All users</option>
+            @foreach (var u in Model.UserOptions) { <option value="@u.Value" selected="@(Model.UserId?.ToString() == u.Value)">@u.Text</option> }
+        </select>
+    </div>
+    <div class="col-auto"><input class="form-control" type="date" id="From" name="From" value="@Model.From?.ToString("yyyy-MM-dd")" title="From" /></div>
+    <div class="col-auto"><input class="form-control" type="date" id="To" name="To" value="@Model.To?.ToString("yyyy-MM-dd")" title="To" /></div>
+    <div class="col-auto"><a class="btn btn-light" href="/Requisitions">Reset</a></div>
+    <div class="col text-end"><a class="btn btn-success" href="/Requisitions/Create">Create New</a></div>
+</form>
+<div id="list" hx-get="/Requisitions?handler=List" hx-include="#filter" hx-trigger="refreshList from:body">
+    <partial name="_List" model="Model" />
+</div>

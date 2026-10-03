@@ -1,0 +1,26 @@
+@model TalukdarSales.Web.Pages.Roles.IndexModel
+@{ var moduleNames = Model.Modules.ToDictionary(m => m.Id, m => m.Name); }
+<div class="card-table">
+    <table class="table table-hover align-middle mb-0">
+        <thead><tr><th>Role</th><th>Modules</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var r in Model.Roles)
+        {
+            <tr>
+                <td>@r.Name</td>
+                <td>
+                    @if (Model.RoleModuleIds.TryGetValue(r.Id, out var ids))
+                    {
+                        foreach (var id in ids.Where(moduleNames.ContainsKey))
+                        {
+                            <span class="badge text-bg-light border me-1">@moduleNames[id]</span>
+                        }
+                    }
+                </td>
+                <td class="text-end"><button class="btn btn-sm btn-outline-success" hx-get="/Roles?handler=Assign&id=@r.Id" hx-target="#modal-content">Modules</button></td>
+            </tr>
+        }
+        @if (!Model.Roles.Any()) { <tr><td colspan="3" class="text-muted">No roles yet.</td></tr> }
+        </tbody>
+    </table>
+</div>

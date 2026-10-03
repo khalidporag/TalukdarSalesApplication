@@ -1,0 +1,17 @@
+@page
+@model TalukdarSales.Web.Pages.Products.IndexModel
+@{ ViewData["Title"] = "Product Setup"; }
+<div class="d-flex flex-wrap gap-2 mb-3">
+    <form id="filter" class="d-flex flex-wrap gap-2 flex-grow-1" hx-get="/Products?handler=List" hx-target="#list"
+          hx-trigger="input changed delay:300ms from:#Name, change from:#TypeId, submit">
+        <input class="form-control w-auto" id="Name" name="Name" value="@Model.Name" placeholder="Product name" autocomplete="off" />
+        <select class="form-select w-auto" id="TypeId" name="TypeId">
+            <option value="">All types</option>
+            @foreach (var t in Model.TypeOptions) { <option value="@t.Value" selected="@(Model.TypeId?.ToString() == t.Value)">@t.Text</option> }
+        </select>
+    </form>
+    <button class="btn btn-success" hx-get="/Products?handler=Create" hx-target="#modal-content">Add Product</button>
+</div>
+<div id="list" hx-get="/Products?handler=List" hx-include="#filter" hx-trigger="refreshList from:body">
+    <partial name="_List" model="Model" />
+</div>

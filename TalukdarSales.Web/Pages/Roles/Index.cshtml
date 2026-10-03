@@ -1,0 +1,10 @@
+@page
+@model TalukdarSales.Web.Pages.Roles.IndexModel
+@{ ViewData["Title"] = "Role Management"; }
+<div class="d-flex gap-2 mb-3">
+    <button class="btn btn-success" hx-get="/Roles?handler=CreateRole" hx-target="#modal-content">Create Role</button>
+    <button class="btn btn-outline-success" hx-get="/Roles?handler=CreateModule" hx-target="#modal-content">Add Module</button>
+</div>
+<div id="list" hx-get="/Roles?handler=List" hx-trigger="refreshList from:body">
+    <partial name="_List" model="Model" />
+</div>

@@ -1,0 +1,32 @@
+@model TalukdarSales.Web.Pages.Users.IndexModel
+@if (!Model.Users.Items.Any())
+{
+    <div class="alert alert-light border">No users found.</div>
+}
+<div class="row g-3">
+    @foreach (var u in Model.Users.Items)
+    {
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <img src="@(string.IsNullOrEmpty(u.ImageName) ? "/img/no-user.jpeg" : "/images/users/" + u.ImageName)" onerror="this.onerror=null;this.src='/img/no-user.jpeg'"
+                         class="rounded-circle mb-2" style="width:72px;height:72px;object-fit:cover" alt="" />
+                    <h6 class="mb-0">@u.FirstName @u.LastName</h6>
+                    <div class="small text-muted">@u.PhoneNumber</div>
+                    <div class="small text-muted">@u.UserTypeName</div>
+                    <div class="small text-muted">@u.Username</div>
+                    <div class="d-flex justify-content-around mt-3">
+                        <div><div class="fw-semibold">@u.MaxCreditLimit.ToString("N2")</div><div class="small text-muted">Max Credit</div></div>
+                        <div><div class="fw-semibold">@u.DueAmount.ToString("N2")</div><div class="small text-muted">Due Amount</div></div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <button class="btn btn-sm btn-outline-success" hx-get="/Users?handler=Edit&id=@u.Id" hx-target="#modal-content">Edit</button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+<div class="mt-3">
+    <partial name="_Pager" model='(Model.Users.Page, Model.Users.TotalPages, $"/Users?handler=List&Name={Uri.EscapeDataString(Model.Name ?? "")}&TypeId={Model.TypeId}", "#user-list")' />
+</div>
