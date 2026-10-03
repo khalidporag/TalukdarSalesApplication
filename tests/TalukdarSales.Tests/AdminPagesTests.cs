@@ -15,38 +15,11 @@ namespace TalukdarSales.Tests
         }
 
         [Fact]
-        public async Task Role_module_assignment_replaces_set_without_duplicates()
-        {
-            var c = await LoggedIn();
-            await c.HtmxPost("/Roles", "/Roles?handler=CreateRole", new() { ["Role.Name"] = "Manager" });
-            await c.HtmxPost("/Roles", "/Roles?handler=CreateModule", new() { ["Module.Name"] = "Sales" });
-            await c.HtmxPost("/Roles", "/Roles?handler=CreateModule", new() { ["Module.Name"] = "Reports" });
-
-            // assign both, twice (must not duplicate), then only one
-            for (var i = 0; i < 2; i++)
-            {
-                var both = new MultipartFormDataContent { { new StringContent(await TestApp.Antiforgery(c, "/Roles")), "__RequestVerificationToken" },
-                    { new StringContent("1"), "Assign.RoleId" }, { new StringContent("1"), "Assign.ModuleIds" }, { new StringContent("2"), "Assign.ModuleIds" } };
-                var req = new HttpRequestMessage(HttpMethod.Post, "/Roles?handler=Assign") { Content = both };
-                req.Headers.Add("HX-Request", "true");
-                Assert.Contains("closeModal", (await c.SendAsync(req)).Trigger());
-            }
-            var list = await c.GetStringAsync("/Roles?handler=List");
-            Assert.Equal(1, System.Text.RegularExpressions.Regex.Matches(list, ">Sales<").Count);
-            Assert.Contains(">Reports<", list);
-
-            var one = await c.HtmxPost("/Roles", "/Roles?handler=Assign", new() { ["Assign.RoleId"] = "1", ["Assign.ModuleIds"] = "2" });
-            Assert.Contains("closeModal", one.Trigger());
-            list = await c.GetStringAsync("/Roles?handler=List");
-            Assert.DoesNotContain(">Sales<", list.Substring(list.IndexOf("<tbody>")));
-        }
-
-        [Fact]
         public async Task Duplicate_role_is_rejected()
         {
             var c = await LoggedIn();
-            await c.HtmxPost("/Roles", "/Roles?handler=CreateRole", new() { ["Role.Name"] = "Admin" });
-            var dup = await c.HtmxPost("/Roles", "/Roles?handler=CreateRole", new() { ["Role.Name"] = "Admin" });
+            await c.HtmxPost("/Roles", "/Roles?handler=CreateRole", new() { ["Role.Name"] = "Clerk" });
+            var dup = await c.HtmxPost("/Roles", "/Roles?handler=CreateRole", new() { ["Role.Name"] = "clerk" });
             Assert.Equal("", dup.Trigger());
             Assert.Contains("already exists", await dup.Content.ReadAsStringAsync());
         }

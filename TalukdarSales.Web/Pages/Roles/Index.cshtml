@@ -3,8 +3,8 @@
 @{ ViewData["Title"] = "Role Management"; }
 <div class="d-flex gap-2 mb-3">
     <button class="btn btn-success" hx-get="/Roles?handler=CreateRole" hx-target="#modal-content">Create Role</button>
-    <button class="btn btn-outline-success" hx-get="/Roles?handler=CreateModule" hx-target="#modal-content">Add Module</button>
 </div>
+<p class="text-muted small">A user's role decides which screens and actions they can use. Assign a role to a user from User Management. The <strong>Administrator</strong> role always has full access.</p>
 <div id="list" hx-get="/Roles?handler=List" hx-trigger="refreshList from:body">
     <partial name="_List" model="Model" />
 </div>

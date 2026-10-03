@@ -1,23 +1,30 @@
 @model TalukdarSales.Web.Pages.Roles.IndexModel
-@{ var moduleNames = Model.Modules.ToDictionary(m => m.Id, m => m.Name); }
 <div class="card-table">
     <table class="table table-hover align-middle mb-0">
-        <thead><tr><th>Role</th><th>Modules</th><th></th></tr></thead>
+        <thead><tr><th style="width:200px">Role</th><th>Permissions</th><th></th></tr></thead>
         <tbody>
         @foreach (var r in Model.Roles)
         {
+            var isAdmin = TalukdarSales.Web.Security.AccessService.IsAdministratorRole(r.Name);
             <tr>
-                <td>@r.Name</td>
+                <td>@r.Name @if (isAdmin) { <span class="badge text-bg-dark ms-1">built-in</span> }</td>
                 <td>
-                    @if (Model.RoleModuleIds.TryGetValue(r.Id, out var ids))
+                    @if (isAdmin)
                     {
-                        foreach (var id in ids.Where(moduleNames.ContainsKey))
+                        <span class="badge text-bg-success">All access</span>
+                    }
+                    else
+                    {
+                        foreach (var p in TalukdarSales.Web.Security.Perm.Catalog.Where(p => Model.RoleKeys[r.Id].Contains(p.Key)))
                         {
-                            <span class="badge text-bg-light border me-1">@moduleNames[id]</span>
+                            <span class="badge text-bg-light border me-1 mb-1">@p.Name</span>
                         }
+                        @if (!Model.RoleKeys[r.Id].Any()) { <span class="text-muted small">No permissions</span> }
                     }
                 </td>
-                <td class="text-end"><button class="btn btn-sm btn-outline-success" hx-get="/Roles?handler=Assign&id=@r.Id" hx-target="#modal-content">Modules</button></td>
+                <td class="text-end">
+                    @if (!isAdmin) { <button class="btn btn-sm btn-outline-success" hx-get="/Roles?handler=Assign&id=@r.Id" hx-target="#modal-content">Permissions</button> }
+                </td>
             </tr>
         }
         @if (!Model.Roles.Any()) { <tr><td colspan="3" class="text-muted">No roles yet.</td></tr> }

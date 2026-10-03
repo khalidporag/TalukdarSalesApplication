@@ -16,8 +16,8 @@
                 <td class="text-end">@r.Collected.ToString("N2")</td>
                 <td class="text-end">@r.Due.ToString("N2")</td>
                 <td class="text-end text-nowrap">
-                    @if (r.Due > 0.005) { <button class="btn btn-sm btn-success" hx-get="/Invoices?handler=Collect&id=@r.Id" hx-target="#modal-content">Collect</button> }
-                    <a class="btn btn-sm btn-outline-secondary" href="/Collections?invoiceId=@r.Id">History</a>
+                    @if (r.Due > 0.005 && Access.For(User).Has(Perm.InvoiceCollect)) { <button class="btn btn-sm btn-success" hx-get="/Invoices?handler=Collect&id=@r.Id" hx-target="#modal-content">Collect</button> }
+                    @if (Access.For(User).Has(Perm.CollectionView)) { <a class="btn btn-sm btn-outline-secondary" href="/Collections?invoiceId=@r.Id">History</a> }
                     <a class="btn btn-sm btn-outline-secondary" href="/Invoices/Details?id=@r.Id">Print</a>
                 </td>
             </tr>

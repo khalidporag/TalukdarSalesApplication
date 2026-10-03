@@ -13,10 +13,14 @@
                 <select class="form-select" asp-for="Create.UserTypeId" asp-items="Model.UserTypeOptions"><option value="0">Select…</option></select>
                 <span class="text-danger small" asp-validation-for="Create.UserTypeId"></span>
             </div>
-            <div class="col-md-6">
-                <label class="form-label">Role</label>
-                <select class="form-select" asp-for="Create.RoleId" asp-items="Model.RoleOptions"><option value="0">None</option></select>
-            </div>
+            @if (Model.CanAssignRoles)
+            {
+                <div class="col-md-6">
+                    <label class="form-label">Role</label>
+                    <select class="form-select" asp-for="Create.RoleId" asp-items="Model.RoleOptions"><option value="0">None</option></select>
+                    <span class="text-danger small" asp-validation-for="Create.RoleId"></span>
+                </div>
+            }
             <div class="col-md-6">
                 <label class="form-label">First name *</label>
                 <input class="form-control" asp-for="Create.FirstName" />

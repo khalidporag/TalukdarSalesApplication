@@ -33,6 +33,8 @@ builder.Services.AddScoped<TalukdarSales.Web.Services.ImageStore>();
 builder.Services.AddScoped<TalukdarSales.Web.Services.RequisitionService>();
 builder.Services.AddScoped<TalukdarSales.Web.Services.InvoiceService>();
 builder.Services.AddScoped<TalukdarSales.Web.Services.ReportService>();
+builder.Services.AddScoped<TalukdarSales.Web.Security.AccessService>();
+builder.Services.AddScoped<TalukdarSales.Web.Security.AccessSeeder>();
 
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -45,7 +47,7 @@ builder.Services
         o.SlidingExpiration = true;
         o.LoginPath = "/Login";
         o.LogoutPath = "/Logout";
-        o.AccessDeniedPath = "/Login";
+        o.AccessDeniedPath = "/AccessDenied";
         o.Events.OnRedirectToLogin = ctx =>
         {
             // htmx requests: ask the browser to do a full-page redirect instead of swapping the login page into a fragment
@@ -66,9 +68,17 @@ builder.Services
     {
         o.Conventions.AuthorizeFolder("/");
         o.Conventions.AllowAnonymousToPage("/Login");
-    });
+    })
+    .AddMvcOptions(o => o.Filters.Add<TalukdarSales.Web.Security.PermissionPageFilter>());
 
 var app = builder.Build();
+
+// Sync the permission catalog, the Administrator role and (first start only) an initial administrator.
+using (var scope = app.Services.CreateScope())
+{
+    try { scope.ServiceProvider.GetRequiredService<TalukdarSales.Web.Security.AccessSeeder>().Run(); }
+    catch (Exception ex) { app.Logger.LogError(ex, "Access control seeding failed."); }
+}
 
 // Configure the HTTP request pipeline.
 //if (app.Environment.IsDevelopment())

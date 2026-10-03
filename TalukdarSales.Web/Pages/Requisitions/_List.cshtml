@@ -1,6 +1,6 @@
 @model TalukdarSales.Web.Pages.Requisitions.IndexModel
 <form id="approve-form">
-    @if (Model.Active && Model.Rows.Items.Any())
+    @if (Model.Active && Model.Rows.Items.Any() && Access.For(User).Has(Perm.RequisitionApprove))
     {
         <div class="mb-2">
             <button type="button" class="btn btn-success btn-sm" hx-post="/Requisitions?handler=Approve" hx-include="#approve-form, #filter" hx-target="#list"
@@ -11,7 +11,7 @@
         <table class="table table-hover align-middle mb-0">
             <thead>
                 <tr>
-                    @if (Model.Active) { <th style="width:40px"><input type="checkbox" class="form-check-input" onclick="document.querySelectorAll('#approve-form .row-check').forEach(c => c.checked = this.checked)" /></th> }
+                    @if (Model.Active && Access.For(User).Has(Perm.RequisitionApprove)) { <th style="width:40px"><input type="checkbox" class="form-check-input" onclick="document.querySelectorAll('#approve-form .row-check').forEach(c => c.checked = this.checked)" /></th> }
                     <th>Requisition No</th><th>Requisition By</th><th>Creation Time</th><th></th>
                 </tr>
             </thead>
@@ -19,7 +19,7 @@
             @foreach (var r in Model.Rows.Items)
             {
                 <tr>
-                    @if (Model.Active) { <td><input type="checkbox" class="form-check-input row-check" name="ids" value="@r.Id" /></td> }
+                    @if (Model.Active && Access.For(User).Has(Perm.RequisitionApprove)) { <td><input type="checkbox" class="form-check-input row-check" name="ids" value="@r.Id" /></td> }
                     <td>@r.Serial</td>
                     <td>@r.UserName</td>
                     <td>@r.CreatedDateTime.ToString("dd MMM yyyy HH:mm")</td>
