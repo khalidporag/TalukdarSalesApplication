@@ -1,15 +1,230 @@
 @page
 @model TalukdarSales.Web.Pages.Dashboard.IndexModel
-@{ ViewData["Title"] = "Dashboard"; }
-<div class="row g-3">
-@foreach (var (kind, title) in new[] { ("sellers", "Top 5 Sellers"), ("best", "Top 5 Selling Products"), ("worst", "Least 5 Selling Products"), ("due", "Top 5 Customers by Due Amount") })
-{
-    <div class="col-xl-6">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between"><strong>@title</strong><span class="text-muted small">last month</span></div>
-            <div class="card-body p-0" hx-get="/Reports?handler=Panel&kind=@kind" hx-trigger="load"><div class="p-3 text-muted">Loading…</div></div>
+@using TalukdarSales.Web.Infrastructure
+@using TalukdarSales.Web.Services
+@{
+    ViewData["Title"] = "Dashboard";
+    var d = Model.Data;
+    var p = d.Period;
+    var billedSeries = d.Days.Select(x => x.Billed).ToArray();
+    var hero = Charts.Sparkline(billedSeries, 400, 64, 6);
+    var chart = new LineChart("trend", "Line chart of daily billed and collected amounts", d.Days.Select(x => x.Date).ToList(), new List<LineSeries>
+    {
+        new("Billed", "#E5412D", billedSeries, true),
+        new("Collected", "#1F9E96", d.Days.Select(x => x.Collected).ToArray()),
+    });
+    string Delta(double cur, double prev, bool upIsGood = true)
+    {
+        var c = Charts.Change(cur, prev);
+        if (c == null) return "";
+        var good = c.Value.Flat || c.Value.Up == upIsGood;
+        return $"<span class=\"delta {(good ? "up-good" : "up-bad")}\">{c.Value.Text}</span>";
+    }
+    string Pct(double part, double total) => total <= 0 ? "0" : Math.Round(part / total * 100).ToString();
+    var catTotal = d.Categories.Sum(c => c.Amount);
+    var arcs = Charts.DonutArcs(d.Categories.Take(4).Select(c => c.Amount).ToList());
+    var maxCust = d.TopCustomers.Select(c => c.Value).DefaultIfEmpty(1).Max();
+    var ageTotal = d.Aging.Sum(a => a.Amount);
+    var products = Model.Slow ? d.Products.OrderBy(x => x.Quantity).Take(5).ToList() : d.Products.Take(5).ToList();
+    var maxPlan = Model.Plan.Select(x => x.TotalQuantity).DefaultIfEmpty(1).Max();
+}
+<header class="page-head">
+    <div>
+        <h1 class="page-title">@IndexModel.Greeting()@(string.IsNullOrEmpty(Model.FirstName) ? "" : ", " + Model.FirstName)</h1>
+        <div class="page-sub row wrap">
+            <span>@DateTime.Now.ToString("dddd, d MMMM")</span>
+            <span class="pill @(Model.WindowOpen ? "good" : "warn")">@Icons.Svg("clock", 14)@Model.WindowText</span>
         </div>
     </div>
-}
-</div>
-<div class="mt-3"><a href="/Reports">More reports &rarr;</a></div>
+    <div class="actions">
+        <div class="seg" role="group" aria-label="Period">
+            @foreach (var (key, label) in Period.Choices)
+            {
+                <a href="?p=@key" class="@(p.Key == key ? "on" : "")" aria-current="@(p.Key == key ? "true" : null)">@label</a>
+            }
+        </div>
+        <a class="btn btn-p" href="/Requisitions/Create">@Icons.Svg("plus", 18, 2.2)New order</a>
+    </div>
+</header>
+
+<section class="kpis" aria-label="Key figures">
+    <div class="card butter kpi hero">
+        <div class="lbl">Sales billed · @p.Label</div>
+        <div class="row wrap" style="align-items:baseline">
+            <div class="v">৳ @Fmt.Int(d.Billed)</div>
+            @Html.Raw(Delta(d.Billed, d.PrevBilled))
+        </div>
+        <svg viewBox="0 0 400 64" width="100%" height="64" preserveAspectRatio="none" aria-hidden="true">
+            <path d="@hero L400 64 L0 64 Z" fill="#E5412D" fill-opacity="0.12"></path>
+            <path d="@hero" fill="none" stroke="#E5412D" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path>
+        </svg>
+    </div>
+    <div class="card kpi">
+        <div class="lbl">Collected</div>
+        <div class="v">৳ @Fmt.Int(d.Collected)</div>
+        <div class="meter good"><i style="width:@Math.Min(100, Math.Round(d.CollectionRate))%"></i></div>
+        <div class="lbl">@Math.Round(d.CollectionRate)% of billed @Html.Raw(Delta(d.Collected, d.PrevCollected))</div>
+    </div>
+    <div class="card kpi">
+        <div class="lbl">Outstanding due</div>
+        <div class="v">৳ @Fmt.Int(d.Outstanding)</div>
+        <div class="lbl">@d.OutstandingCustomers customers owe money</div>
+        @if (d.Over30Count > 0) { <a class="link bad" href="/Invoices?status=due">@d.Over30Count invoices over 30 days late &rarr;</a> }
+    </div>
+    <div class="card kpi alert">
+        <div class="lbl">Orders waiting for invoice</div>
+        <div class="v">@d.Waiting</div>
+        <div class="lbl">@(d.Waiting == 0 ? "All caught up" : "৳ " + Fmt.Int(d.WaitingAmount) + (d.OldestWaiting is { } o ? " · oldest from " + o.ToString("d MMM") : ""))</div>
+        @if (d.Waiting > 0) { <a class="btn btn-p btn-s" style="align-self:flex-start" href="/Requisitions">Invoice them</a> }
+    </div>
+</section>
+
+<section class="row top wrap" style="gap:20px">
+    <div class="card f2" style="min-width:0;flex:2 1 560px">
+        <div class="row between wrap">
+            <div><div class="ct">Billed vs collected</div><div class="lbl">Daily, @(p.Days < 7 ? "last 14 days" : p.Label)</div></div>
+            <div class="legend">
+                <span><i class="key-line" style="background:#E5412D"></i>Billed</span>
+                <span><i class="key-line" style="background:#1F9E96"></i>Collected</span>
+                <a class="link" href="/Reports?p=@p.Key">Full report &rarr;</a>
+            </div>
+        </div>
+        <partial name="_LineChart" model="chart" />
+    </div>
+
+    <div class="card f1" style="flex:1 1 320px">
+        <div class="ct" style="margin-bottom:8px">Needs your attention</div>
+        @{
+            var any = false;
+        }
+        @if (d.Waiting > 0)
+        {
+            any = true;
+            <a href="/Requisitions" class="attn bad">
+                <span class="ico">@Icons.Svg("orders", 20)</span>
+                <span class="grow"><b>@d.Waiting orders waiting for an invoice</b><small>৳ @Fmt.Int(d.WaitingAmount)</small></span>
+                <span class="cta">Invoice &rarr;</span>
+            </a>
+        }
+        @if (d.CreditAlerts.Count > 0)
+        {
+            any = true;
+            <a href="/Users" class="attn warn">
+                <span class="ico">@Icons.Svg("customers", 20)</span>
+                <span class="grow"><b>@d.CreditAlerts.Count customers at or over credit limit</b><small>@string.Join(", ", d.CreditAlerts.Take(2).Select(c => c.Name))@(d.CreditAlerts.Count > 2 ? " and " + (d.CreditAlerts.Count - 2) + " more" : "")</small></span>
+                <span class="cta">Review &rarr;</span>
+            </a>
+        }
+        @if (d.Over30Count > 0)
+        {
+            any = true;
+            <a href="/Invoices?status=due" class="attn neutral">
+                <span class="ico">@Icons.Svg("collections", 20)</span>
+                <span class="grow"><b>@d.Over30Count invoices over 30 days late</b><small>৳ @Fmt.Int(d.Over30Amount) in total</small></span>
+                <span class="cta">Collect &rarr;</span>
+            </a>
+        }
+        <a href="/Requisitions/Create" class="attn @(Model.WindowOpen ? "good" : "neutral")">
+            <span class="ico">@Icons.Svg("clock", 20)</span>
+            <span class="grow"><b>@Model.WindowText</b><small>@Model.PlanOrders orders today</small></span>
+            <span class="cta">New order &rarr;</span>
+        </a>
+        @if (!any) { <div class="muted" style="padding:8px 4px">Nothing needs attention right now.</div> }
+    </div>
+</section>
+
+<section class="row top wrap" style="gap:20px">
+    <div class="card" style="flex:1 1 320px">
+        <div class="ct">Top customers</div><div class="lbl" style="margin-bottom:14px">By billed amount, @p.Label</div>
+        @if (d.TopCustomers.Count == 0) { <div class="muted">No sales in this period.</div> }
+        @foreach (var c in d.TopCustomers)
+        {
+            <div class="bar-row" style="margin-bottom:14px">
+                <div class="top-line"><span>@c.Name</span><span class="num strong">৳ @Fmt.Int(c.Value)</span></div>
+                <div class="meter thick violet"><i style="width:@Pct(c.Value, maxCust)%"></i></div>
+            </div>
+        }
+    </div>
+
+    <div class="card" style="flex:1 1 320px">
+        <div class="ct">Sales by category</div><div class="lbl" style="margin-bottom:14px">Share of billed amount</div>
+        @if (catTotal <= 0) { <div class="muted">No sales in this period.</div> }
+        else
+        {
+            <div class="row wrap" style="gap:20px">
+                <div class="donut">
+                    <svg viewBox="0 0 160 160" width="160" height="160" role="img" aria-label="Donut chart of sales by category">
+                        <g transform="rotate(-90 80 80)" fill="none" stroke-width="22">
+                            @for (var i = 0; i < arcs.Count; i++) { <circle cx="80" cy="80" r="58" stroke="@Charts.CategoryColors[i]" stroke-dasharray="@arcs[i].Dash" stroke-dashoffset="@arcs[i].Offset"></circle> }
+                        </g>
+                    </svg>
+                    <div class="mid"><div class="num strong" style="font-size:20px">৳ @Charts.Short(catTotal)</div><div class="lbl">billed</div></div>
+                </div>
+                <div class="col grow" style="gap:10px;min-width:140px">
+                    @for (var i = 0; i < Math.Min(4, d.Categories.Count); i++)
+                    {
+                        var c = d.Categories[i];
+                        <div class="row between"><span class="row" style="gap:8px"><i class="dot" style="background:@Charts.CategoryColors[i]"></i>@c.Name</span><span class="num strong">@Pct(c.Amount, catTotal)%</span></div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="card" style="flex:1 1 320px">
+        <div class="row between"><div><div class="ct">Money owed, by age</div><div class="lbl">Total ৳ @Fmt.Int(ageTotal)</div></div><a class="link" href="/Invoices?status=due">Collect &rarr;</a></div>
+        @if (ageTotal <= 0) { <div class="muted" style="margin-top:14px">Nothing outstanding.</div> }
+        else
+        {
+            <div class="stackbar" style="margin:16px 0">
+                @for (var i = 0; i < d.Aging.Count; i++) { if (d.Aging[i].Amount > 0) { <i style="flex:@Charts.N(d.Aging[i].Amount);background:@Charts.AgeColors[i]"></i> } }
+            </div>
+            @for (var i = 0; i < d.Aging.Count; i++)
+            {
+                <div class="row between" style="margin-bottom:10px"><span class="row" style="gap:8px"><i class="dot" style="background:@Charts.AgeColors[i]"></i>@d.Aging[i].Name</span><span class="num strong">৳ @Fmt.Int(d.Aging[i].Amount)</span></div>
+            }
+        }
+    </div>
+</section>
+
+<section class="row top wrap" style="gap:20px">
+    <div class="card" style="flex:1.3 1 420px">
+        <div class="row between" style="margin-bottom:10px">
+            <div class="ct">Products</div>
+            <div class="seg" role="group" aria-label="Best or slowest">
+                <a href="?p=@p.Key" class="@(Model.Slow ? "" : "on")">Best sellers</a>
+                <a href="?p=@p.Key&slow=true" class="@(Model.Slow ? "on" : "")">Slowest</a>
+            </div>
+        </div>
+        @if (products.Count == 0) { <div class="muted">No products sold in this period.</div> }
+        @foreach (var x in products)
+        {
+            <div class="row" style="gap:14px;margin-bottom:12px">
+                <div class="grow" style="min-width:0"><div class="strong">@x.Name</div><div class="lbl">@x.Category</div></div>
+                <svg class="spark" width="84" height="28" viewBox="0 0 84 28" role="img" aria-label="Last 7 days"><path d="@Charts.Sparkline(x.Spark, 84, 28, 3)" fill="none" stroke="#7B4BB8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                <div class="num strong" style="width:84px;text-align:right">@Fmt.Int(x.Quantity) pk</div>
+            </div>
+        }
+    </div>
+
+    <div class="card" style="flex:1 1 320px">
+        <div class="row between" style="margin-bottom:12px"><div><div class="ct">Today's production plan</div><div class="lbl">From @Model.PlanOrders orders</div></div><a class="link" href="/Production">Open &rarr;</a></div>
+        @if (Model.Plan.Count == 0) { <div class="muted">No orders placed today yet.</div> }
+        @foreach (var x in Model.Plan)
+        {
+            <div class="bar-row" style="margin-bottom:12px">
+                <div class="top-line"><span>@x.ProductName</span><span class="num strong">@Fmt.Int(x.TotalQuantity)</span></div>
+                <div class="meter violet"><i style="width:@Pct(x.TotalQuantity, maxPlan)%"></i></div>
+            </div>
+        }
+    </div>
+
+    <div class="card" style="flex:1 1 280px">
+        <div class="row between" style="margin-bottom:12px"><div class="ct">Latest notices</div><a class="link" href="/">All &rarr;</a></div>
+        @if (Model.Notices.Count == 0) { <div class="muted">No notices yet.</div> }
+        @foreach (var n in Model.Notices)
+        {
+            <a href="/" class="notice-mini"><b>@n.Title</b><span>@n.Description</span><small>@n.CreatedOn.ToString("d MMM")</small></a>
+        }
+    </div>
+</section>

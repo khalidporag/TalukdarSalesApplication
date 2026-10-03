@@ -45,6 +45,15 @@ namespace TalukdarSales.Web.Services
             return from <= to ? (from <= now && now <= to) : (now >= from || now <= to);
         }
 
+        /// <summary>Orders still waiting for an invoice (drives the sidebar badge).</summary>
+        public int WaitingCount() => _requisitions.GetAll().Count(r => r.IsActive);
+
+        public int OrderCountForDay(DateTime day)
+        {
+            var start = day.Date; var end = start.AddDays(1);
+            return _requisitions.GetAll().Count(r => r.CreatedDateTime >= start && r.CreatedDateTime < end);
+        }
+
         public (string From, string To) GetWindow()
         {
             var s = _timeSettings.GetAll().OrderByDescending(n => n.CreatedOn).FirstOrDefault();

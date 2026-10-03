@@ -1,19 +1,61 @@
 @page
 @model TalukdarSales.Web.Pages.IndexModel
-@{ ViewData["Title"] = "Notices"; }
-<div class="row g-3">
-    @foreach (var n in Model.Notices)
-    {
-        <div class="col-lg-4 col-md-6">
-            <div class="card h-100" role="button" hx-get="/?handler=Notice&id=@n.Id" hx-target="#modal-content">
-                @if (!string.IsNullOrEmpty(n.LogoName)) { <img src="/images/notices/@n.LogoName" class="card-img-top" style="max-height:180px;object-fit:cover" alt="" /> }
-                <div class="card-body">
-                    <h6 class="card-title">@n.Title</h6>
-                    <p class="card-text small text-muted text-truncate-3">@n.Description</p>
+@{
+    ViewData["Title"] = "Notices";
+    var tints = new[] { ("var(--butter)", "var(--maroon)", "calendar"), ("#F1EAFA", "#4F2B86", "tag"), ("#E4F5F3", "#0B5F59", "collections") };
+}
+@if (!string.IsNullOrEmpty(Model.Flash)) { <span data-flash="@Model.Flash" hidden></span> }
+
+<header class="page-head">
+    <div>
+        <h1 class="page-title">Notices</h1>
+        <div class="page-sub">Announcements from the office</div>
+    </div>
+</header>
+
+<div class="flow top">
+    <section class="f2 col" style="gap:18px">
+        @if (!Model.Items.Any())
+        {
+            <div class="card empty">No notices yet.</div>
+        }
+        @for (var i = 0; i < Model.Items.Count; i++)
+        {
+            var n = Model.Items[i];
+            var t = tints[n.Id % tints.Length];
+            <article class="card" style="display:flex;flex-wrap:wrap;gap:20px;padding:20px;@(i == 0 ? "background:var(--butter-tint);border-color:var(--butter-line)" : "")">
+                <div style="flex:0 0 160px;min-height:120px;border-radius:14px;overflow:hidden;background:@t.Item1;color:@t.Item2;display:flex;align-items:center;justify-content:center">
+                    @if (!string.IsNullOrEmpty(n.LogoName)) { <img src="/images/notices/@n.LogoName" alt="" style="width:100%;height:100%;object-fit:cover" /> }
+                    else { @Icons.Svg(t.Item3, 44, 1.4) }
                 </div>
-                <div class="card-footer bg-transparent small text-muted">Created at: @n.CreatedOn.ToString("dd MMM yyyy HH:mm")</div>
-            </div>
-        </div>
+                <div class="col" style="flex:1 1 280px;min-width:0;gap:8px">
+                    <span class="lbl">@n.CreatedOn.ToString("d MMM yyyy")</span>
+                    <h2 style="font-size:20px">@n.Title</h2>
+                    <p style="margin:0;white-space:pre-line" class="muted">@n.Description</p>
+                    @if (Model.CanManage)
+                    {
+                        <div class="row" style="gap:8px;margin-top:auto">
+                            <a class="btn btn-s" href="/?edit=@n.Id">Edit</a>
+                            <form method="post" asp-page-handler="Remove" asp-route-id="@n.Id" data-confirm="Remove this notice?"><button class="btn btn-s" style="color:#B3231C">Remove</button></form>
+                        </div>
+                    }
+                </div>
+            </article>
+        }
+    </section>
+
+    @if (Model.CanManage)
+    {
+        <aside class="card panel f1 col" style="max-width:420px">
+            <div class="ct">@(Model.Form.Id > 0 ? "Edit notice" : "New notice")</div>
+            <form method="post" enctype="multipart/form-data" asp-page-handler="Save" class="col">
+                <input type="hidden" asp-for="Form.Id" />
+                <div class="field"><label for="Form_Title">Title</label><input asp-for="Form.Title" placeholder="What is this about?" /><span class="err" asp-validation-for="Form.Title"></span></div>
+                <div class="field"><label for="Form_Description">Message</label><textarea asp-for="Form.Description" rows="5" placeholder="Keep it short and clear"></textarea><span class="err" asp-validation-for="Form.Description"></span></div>
+                <div class="field"><label for="Form_Image">Image (optional)</label><input type="file" asp-for="Form.Image" accept="image/*" /><span class="err" asp-validation-for="Form.Image"></span></div>
+                <button class="btn btn-p btn-lg" type="submit">@(Model.Form.Id > 0 ? "Save notice" : "Publish notice")</button>
+                @if (Model.Form.Id > 0) { <a class="btn" href="/">Cancel</a> }
+            </form>
+        </aside>
     }
-    @if (!Model.Notices.Any()) { <div class="col-12"><div class="alert alert-light border">No notices yet.</div></div> }
 </div>

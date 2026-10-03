@@ -1,7 +1,0 @@
-@page
-@model TalukdarSales.Web.Pages.Notices.IndexModel
-@{ ViewData["Title"] = "Notices"; }
-<div class="mb-3"><button class="btn btn-success" hx-get="/Notices?handler=Create" hx-target="#modal-content">Create Notice</button></div>
-<div id="list" hx-get="/Notices?handler=List" hx-trigger="refreshList from:body">
-    <partial name="_List" model="Model" />
-</div>

@@ -1,8 +1,9 @@
 @page
 @model TalukdarSales.Web.Pages.AccessDeniedModel
 @{ ViewData["Title"] = "Access denied"; }
-<div class="alert alert-warning" style="max-width:560px">
-    <h5 class="alert-heading">You do not have access to that page</h5>
-    <p class="mb-0">Your role does not include this permission. Ask an administrator to update your role if you need it.</p>
+<div class="card" style="max-width:520px;margin:40px auto;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;padding:32px">
+    <div style="width:64px;height:64px;border-radius:20px;background:var(--butter-tint);color:var(--maroon);display:flex;align-items:center;justify-content:center">@Icons.Svg("shield-lock", 30, 1.6)</div>
+    <h2 style="font-size:20px">You do not have access to this page</h2>
+    <p class="muted" style="margin:0">Your role does not include this permission. Ask an administrator if you need it.</p>
+    <a class="btn" href="/">Back to home</a>
 </div>
-<a class="btn btn-light" href="/">Back to home</a>

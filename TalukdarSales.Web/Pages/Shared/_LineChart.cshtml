@@ -1,0 +1,31 @@
+@using TalukdarSales.Web.Infrastructure
+@model LineChart
+@{
+    var ticks = new[] { 0, 1, 2, 3 }.Select(i => (Y: 224 - i * 69.33, V: Model.YMax * i / 3)).ToList();
+}
+<div class="chart">
+    <svg viewBox="0 0 720 260" role="img" aria-label="@Model.Aria">
+        <g stroke="#EFE5CB" stroke-width="1">@foreach (var t in ticks) { <line x1="52" y1="@Charts.N(t.Y)" x2="712" y2="@Charts.N(t.Y)"></line> }</g>
+        <g font-size="12" fill="#8F8294" text-anchor="end">@foreach (var t in ticks) { @Html.Raw($"<text x=\"44\" y=\"{Charts.N(t.Y + 4)}\">{Charts.Short(t.V)}</text>") }</g>
+        <g font-size="12" fill="#8F8294" text-anchor="middle">@foreach (var (i, label) in Model.XLabels()) { @Html.Raw($"<text x=\"{Charts.N(Model.X(i))}\" y=\"246\">{label}</text>") }</g>
+        @foreach (var s in Model.Series)
+        {
+            if (s.Area) { <path d="@Model.AreaPath(s)" fill="@s.Color" fill-opacity="0.08"></path> }
+            <path d="@Model.Path(s)" fill="none" stroke="@s.Color" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path>
+        }
+        <g class="xhair"><line x1="0" y1="16" x2="0" y2="224" stroke="#8F8294" stroke-width="1"></line>
+            @foreach (var s in Model.Series) { <circle r="5" fill="@s.Color" stroke="#fff" stroke-width="2"></circle> }</g>
+        @if (Model.Dates.Count > 0)
+        {
+            var last = Model.Dates.Count - 1;
+            @foreach (var s in Model.Series) { <circle cx="@Charts.N(Model.X(last))" cy="@Charts.N(Model.Y(s.Values[last]))" r="4.5" fill="@s.Color" stroke="#fff" stroke-width="2"></circle> }
+        }
+    </svg>
+    <div class="hits" style="left:5.64%;width:94.83%;top:0;height:86.15%">
+        @for (var i = 0; i < Model.Dates.Count; i++)
+        {
+            <div data-x="@Charts.N(Model.X(i))" data-ys="@Model.Ys(i)" data-tip="@Model.Tip(i)"></div>
+        }
+    </div>
+    <div class="tip" aria-hidden="true"></div>
+</div>

@@ -33,6 +33,7 @@ builder.Services.AddScoped<TalukdarSales.Web.Services.ImageStore>();
 builder.Services.AddScoped<TalukdarSales.Web.Services.RequisitionService>();
 builder.Services.AddScoped<TalukdarSales.Web.Services.InvoiceService>();
 builder.Services.AddScoped<TalukdarSales.Web.Services.ReportService>();
+builder.Services.AddScoped<TalukdarSales.Web.Services.AnalyticsService>();
 builder.Services.AddScoped<TalukdarSales.Web.Security.AccessService>();
 builder.Services.AddScoped<TalukdarSales.Web.Security.AccessSeeder>();
 
@@ -86,6 +87,9 @@ using (var scope = app.Services.CreateScope())
 //    app.UseSwagger();
 //    app.UseSwaggerUI();
 //}
+
+if (!app.Environment.IsDevelopment())
+    app.UseExceptionHandler("/Error");
 
 app.UseHttpsRedirection();
 app.UseStaticFiles(); // uploads, fonts, generated PDFs

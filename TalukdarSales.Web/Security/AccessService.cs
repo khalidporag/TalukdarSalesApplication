@@ -6,14 +6,18 @@ namespace TalukdarSales.Web.Security
 {
     public class UserAccess
     {
-        public static readonly UserAccess None = new(false, false, new HashSet<string>());
+        public static readonly UserAccess None = new(false, false, new HashSet<string>(), Array.Empty<string>());
 
-        public UserAccess(bool exists, bool isAdmin, IReadOnlySet<string> keys)
+        public UserAccess(bool exists, bool isAdmin, IReadOnlySet<string> keys, IReadOnlyList<string> roleNames = null)
         {
             Exists = exists;
             IsAdmin = isAdmin;
             Keys = keys;
+            RoleNames = roleNames ?? Array.Empty<string>();
         }
+
+        /// <summary>For display ("Administrator").</summary>
+        public IReadOnlyList<string> RoleNames { get; }
 
         /// <summary>False when the user was deleted since the cookie was issued.</summary>
         public bool Exists { get; }
@@ -21,7 +25,7 @@ namespace TalukdarSales.Web.Security
         public IReadOnlySet<string> Keys { get; }
 
         public bool Has(string key) => Exists && (IsAdmin || Keys.Contains(key));
-        public bool HasAny(IEnumerable<string> keys) => Exists && (IsAdmin || keys.Any(Keys.Contains));
+        public bool HasAny(IEnumerable<string> keys) => Exists && (IsAdmin || keys.Any(k => k == Perm.Anyone || Keys.Contains(k)));
     }
 
     /// <summary>
@@ -61,7 +65,7 @@ namespace TalukdarSales.Web.Security
                     .Where(k => k != null && Perm.Find(k) != null)
                     .ToHashSet();
 
-                access = new UserAccess(true, roles.Any(r => IsAdministratorRole(r.Name)), keys);
+                access = new UserAccess(true, roles.Any(r => IsAdministratorRole(r.Name)), keys, roles.Select(r => r.Name).OrderBy(n => n).ToList());
             }
             _cache[userId] = access;
             return access;

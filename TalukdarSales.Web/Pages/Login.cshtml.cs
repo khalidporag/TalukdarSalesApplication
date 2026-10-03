@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using TalukdarSales.Web.Context;
 using TalukdarSales.Web.Helpers;
 using TalukdarSales.Web.Interfaces;
+using TalukdarSales.Web.Security;
 
 namespace TalukdarSales.Web.Pages
 {
@@ -14,9 +15,11 @@ namespace TalukdarSales.Web.Pages
         private readonly IUserRepository _users;
         private readonly IUserRoleMappingRepository _roleMappings;
         private readonly ApplicationDbContext _db;
+        private readonly AccessService _access;
 
-        public LoginModel(IUserRepository users, IUserRoleMappingRepository roleMappings, ApplicationDbContext db)
+        public LoginModel(IUserRepository users, IUserRoleMappingRepository roleMappings, ApplicationDbContext db, AccessService access)
         {
+            _access = access;
             _users = users;
             _roleMappings = roleMappings;
             _db = db;
@@ -68,10 +71,10 @@ namespace TalukdarSales.Web.Pages
             var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme));
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 
-            return LocalRedirect(SafeReturnUrl(ReturnUrl));
+            return LocalRedirect(SafeReturnUrl(ReturnUrl, _access.For(user.Id).Has(Perm.Dashboard) ? "/Dashboard" : "/"));
         }
 
-        private string SafeReturnUrl(string url) =>
-            !string.IsNullOrEmpty(url) && Url.IsLocalUrl(url) ? url : "/";
+        private string SafeReturnUrl(string url, string fallback = "/") =>
+            !string.IsNullOrEmpty(url) && Url.IsLocalUrl(url) ? url : fallback;
     }
 }
