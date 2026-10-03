@@ -55,12 +55,12 @@ namespace TalukdarSales.Tests
         }
 
         [Fact]
-        public async Task Cookie_is_not_accepted_by_the_api()
+        public async Task Old_json_api_and_swagger_are_gone()
         {
             var client = _app.NewClient();
             await TestApp.Login(client, "admin", "secret123");
-            var res = await client.GetAsync("/api/User");
-            Assert.Equal(HttpStatusCode.Unauthorized, res.StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/api/User")).StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/swagger/index.html")).StatusCode);
         }
 
         [Fact]

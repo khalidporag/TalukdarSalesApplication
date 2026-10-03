@@ -20,10 +20,6 @@ namespace TalukdarSales.Tests
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseEnvironment("Development");
-            builder.ConfigureAppConfiguration((_, cfg) => cfg.AddInMemoryCollection(new Dictionary<string, string>
-            {
-                ["Jwt:Key"] = "test-key-test-key-test-key-test-key-1234"
-            }));
             builder.ConfigureServices(services =>
             {
                 services.RemoveAll<DbContextOptions<ApplicationDbContext>>();

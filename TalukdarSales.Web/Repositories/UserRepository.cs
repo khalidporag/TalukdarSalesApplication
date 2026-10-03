@@ -3,7 +3,7 @@ using TalukdarSales.Web.Interfaces;
 using TalukdarSales.Web.Models;
 using TalukdarSales.Web.Repositories;
 
-namespace Project.Run.Repositories
+namespace TalukdarSales.Web.Repositories
 {
     public class UserRepository: RepositoryBase<User>, IUserRepository
     {
