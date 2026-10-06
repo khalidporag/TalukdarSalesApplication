@@ -1,0 +1,21 @@
+/* Additions for the static demo only. Everything else comes from app.css, shared with the real app. */
+.demo-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-radius:12px;background:var(--butter-tint);border:1px solid var(--butter-line);color:#6A4B15;font-size:13.5px}
+.demo-bar button{border:0;background:none;color:#B3231C;font-weight:600;padding:4px 8px;border-radius:8px}
+.demo-bar button:hover{background:#fff}
+.auth-hint{padding:12px 14px;border-radius:12px;background:var(--butter-tint);color:#6A4B15;font-size:14px}
+.nav a{cursor:pointer}
+.chart-wrap{position:relative}
+.chart-wrap .tip{position:absolute;top:4px;pointer-events:none;opacity:0;transform:translateX(-50%);background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px;box-shadow:0 6px 20px rgba(43,18,51,.12);min-width:170px;font-size:13px;z-index:2;transition:opacity .1s}
+.chart-wrap .tip b{display:block;margin-bottom:6px}
+.chart-wrap .tip .r2{display:flex;justify-content:space-between;gap:18px;margin-top:4px}
+.chart-wrap svg{display:block;width:100%;height:auto}
+.thumb{width:48px;height:48px;border-radius:13px;object-fit:cover;flex:none}
+.thumb.s{width:42px;height:42px;border-radius:12px}
+.product .thumb{width:56px;height:56px}
+.a-link{color:#B3231C;font-weight:600}.a-link:hover{text-decoration:underline}
+tr.click{cursor:pointer}tr.click:hover td{background:#FFFDF7}
+.sheet h2{font-size:22px}
+.cols-h{height:150px}
+.pager a{cursor:pointer}
+.mini{font-size:12.5px}
+@media print{.demo-bar{display:none}}
