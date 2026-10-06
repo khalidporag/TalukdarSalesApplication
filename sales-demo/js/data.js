@@ -40,6 +40,27 @@
 
   var STAFF = ['Sabbir', 'Nusrat', 'Imran'];
 
+  var PERMS = [
+    ['dashboard', 'See the dashboard', 'Overview'],
+    ['reports', 'See the KPI report', 'Overview'],
+    ['notices', 'Post and remove notices', 'Overview'],
+    ['order.create', 'Take new orders', 'Sell'],
+    ['order.view', 'See orders waiting for an invoice', 'Sell'],
+    ['order.manage', 'Edit and cancel orders, create invoices', 'Sell'],
+    ['invoice.view', 'See invoices', 'Sell'],
+    ['invoice.collect', 'Collect payments', 'Sell'],
+    ['invoice.discount', 'Give discounts on invoices', 'Sell'],
+    ['invoice.return', 'Record returns and credit notes', 'Sell'],
+    ['collection.view', 'See collections', 'Sell'],
+    ['production', 'See the production plan', 'Operate'],
+    ['products', 'Manage products and categories', 'Operate'],
+    ['customers', 'Manage customers', 'Operate'],
+    ['users', 'Manage users', 'Admin'],
+    ['roles', 'Manage roles and permissions', 'Admin'],
+    ['window', 'Change the order window', 'Admin'],
+    ['audit', 'See the audit log', 'Admin']
+  ];
+
   function rng(seed) {
     return function () {
       seed |= 0; seed = seed + 0x6D2B79F5 | 0;
@@ -85,8 +106,37 @@
     [[1, [[5, 12], [3, 20]]], [4, [[1, 30], [2, 15]]], [8, [[6, 8], [11, 10], [9, 25]]], [2, [[7, 18], [8, 14]]], [6, [[10, 40]]]].forEach(function (o, i) {
       orders.push({ id: i + 1, no: 'ORD-' + (200 + i), date: day(i < 3 ? 0 : 1), custId: o[0], staff: STAFF[i % 3], status: 'waiting', lines: o[1].map(function (x) { return { pid: x[0], qty: x[1], price: price[x[0]] }; }) });
     });
-    return { v: 1, customers: CUSTOMERS, products: PRODUCTS, invoices: invoices, collections: collections, orders: orders, seq: { inv: n, col: c, ord: orders.length } };
+    var cats = CATS.map(function (c, i) { return { id: c.id, name: c.name, cls: c.cls, color: c.color }; });
+    var all = PERMS.map(function (p) { return p[0]; });
+    var roles = [
+      { id: 1, name: 'Administrator', locked: true, perms: all },
+      { id: 2, name: 'Sales manager', perms: all.filter(function (k) { return ['users', 'roles', 'window', 'audit'].indexOf(k) < 0; }) },
+      { id: 3, name: 'Salesperson', perms: ['order.create', 'order.view', 'invoice.view', 'production'] },
+      { id: 4, name: 'Accountant', perms: ['dashboard', 'reports', 'invoice.view', 'invoice.collect', 'invoice.discount', 'invoice.return', 'collection.view', 'customers'] }
+    ];
+    var users = [
+      { id: 1, name: 'Demo Admin', username: 'admin', role: 'Administrator', active: true, pass: 'demo1234' },
+      { id: 2, name: 'Sabbir Hossain', username: 'sabbir', role: 'Salesperson', active: true, pass: 'demo1234' },
+      { id: 3, name: 'Nusrat Jahan', username: 'nusrat', role: 'Salesperson', active: true, pass: 'demo1234' },
+      { id: 4, name: 'Imran Khan', username: 'imran', role: 'Salesperson', active: true, pass: 'demo1234' },
+      { id: 5, name: 'Farhana Akter', username: 'farhana', role: 'Accountant', active: true, pass: 'demo1234' },
+      { id: 6, name: 'Tahmina Sultana', username: 'tahmina', role: 'Sales manager', active: true, pass: 'demo1234' }
+    ];
+    var notices = [
+      { id: 1, date: day(0), title: 'Order desk closes at 10 PM', body: 'Orders placed after the closing time are picked up the next morning. Please finish your rounds early on Thursdays.', by: 'Demo Admin' },
+      { id: 2, date: day(2), title: 'New: Special Semai Gift Bag', body: 'The gift bag is now in the product list at ৳ 180. Stock is limited for the first week.', by: 'Tahmina Sultana' },
+      { id: 3, date: day(6), title: 'Collect before month end', body: 'Please clear invoices older than 15 days before the month closes. Check the "Who owes how long" card on the KPI report.', by: 'Demo Admin' }
+    ];
+    var notifications = [
+      { id: 1, time: day(0) + 'T08:05:00', title: 'Order desk is open', body: 'Orders are open until 10:00 PM today.', read: false },
+      { id: 2, time: day(0) + 'T07:30:00', title: '5 orders are waiting for an invoice', body: 'Open Orders to invoice to turn them into invoices.', read: false },
+      { id: 3, time: day(1) + 'T21:00:00', title: 'Closing reminder', body: 'The order desk closes in one hour.', read: true }
+    ];
+    var audit = [];
+    var acts = [['Order placed', 'ORD-198 for Rahim Store'], ['Invoice created', 'INV-1' + '085 for Karim Traders'], ['Payment recorded', '৳ 4,200 against INV-1081'], ['Product added', 'Special Semai Gift Bag'], ['User added', 'tahmina (Sales manager)'], ['Discount given', '৳ 200 on INV-1077'], ['Order window changed', 'Closing time set to 10:00 PM'], ['Role changed', 'Accountant: collect payments on']];
+    acts.forEach(function (a, i) { audit.push({ id: i + 1, time: day(7 - i) + 'T' + ['09:12', '10:40', '11:05', '14:20', '15:45', '12:30', '16:10', '17:02'][i] + ':00', user: i % 2 ? 'Tahmina Sultana' : 'Demo Admin', action: a[0], detail: a[1] }); });
+    return { v: 2, customers: CUSTOMERS, products: PRODUCTS, categories: cats, invoices: invoices, collections: collections, orders: orders, returns: [], users: users, roles: roles, notices: notices, notifications: notifications, audit: audit, window: { enforce: true, open: '05:00', close: '22:00' }, seq: { inv: n, col: c, ord: orders.length, ret: 0, audit: audit.length, note: notifications.length, notice: notices.length, role: roles.length } };
   }
 
-  window.DEMO = { CATS: CATS, STAFF: STAFF, seed: seed, day: day };
+  window.DEMO = { CATS: CATS, PERMS: PERMS, STAFF: STAFF, seed: seed, day: day };
 })();
