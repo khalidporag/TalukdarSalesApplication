@@ -3,7 +3,7 @@ name: Deploy bakery site to GitHub Pages
 on:
   push:
     branches: [main]
-    paths: ['bakery-static/**', '.github/workflows/pages.yml']
+    paths: ['bakery-static/**', 'sales-demo/**', '.github/workflows/pages.yml']
   workflow_dispatch:
 
 permissions:
@@ -26,8 +26,14 @@ jobs:
       - uses: actions/configure-pages@v5
         with:
           enablement: true
+      - name: Assemble site
+        run: |
+          mkdir _site
+          cp -r bakery-static/. _site/
+          mkdir _site/sales-demo
+          cp -r sales-demo/. _site/sales-demo/
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: bakery-static
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
