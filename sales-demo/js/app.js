@@ -5,7 +5,7 @@
   var D = window.DEMO;
   var state = load();
   if (!state.users) { state.users = defaultUsers(); save(); }
-  var ui = { period: '7', invStatus: 'all', invQ: '', invPage: 1, colPage: 1, cart: { custId: null, lines: {} }, prodCat: 'all', custQ: '', picked: {}, modal: null, modalImg: null };
+  var ui = { period: '7', invStatus: 'all', invQ: '', invPage: 1, colPage: 1, cart: { custId: null, lines: {} }, prodCat: 'all', custQ: '', picked: {}, modal: null, modalImg: null, planDate: null };
 
   // ---------- storage ----------
   function load() {
@@ -66,6 +66,7 @@
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
     print: '<path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2"/><rect x="6" y="14" width="12" height="7"/>',
+    production: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 14h8"/>',
     roles: '<path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
     trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'
   };
@@ -121,7 +122,7 @@
   var NAV = [
     ['Overview', [['Dashboard', '#/dashboard', 'dashboard'], ['KPI report', '#/reports', 'reports']]],
     ['Sell', [['New order', '#/orders/new', 'new-order'], ['Orders to invoice', '#/orders', 'orders'], ['Invoices', '#/invoices', 'invoices'], ['Collections', '#/collections', 'collections']]],
-    ['Operate', [['Products', '#/products', 'products'], ['Customers', '#/customers', 'customers']]],
+    ['Operate', [['Production plan', '#/production', 'production'], ['Products', '#/products', 'products'], ['Customers', '#/customers', 'customers']]],
     ['Admin', [['Users', '#/users', 'roles']]]
   ];
 
@@ -320,6 +321,32 @@
       '<div class="card flush"><div class="ct" style="padding:18px 20px 6px">Statement</div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Invoice</th><th>Date</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Due</th></tr></thead><tbody>' + invs.map(function (i) { return '<tr class="click" data-go="#/invoices/' + i.id + '"><td><a class="a-link" href="#/invoices/' + i.id + '">' + i.no + '</a></td><td>' + dt(i.date) + '</td><td class="r num">' + money(invTotal(i)) + '</td><td class="r num">' + money(invPaid(i)) + '</td><td class="r num strong">' + money(invDue(i)) + '</td></tr>'; }).join('') + '</tbody></table></div></div>';
   }
 
+  function shiftDay(iso, n) { var d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+
+  function pProduction() {
+    var day = ui.planDate || today();
+    // Orders for the day = invoices raised that day plus orders still waiting for an invoice.
+    var src = state.invoices.filter(function (i) { return i.date === day; }).concat(state.orders.filter(function (o) { return o.status === 'waiting' && o.date === day; }));
+    var qty = {}, custs = {};
+    src.forEach(function (o) { custs[o.custId] = 1; o.lines.forEach(function (l) { qty[l.pid] = (qty[l.pid] || 0) + l.qty; }); });
+    var groups = D.CATS.map(function (c, ci) {
+      var items = state.products.filter(function (p) { return p.cat === c.id && qty[p.id]; }).map(function (p) { return { name: p.name, q: qty[p.id] }; }).sort(function (a, b) { return b.q - a.q; });
+      return { name: c.name, color: c.color, total: sum(items, function (x) { return x.q; }), items: items };
+    }).filter(function (g) { return g.total > 0; }).sort(function (a, b) { return b.total - a.total; });
+    var total = sum(groups, function (g) { return g.total; }), max = Math.max.apply(null, groups.map(function (g) { return g.items[0].q; }).concat([1]));
+    var live = day === today(), nProd = sum(groups, function (g) { return g.items.length; });
+    var nav = '<div class="row" style="gap:4px;padding:4px;border-radius:12px;background:#fff;border:1px solid var(--line)"><button class="daynav" data-act="plan-day" data-d="-1" aria-label="Previous day">&lsaquo;</button><input type="date" id="planDate" value="' + day + '" aria-label="Date" style="border:0;background:transparent;min-height:40px;width:auto;font-weight:600"><button class="daynav" data-act="plan-day" data-d="1" aria-label="Next day">&rsaquo;</button></div>';
+    return head('Production plan', 'What to make, from the orders received for the day', nav + '<button class="btn" data-act="print">' + icon('print', 18) + 'Print sheet</button>') +
+      '<section class="kpis"><div class="card kpi small"><div class="lbl">Packs to make</div><div class="v">' + total.toLocaleString('en-IN') + '</div>' + (live ? '<span class="pill good live" style="align-self:flex-start"><i class="dot"></i>Live · orders still arriving</span>' : '') + '</div>' +
+      '<div class="card kpi small"><div class="lbl">Orders</div><div class="v">' + src.length + '</div><div class="lbl">From ' + Object.keys(custs).length + ' customers</div></div>' +
+      '<div class="card kpi small"><div class="lbl">Products</div><div class="v">' + nProd + '</div><div class="lbl">in ' + groups.length + ' categories</div></div>' +
+      '<div class="card kpi small butter"><div class="lbl">Order desk closes</div><div class="v" style="color:var(--maroon)">6:00 PM</div><div class="lbl">' + (live ? 'Orders are open' : 'Past day') + '</div></div></section>' +
+      '<div class="row top wrap" style="gap:22px"><section class="col grow" style="flex:2 1 560px;min-width:0;gap:18px">' +
+      (groups.length ? groups.map(function (g) { return '<div class="card flush"><div class="list-head"><span class="row" style="gap:10px"><i class="dot" style="background:' + g.color + '"></i><span class="ct">' + g.name + '</span></span><span class="grow"></span><span class="num strong">' + g.total.toLocaleString('en-IN') + ' packs</span></div>' + g.items.map(function (x) { return '<div class="list-row"><div style="width:200px;flex:none;font-weight:500">' + esc(x.name) + '</div><div class="meter thick violet grow"><i style="width:' + Math.round(x.q / max * 100) + '%;background:' + g.color + '"></i></div><div class="num strong" style="width:70px;text-align:right">' + x.q + '</div></div>'; }).join('') + '</div>'; }).join('') : '<div class="card empty">No orders for this day.</div>') +
+      '</section><aside class="card panel"><div><div class="ct">Share by category</div><div class="lbl">Of ' + total.toLocaleString('en-IN') + ' packs</div></div>' +
+      (groups.length ? '<div class="stackbar">' + groups.map(function (g) { return '<i style="flex:' + g.total + ';background:' + g.color + '"></i>'; }).join('') + '</div>' + groups.map(function (g) { return '<div class="row between"><span class="row" style="gap:8px"><i class="dot" style="background:' + g.color + '"></i>' + g.name + '</span><span><span class="num strong">' + g.total.toLocaleString('en-IN') + '</span> <span class="lbl">· ' + Math.round(g.total / total * 100) + '%</span></span></div>'; }).join('') : '') + '</aside></div>';
+  }
+
   function pUsers() {
     var rows = state.users.map(function (u) {
       return '<tr><td><div class="row"><div class="avatar-s">' + initials(u.name) + '</div><div><b>' + esc(u.name) + '</b><div class="muted mini">@' + esc(u.username) + '</div></div></div></td><td><span class="pill info">' + esc(u.role) + '</span></td><td>' + (u.active ? '<span class="pill good">Active</span>' : '<span class="pill neutral">Disabled</span>') + '</td><td class="r">' + (u.id === 1 ? '<span class="faint mini">You</span>' : '<button class="btn btn-s" data-act="modal" data-v="user" data-id="' + u.id + '">Edit</button> <button class="btn btn-s" data-act="user-toggle" data-id="' + u.id + '">' + (u.active ? 'Disable' : 'Enable') + '</button>') + '</td></tr>';
@@ -382,6 +409,7 @@
     if ((m = h.match(/^\/invoices\/(\d+)$/))) return { nav: '#/invoices', title: 'Invoice', html: function () { return pInvoice(+m[1]); } };
     if (h === '/collections') return { nav: '#/collections', title: 'Collections', html: pCollections };
     if (h === '/products') return { nav: '#/products', title: 'Products', html: pProducts };
+    if (h === '/production') return { nav: '#/production', title: 'Production plan', html: pProduction };
     if (h === '/users') return { nav: '#/users', title: 'Users', html: pUsers };
     if (h === '/customers') return { nav: '#/customers', title: 'Customers', html: pCustomers };
     if ((m = h.match(/^\/customers\/(\d+)$/))) return { nav: '#/customers', title: 'Customer', html: function () { return pCustomer(+m[1]); } };
@@ -440,6 +468,7 @@
         save(); toast(money(amt) + ' recorded for ' + inv.no); render(true); break;
       case 'print': window.print(); break;
       case 'modal': ui.modal = { kind: t.dataset.v, id: id || null }; ui.modalImg = null; render(true); break;
+      case 'plan-day': ui.planDate = shiftDay(ui.planDate || today(), +t.dataset.d); render(true); break;
       case 'modal-close': ui.modal = null; render(true); break;
       case 'prod-toggle': var pr = prod(id); pr.active = pr.active === false; save(); toast(pr.name + (pr.active ? ' is visible again' : ' hidden from new orders')); render(true); break;
       case 'user-toggle': var us = state.users.filter(function (u) { return u.id === id; })[0]; us.active = !us.active; save(); toast(us.name + (us.active ? ' enabled' : ' disabled')); render(true); break;
@@ -448,6 +477,7 @@
   });
 
   document.addEventListener('change', function (e) {
+    if (e.target.id === 'planDate' && e.target.value) { ui.planDate = e.target.value; render(true); }
     if (e.target.id === 'f_photo' && e.target.files[0]) shrink(e.target.files[0], function (d) { ui.modalImg = d; var n = $('#photoNote'); if (n) n.textContent = 'Photo ready.'; });
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && ui.modal) { ui.modal = null; render(true); } });
