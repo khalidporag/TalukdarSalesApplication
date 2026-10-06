@@ -10,8 +10,10 @@ Open `index.html` (or serve the folder with `python3 -m http.server`) and press 
 3. **Invoices**: open one, enter an amount, Record payment.
 4. **Dashboard / KPI report**: figures and charts update from what you just did.
 
+5. **Products / Customers / Users**: add a product (with an optional photo), a customer, or a user with a role. New products appear in New order straight away.
+
 Use **Reset demo data** (top of any page) to start over.
 
 Live at `/sales-demo/` on the GitHub Pages site (https://khalidporag.github.io/TalukdarSalesApplication/sales-demo/).
 
-Not included in the demo: roles, audit log, production plan, order window settings, returns and Excel export. Those exist only in the real app.
+Not included in the demo: role permission editing, audit log, production plan, order window settings, returns and Excel export. Those exist only in the real app.

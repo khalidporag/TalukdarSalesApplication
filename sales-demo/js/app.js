@@ -4,7 +4,8 @@
   var KEY = 'talukder-sales-demo-v1', SESSION = 'talukder-sales-demo-user';
   var D = window.DEMO;
   var state = load();
-  var ui = { period: '7', invStatus: 'all', invQ: '', invPage: 1, colPage: 1, cart: { custId: null, lines: {} }, prodCat: 'all', custQ: '', picked: {} };
+  if (!state.users) { state.users = defaultUsers(); save(); }
+  var ui = { period: '7', invStatus: 'all', invQ: '', invPage: 1, colPage: 1, cart: { custId: null, lines: {} }, prodCat: 'all', custQ: '', picked: {}, modal: null, modalImg: null };
 
   // ---------- storage ----------
   function load() {
@@ -12,6 +13,17 @@
     var s2 = D.seed(); save(s2); return s2;
   }
   function save(s) { try { localStorage.setItem(KEY, JSON.stringify(s || state)); } catch (e) { /* ignore */ } }
+
+  function defaultUsers() {
+    return [
+      { id: 1, name: 'Demo Admin', username: 'admin', role: 'Administrator', active: true },
+      { id: 2, name: 'Sabbir Hossain', username: 'sabbir', role: 'Salesperson', active: true },
+      { id: 3, name: 'Nusrat Jahan', username: 'nusrat', role: 'Salesperson', active: true },
+      { id: 4, name: 'Imran Khan', username: 'imran', role: 'Salesperson', active: true },
+      { id: 5, name: 'Farhana Akter', username: 'farhana', role: 'Accountant', active: true }
+    ];
+  }
+  var ROLES = ['Administrator', 'Sales manager', 'Salesperson', 'Accountant'];
 
   // ---------- helpers ----------
   var $ = function (s, r) { return (r || document).querySelector(s); };
@@ -35,6 +47,12 @@
   var isoOf = function (offset) { return D.day(offset); };
   var inRange = function (iso, from, to) { return iso >= from && iso <= to; };
 
+  function thumb(p) {
+    if (p.imgData) return '<img class="thumb" src="' + p.imgData + '" alt="">';
+    if (p.img) return '<img class="thumb" src="img/' + p.img + '.jpg" alt="">';
+    return '<div class="tile ' + cat(p.cat).cls + '" style="width:56px;height:56px">' + initials(p.name) + '</div>';
+  }
+
   var ICONS = {
     dashboard: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
     reports: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
@@ -48,6 +66,7 @@
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
     print: '<path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2"/><rect x="6" y="14" width="12" height="7"/>',
+    roles: '<path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
     trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'
   };
   var icon = function (n, s, w) { return '<svg width="' + (s || 20) + '" height="' + (s || 20) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (w || 1.8) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICONS[n] || '') + '</svg>'; };
@@ -102,7 +121,8 @@
   var NAV = [
     ['Overview', [['Dashboard', '#/dashboard', 'dashboard'], ['KPI report', '#/reports', 'reports']]],
     ['Sell', [['New order', '#/orders/new', 'new-order'], ['Orders to invoice', '#/orders', 'orders'], ['Invoices', '#/invoices', 'invoices'], ['Collections', '#/collections', 'collections']]],
-    ['Operate', [['Products', '#/products', 'products'], ['Customers', '#/customers', 'customers']]]
+    ['Operate', [['Products', '#/products', 'products'], ['Customers', '#/customers', 'customers']]],
+    ['Admin', [['Users', '#/users', 'roles']]]
   ];
 
   function layout(route, body) {
@@ -199,9 +219,9 @@
       '<div class="selected-cust"><div class="avatar big">' + initials(selected.name) + '</div><div class="grow"><b>' + esc(selected.name) + '</b><div class="muted">' + esc(selected.owner) + ' · ' + esc(selected.area) + '</div></div><div><div class="lbl">Owes now</div><b class="num">' + money(custDue(selected.id)) + '</b></div><button class="btn btn-s" data-act="change-cust">Change</button></div>' :
       '<div class="field"><label for="custQ">Find customer</label><input id="custQ" type="search" placeholder="Search by shop or owner name" value="' + esc(ui.custQ) + '" autocomplete="off"></div><div class="cust-results" id="custResults">' + custResults() + '</div>';
     var chips = '<button class="chip ' + (ui.prodCat === 'all' ? 'on' : '') + '" data-act="prodcat" data-v="all">All</button>' + D.CATS.filter(function (x) { return x.id !== 'cake'; }).concat(D.CATS.filter(function (x) { return x.id === 'cake'; })).map(function (x) { return '<button class="chip ' + (ui.prodCat === x.id ? 'on' : '') + '" data-act="prodcat" data-v="' + x.id + '">' + x.name + '</button>'; }).join('');
-    var grid = state.products.filter(function (p) { return ui.prodCat === 'all' || p.cat === ui.prodCat; }).map(function (p) {
+    var grid = state.products.filter(function (p) { return p.active !== false && (ui.prodCat === 'all' || p.cat === ui.prodCat); }).map(function (p) {
       var q = c.lines[p.id] || 0;
-      return '<div class="product ' + (q ? 'has' : '') + '"><div class="row"><img class="thumb" src="img/' + p.img + '.jpg" alt=""><div class="grow"><b>' + esc(p.name) + '</b><div class="muted mini">' + cat(p.cat).name + '</div><div class="num strong">' + money(p.price) + '</div></div></div>' +
+      return '<div class="product ' + (q ? 'has' : '') + '"><div class="row">' + thumb(p) + '<div class="grow"><b>' + esc(p.name) + '</b><div class="muted mini">' + cat(p.cat).name + '</div><div class="num strong">' + money(p.price) + '</div></div></div>' +
         '<div class="row stepper"><button class="step" data-act="step" data-id="' + p.id + '" data-d="-5" aria-label="Remove 5 ' + esc(p.name) + '">−</button><div class="qty num" aria-live="polite">' + q + '</div><button class="step" data-act="step" data-id="' + p.id + '" data-d="5" aria-label="Add 5 ' + esc(p.name) + '">+</button></div></div>';
     }).join('');
     var cartHtml = lines.length ? lines.map(function (l) { return '<div class="cart-line"><div class="grow"><b>' + esc(l.p.name) + '</b><div class="muted mini">' + l.qty + ' × ' + money(l.p.price) + '</div></div><b class="num">' + money(l.qty * l.p.price) + '</b><button class="rm" data-act="rm" data-id="' + l.p.id + '" aria-label="Remove ' + esc(l.p.name) + '">' + icon('trash', 16) + '</button></div>'; }).join('') : '<div class="empty-dash">Add products to start the order.</div>';
@@ -276,13 +296,19 @@
   }
 
   function pProducts() {
-    return head('Products', state.products.length + ' items in the range.') +
-      '<div class="product-grid">' + state.products.map(function (p) { var c = cat(p.cat), sold = sum(state.invoices, function (i) { return sum(i.lines.filter(function (l) { return l.pid === p.id; }), function (l) { return l.qty; }); }); return '<div class="product"><div class="row"><img class="thumb" src="img/' + p.img + '.jpg" alt=""><div class="grow"><b>' + esc(p.name) + '</b><div><span class="pill neutral">' + c.name + '</span></div></div></div><div class="row between"><span class="num strong" style="font-size:18px">' + money(p.price) + '</span><span class="muted mini">' + sold + ' sold in 30 days</span></div></div>'; }).join('') + '</div>';
+    var act = '<button class="btn btn-p" data-act="modal" data-v="product">' + icon('plus', 18, 2.2) + 'Add product</button>';
+    return head('Products', state.products.length + ' items in the range.', act) +
+      '<div class="product-grid">' + state.products.map(function (p) {
+        var c = cat(p.cat), sold = sum(state.invoices, function (i) { return sum(i.lines.filter(function (l) { return l.pid === p.id; }), function (l) { return l.qty; }); }), on = p.active !== false;
+        return '<div class="product" style="' + (on ? '' : 'opacity:.6') + '"><div class="row">' + thumb(p) + '<div class="grow"><b>' + esc(p.name) + '</b><div><span class="pill neutral">' + c.name + '</span> ' + (on ? '' : '<span class="pill warn">Hidden</span>') + '</div></div></div>' +
+          '<div class="row between"><span class="num strong" style="font-size:18px">' + money(p.price) + '</span><span class="muted mini">' + sold + ' sold in 30 days</span></div>' +
+          '<div class="row"><button class="btn btn-s grow" data-act="modal" data-v="product" data-id="' + p.id + '">Edit</button><button class="btn btn-s grow" data-act="prod-toggle" data-id="' + p.id + '">' + (on ? 'Hide' : 'Show') + '</button></div></div>';
+      }).join('') + '</div>';
   }
 
   function pCustomers() {
     var rows = state.customers.map(function (c) { var due = custDue(c.id), use = Math.min(100, Math.round(due / c.limit * 100)); return '<tr class="click" data-go="#/customers/' + c.id + '"><td><div class="row"><div class="avatar-s">' + initials(c.name) + '</div><div><b>' + esc(c.name) + '</b><div class="muted mini">' + esc(c.owner) + '</div></div></div></td><td>' + esc(c.area) + '</td><td class="r num">' + money(custBilled(c.id)) + '</td><td class="r num strong">' + money(due) + '</td><td style="min-width:150px"><div class="meter ' + (use >= 80 ? '' : 'good') + '"><i style="width:' + use + '%;' + (use >= 80 ? 'background:#E5412D' : '') + '"></i></div><div class="muted mini">' + use + '% of ' + money(c.limit) + '</div></td></tr>'; }).join('');
-    return head('Customers', 'Shops you sell to, what they owe and how close they are to their credit limit.') +
+    return head('Customers', 'Shops you sell to, what they owe and how close they are to their credit limit.', '<button class="btn btn-p" data-act="modal" data-v="customer">' + icon('plus', 18, 2.2) + 'Add customer</button>') +
       '<div class="card flush"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Customer</th><th>Area</th><th class="r">Billed (30d)</th><th class="r">Owes</th><th>Credit used</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>';
   }
 
@@ -292,6 +318,49 @@
     return head(esc(c.name), esc(c.owner) + ' · ' + esc(c.area) + ' · ' + esc(c.phone) + ' · <a class="a-link" href="#/customers">All customers</a>', '<a class="btn btn-p" data-act="order-for" data-id="' + id + '">' + icon('plus', 18, 2.2) + 'New order</a>') +
       '<section class="kpis"><div class="card kpi small"><div class="lbl">Billed (30 days)</div><div class="v">' + money(custBilled(id)) + '</div></div><div class="card kpi small alert"><div class="lbl">Owes now</div><div class="v" style="color:#B3231C">' + money(custDue(id)) + '</div></div><div class="card kpi small"><div class="lbl">Credit limit</div><div class="v">' + money(c.limit) + '</div></div></section>' +
       '<div class="card flush"><div class="ct" style="padding:18px 20px 6px">Statement</div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Invoice</th><th>Date</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Due</th></tr></thead><tbody>' + invs.map(function (i) { return '<tr class="click" data-go="#/invoices/' + i.id + '"><td><a class="a-link" href="#/invoices/' + i.id + '">' + i.no + '</a></td><td>' + dt(i.date) + '</td><td class="r num">' + money(invTotal(i)) + '</td><td class="r num">' + money(invPaid(i)) + '</td><td class="r num strong">' + money(invDue(i)) + '</td></tr>'; }).join('') + '</tbody></table></div></div>';
+  }
+
+  function pUsers() {
+    var rows = state.users.map(function (u) {
+      return '<tr><td><div class="row"><div class="avatar-s">' + initials(u.name) + '</div><div><b>' + esc(u.name) + '</b><div class="muted mini">@' + esc(u.username) + '</div></div></div></td><td><span class="pill info">' + esc(u.role) + '</span></td><td>' + (u.active ? '<span class="pill good">Active</span>' : '<span class="pill neutral">Disabled</span>') + '</td><td class="r">' + (u.id === 1 ? '<span class="faint mini">You</span>' : '<button class="btn btn-s" data-act="modal" data-v="user" data-id="' + u.id + '">Edit</button> <button class="btn btn-s" data-act="user-toggle" data-id="' + u.id + '">' + (u.active ? 'Disable' : 'Enable') + '</button>') + '</td></tr>';
+    }).join('');
+    return head('Users', 'People who can sign in. Roles decide what each person can see and do.', '<button class="btn btn-p" data-act="modal" data-v="user">' + icon('plus', 18, 2.2) + 'Add user</button>') +
+      '<div class="card flush"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Role</th><th>Status</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div></div>';
+  }
+
+  function field(id, label, input) { return '<div class="field"><label for="' + id + '">' + label + '</label>' + input + '</div>'; }
+  function modalHtml() {
+    var m = ui.modal; if (!m) return '';
+    var title, body, edit;
+    if (m.kind === 'product') {
+      edit = m.id ? prod(m.id) : null; title = edit ? 'Edit product' : 'Add product';
+      body = field('f_name', 'Product name', '<input id="f_name" name="name" required value="' + esc(edit ? edit.name : '') + '">') +
+        '<div class="fields">' + field('f_cat', 'Category', '<select id="f_cat" name="cat">' + D.CATS.map(function (c) { return '<option value="' + c.id + '"' + (edit && edit.cat === c.id ? ' selected' : '') + '>' + c.name + '</option>'; }).join('') + '</select>') +
+        field('f_price', 'Price (৳)', '<input id="f_price" name="price" type="number" min="1" required value="' + (edit ? edit.price : '') + '">') + '</div>' +
+        field('f_photo', 'Photo (optional)', '<input id="f_photo" type="file" accept="image/*">') + '<div class="muted mini" id="photoNote">' + (edit && (edit.imgData || edit.img) ? 'Current photo is kept unless you pick a new one.' : 'Without a photo, initials are shown.') + '</div>';
+    } else if (m.kind === 'customer') {
+      title = 'Add customer';
+      body = field('f_name', 'Shop name', '<input id="f_name" name="name" required>') +
+        '<div class="fields">' + field('f_owner', 'Owner', '<input id="f_owner" name="owner" required>') + field('f_phone', 'Phone', '<input id="f_phone" name="phone" inputmode="tel">') + '</div>' +
+        '<div class="fields">' + field('f_area', 'Area', '<input id="f_area" name="area">') + field('f_limit', 'Credit limit (৳)', '<input id="f_limit" name="limit" type="number" min="0" value="50000">') + '</div>';
+    } else {
+      edit = m.id ? state.users.filter(function (u) { return u.id === m.id; })[0] : null; title = edit ? 'Edit user' : 'Add user';
+      body = field('f_name', 'Full name', '<input id="f_name" name="name" required value="' + esc(edit ? edit.name : '') + '">') +
+        '<div class="fields">' + field('f_user', 'Username', '<input id="f_user" name="username" required autocomplete="off" value="' + esc(edit ? edit.username : '') + '">') +
+        field('f_role', 'Role', '<select id="f_role" name="role">' + ROLES.map(function (r) { return '<option' + (edit && edit.role === r ? ' selected' : '') + '>' + r + '</option>'; }).join('') + '</select>') + '</div>' +
+        (edit ? '' : field('f_pass', 'Temporary password', '<input id="f_pass" name="pass" type="password" required minlength="6" autocomplete="new-password">'));
+    }
+    return '<div class="modal-scrim" data-act="modal-close"></div><div class="modal card" role="dialog" aria-modal="true" aria-labelledby="mt"><div class="row between"><h2 class="ct" id="mt" style="font-size:20px">' + title + '</h2><button class="step s" data-act="modal-close" aria-label="Close">&times;</button></div>' +
+      '<form id="modalForm" class="col" data-kind="' + m.kind + '" data-id="' + (m.id || '') + '" style="margin-top:14px">' + body + '<div class="row end" style="margin-top:6px"><button type="button" class="btn" data-act="modal-close">Cancel</button><button class="btn btn-p" type="submit">Save</button></div></form></div>';
+  }
+  function shrink(file, cb) {
+    var fr = new FileReader();
+    fr.onload = function () {
+      var im = new Image();
+      im.onload = function () { var s = 160 / Math.max(im.width, im.height, 160), c = document.createElement('canvas'); c.width = Math.round(im.width * s); c.height = Math.round(im.height * s); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); cb(c.toDataURL('image/jpeg', 0.8)); };
+      im.src = fr.result;
+    };
+    fr.readAsDataURL(file);
   }
 
   // ---------- login ----------
@@ -313,6 +382,7 @@
     if ((m = h.match(/^\/invoices\/(\d+)$/))) return { nav: '#/invoices', title: 'Invoice', html: function () { return pInvoice(+m[1]); } };
     if (h === '/collections') return { nav: '#/collections', title: 'Collections', html: pCollections };
     if (h === '/products') return { nav: '#/products', title: 'Products', html: pProducts };
+    if (h === '/users') return { nav: '#/users', title: 'Users', html: pUsers };
     if (h === '/customers') return { nav: '#/customers', title: 'Customers', html: pCustomers };
     if ((m = h.match(/^\/customers\/(\d+)$/))) return { nav: '#/customers', title: 'Customer', html: function () { return pCustomer(+m[1]); } };
     return { nav: '#/dashboard', title: 'Dashboard', html: pDashboard };
@@ -321,8 +391,9 @@
   function render(keepScroll) {
     var y = window.scrollY, app = $('#app');
     if (!sessionStorage.getItem(SESSION)) { app.innerHTML = loginPage(); document.title = 'Sign in · Talukder Foods Sales demo'; return; }
-    var r = route(); app.innerHTML = layout(r, r.html()); document.title = r.title + ' · Talukder Foods Sales demo';
+    var r = route(); app.innerHTML = layout(r, r.html()) + modalHtml(); document.title = r.title + ' · Talukder Foods Sales demo';
     window.scrollTo(0, keepScroll ? y : 0);
+    var first = ui.modal && $('#modalForm input, #modalForm select'); if (first) first.focus({ preventScroll: true });
   }
 
   // ---------- actions ----------
@@ -368,9 +439,18 @@
         state.collections.push({ id: ++state.seq.col, date: today(), invId: inv.id, custId: inv.custId, amount: amt, method: ($('#method .on') || {}).dataset ? $('#method .on').dataset.v : 'Cash' });
         save(); toast(money(amt) + ' recorded for ' + inv.no); render(true); break;
       case 'print': window.print(); break;
+      case 'modal': ui.modal = { kind: t.dataset.v, id: id || null }; ui.modalImg = null; render(true); break;
+      case 'modal-close': ui.modal = null; render(true); break;
+      case 'prod-toggle': var pr = prod(id); pr.active = pr.active === false; save(); toast(pr.name + (pr.active ? ' is visible again' : ' hidden from new orders')); render(true); break;
+      case 'user-toggle': var us = state.users.filter(function (u) { return u.id === id; })[0]; us.active = !us.active; save(); toast(us.name + (us.active ? ' enabled' : ' disabled')); render(true); break;
       case 'order-for': ui.cart = { custId: id, lines: {} }; location.hash = '#/orders/new'; break;
     }
   });
+
+  document.addEventListener('change', function (e) {
+    if (e.target.id === 'f_photo' && e.target.files[0]) shrink(e.target.files[0], function (d) { ui.modalImg = d; var n = $('#photoNote'); if (n) n.textContent = 'Photo ready.'; });
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && ui.modal) { ui.modal = null; render(true); } });
 
   document.addEventListener('input', function (e) {
     if (e.target.id === 'custQ') { ui.custQ = e.target.value; $('#custResults').innerHTML = custResults(); }
@@ -378,6 +458,30 @@
   });
 
   document.addEventListener('submit', function (e) {
+    if (e.target.id === 'modalForm') {
+      e.preventDefault();
+      var f = e.target, k = f.dataset.kind, eid = +f.dataset.id || null, v = function (n) { return f.elements[n] ? f.elements[n].value.trim() : ''; };
+      if (k === 'product') {
+        var price = Math.round(+v('price')); if (!v('name') || !(price > 0)) { toast('Enter a name and a price above 0', true); return; }
+        var pr = eid ? prod(eid) : { id: Math.max.apply(null, state.products.map(function (x) { return x.id; })) + 1, active: true };
+        pr.name = v('name'); pr.cat = v('cat'); pr.price = price; if (ui.modalImg) { pr.imgData = ui.modalImg; }
+        if (!eid) state.products.push(pr);
+        toast(eid ? 'Product updated' : 'Product added');
+      } else if (k === 'customer') {
+        if (!v('name') || !v('owner')) { toast('Enter the shop and owner name', true); return; }
+        var nid = Math.max.apply(null, state.customers.map(function (x) { return x.id; })) + 1;
+        state.customers.push({ id: nid, name: v('name'), owner: v('owner'), area: v('area') || '—', phone: v('phone') || '—', limit: Math.max(0, +v('limit') || 0) });
+        toast('Customer added');
+      } else {
+        var un = v('username').toLowerCase();
+        if (!v('name') || !un) { toast('Enter a name and username', true); return; }
+        if (state.users.some(function (x) { return x.username === un && x.id !== eid; })) { toast('That username is taken', true); return; }
+        if (eid) { var uu = state.users.filter(function (x) { return x.id === eid; })[0]; uu.name = v('name'); uu.username = un; uu.role = v('role'); }
+        else state.users.push({ id: Math.max.apply(null, state.users.map(function (x) { return x.id; })) + 1, name: v('name'), username: un, role: v('role'), active: true });
+        toast(eid ? 'User updated' : 'User added');
+      }
+      save(); ui.modal = null; render(true); return;
+    }
     if (e.target.id === 'loginForm') { e.preventDefault(); sessionStorage.setItem(SESSION, '1'); if (!location.hash) location.hash = '#/dashboard'; render(); }
   });
 
